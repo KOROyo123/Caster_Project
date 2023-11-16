@@ -1,0 +1,169 @@
+[
+    {
+        "Ntrip2.0_request_Sourcetable": [
+            "GET / HTTP/1.1\r\n",
+            "Host: ntrip.example.com\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n",
+            "User-Agent: Ntrip ExampleClient/2.0\r\n",
+            "Connection: close\r\n",
+            "\r\n"
+        ],
+        "Ntrip2.0_reply_Sourcetable": [
+            "HTTP/1.1 200 OK\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Ntrip-Flag: st_filter,st_auth,st_match,st_strict,rtsp\r\n",
+            "Server: Ntrip ExampleCaster/2.0\r\n",
+            "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
+            "Connection: close\r\n",
+            "Content-Type: gnss/sourcetable\r\n",
+            "Content-Length: 1234\r\n",
+            "\r\n",
+            "sourcetable data"
+        ]
+    },
+    {
+        "Ntrip1.0_request_Sourcetable": [
+            "GET / HTTP/1.0\r\n",
+            "User-Agent: Ntrip ExampleClient/1.0\r\n",
+            "Accept: */*\r\n",
+            "Connection: close\r\n",
+            "\r\n"
+        ],
+        "Ntrip1.0_reply_Sourcetable": [
+            "SOURCETABLE 200 OK\r\n",
+            "Server: Ntrip ExampleCaster 2.0/1.0\r\n",
+            "Connection: close\r\n",
+            "Content-Type: text/plain\r\n",
+            "Content-Length: 1234\r\n",
+            "\r\n",
+            "sourcetable data"
+        ]
+    },
+    {
+        "Ntrip2.0_request_GNSS_data": [
+            "GET /ExampleMountpoint HTTP/1.1\r\n",
+            "Host: ntrip.example.com\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n",
+            "User-Agent: Ntrip ExampleClient/2.0\r\n",
+            "(可选)Ntrip-GGA: $GNGGA,035200.21,3600.0000000,N,12006.0000000,E,1,00,1.0,85.356,M,4.644,M,0.0,0000*55\r\n",
+            "Authorization: Basic bnRyaXA6c2VjcmV0\r\n",
+            "Connection: close\r\n",
+            "\r\n"
+        ],     
+        "Ntrip2.0_reply_GNSS_data": [
+            "HTTP/1.1 200 OK\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Server: Ntrip ExampleCaster/2.0\r\n",
+            "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
+            "Cache-Control: no-store, no-cache, max-age=0\r\n",
+            "Pragma: no-cache\r\n",
+            "Connection: close\r\n",
+            "Content-Type: gnss/data\r\n",
+            "\r\n",
+            "data"
+        ]
+    },
+    {
+        "Ntrip1.0_request_GNSS_data": [
+            "GET /TEST3 HTTP/1.0\r\n",
+            "User-Agent: NTRIP RTKLIB/2.4.3\r\n",
+            "Authorization: Basic U0RBU0RuMjIyOjEyMzQ1Ng==\r\n",
+            "\r\n"
+        ],
+        "Ntrip1.0_reply_GNSS_data": [
+            "ICY 200 OK\r\n",
+            "\r\n"
+        ]
+    },
+    {
+        "Ntrip2.0_request_Server": [
+            "POST /ExampleMountpoint HTTP/1.1\r\n",
+            "Host: ntrip.example.com\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n",
+            "Authorization: Basic bnRyaXA6c2VjcmV0\r\n",
+            "User-Agent: Ntrip ExampleServer/2.0\r\n",
+            "Connection: close\r\n",
+            "\r\n"
+        ],
+        "Ntrip2.0_reply_Server": [
+            "HTTP/1.1 200 OK\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Server: Ntrip ExampleCaster/2.0\r\n",
+            "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
+            "Connection: close\r\n",
+            "\r\n"
+        ],
+        "Ntrip2.0_reply_Server1": [
+            "HTTP/1.1 【code】 【text】\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Server: Ntrip ExampleCaster/2.0\r\n",
+            "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
+            "Connection: close\r\n",
+            "\r\n",
+            "long text"
+        ],
+        "Ntrip2.0_code_text":[
+            "200 OK",
+            "401 Unauthorized",
+            "404 NotFound",
+            "409 Conflict",
+            "500 Intenal Serve Eror",
+            "501 Not Implemented",
+            "503 Service Unavailable"
+        ]
+    },
+    {
+        "Ntrip1.0_request_Server": [
+            "SOURCE secret /ExampleMountpoint HTTP/1.1\r\n",
+            "Source-Agent: Ntrip ExampleServer/2.0\r\n",
+            "\r\n"
+        ],
+        "Ntrip1.0_request_Server2": [
+            "SOURCE secret ExampleMountpoint\r\n",
+            "Source-Agent: Ntrip ExampleServer/2.0\r\n",
+            "\r\n"
+        ],
+        "Ntrip1.0_request_Server3": [
+            "SOURCE secret /ExampleMountpoint\r\n",
+            "Source-Agent: Ntrip ExampleServer/2.0\r\n",
+            "\r\n"
+        ],
+        "Ntrip1.0_reply_Server": [
+            "OK\r\n"
+        ],
+        "Ntrip1.0_reply_Server2": [
+            "ICY 200 OK\r\n"
+        ],
+        "Ntrip1.0_reply_Server3": [
+            "ERROR - Bad Password\r\n"
+        ],
+        "Ntrip1.0_reply_Server4": [
+            "ERROR - Mount Point Taken or Invalid\r\n"
+        ],
+        "Ntrip1.0_reply_Server5": [
+            "ERROR - Already Connected\r\n"
+        ]
+    },
+    {
+        "Ntripx.0_request_": [
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n"
+        ],
+        "Ntripx.0_reply_": [
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n",
+            "\r\n"
+        ]
+    }
+]

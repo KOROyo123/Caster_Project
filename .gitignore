@@ -1,0 +1,5 @@
+# C++ objects and libs
+/*.o
+.vscode
+build
+.package

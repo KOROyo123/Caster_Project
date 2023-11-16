@@ -1,0 +1,7 @@
+程序的正常运行需要安装cmake 和GDB
+sudo apt-get install gdb
+sudo apt-get install cmake
+
+参照模板的方式.vscode文件夹中的launch.json和task.json，以及主目录下的cmd.sh
+其中cmd.sh用来执行一般的cmake构建过程
+

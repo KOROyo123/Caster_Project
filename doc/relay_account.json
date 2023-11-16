@@ -1,0 +1,134 @@
+{
+    "user_config": [
+        {
+            "Maping": [
+                {
+                    "Maping_Mount": "RTCM32_A1",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_A2",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_A3",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_A4",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                }
+            ],
+            "username_pwd": [
+                "admina:123456",
+                "adminb:123456",
+                "adminc:123456",
+                "admind:123456",
+                "admine:123456",
+                "adminf:123456",
+                "adming:123456",
+                "adminh:123456",
+                "admini:123456",
+                "adminj:123456",
+                "admink:123456",
+                "adminl:123456",
+                "adminm:123456",
+                "adminn:123456",
+                "admino:123456",
+                "adminp:123456"
+            ]
+        },
+        {
+            "Maping": [
+                {
+                    "Maping_Mount": "RTCM32_B1",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_B2",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_B3",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_B4",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                }
+            ],
+            "username_pwd": [
+                "admina:123456",
+                "adminb:123456",
+                "adminc:123456",
+                "admind:123456"
+            ]
+        },
+        {
+            "Maping": [
+                {
+                    "Maping_Mount": "RTCM32_C1",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                },
+                {
+                    "Maping_Mount": "RTCM32_C2",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "SDQDSK01"
+                }
+            ],
+            "username_pwd": [
+                "admina:123456",
+                "adminb:123456"
+            ]
+        }
+    ],
+    "sys_config": [
+        {
+            "Local_Mount": "RTCM32_X1",
+            "addr": "49.234.134.179",
+            "port": 4202,
+            "Mount": "SDQDSK01",
+            "username_pwd":"adminx1:123456"
+        },
+        {
+            "Local_Mount": "RTCM32_X2",
+            "addr": "49.234.134.179",
+            "port": 4202,
+            "Mount": "SDQDSK01",
+            "username_pwd":"adminx2:123456"
+        },
+        {
+            "Local_Mount": "RTCM32_X3",
+            "addr": "49.234.134.179",
+            "port": 4202,
+            "Mount": "SDQDSK01",
+            "username_pwd":"adminx3:123456"
+        },
+        {
+            "Local_Mount": "RTCM32_X4",
+            "addr": "49.234.134.179",
+            "port": 4202,
+            "Mount": "SDQDSK01",
+            "username_pwd":"adminx4:123456"
+        }
+    ]
+}
