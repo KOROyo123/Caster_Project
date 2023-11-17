@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(KoroCaster_0.0.1 LANGUAGES CXX)
+project(Koro_Caster_0.0.1 LANGUAGES CXX)
 
 #版本14以下可能会导致abseil不支持
 set(CMAKE_CXX_STANDARD 17)
@@ -8,51 +8,53 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #包含的源文件和头文件
 include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include)
-include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
+include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Connect)
 
-include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/basic)
+include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
 
 
 # add_definitions(-DNTRIP_MULT_THREAD)
 # add_definitions(-DENABLE_TABLE_MUTEX)
 
-set(DB_TABLE_SOURCE
-    include/DB/hash_table.h
-    include/DB/tcp_connect_table.h
-    src/DB/tcp_connect_table.cpp
-    include/DB/ntrip_client_table.h
-    src/DB/ntrip_client_table.cpp
-    include/DB/ntrip_server_table.h
-    src/DB/ntrip_server_table.cpp
-    include/DB/ntrip_subclient_table.h
-    src/DB/ntrip_subclient_table.cpp
-    include/DB/relay_account_table.h
-    src/DB/relay_account_table.cpp
-)
+# set(DB_TABLE_SOURCE
+#     include/DB/hash_table.h
+#     include/DB/tcp_connect_table.h
+#     src/DB/tcp_connect_table.cpp
+#     include/DB/ntrip_client_table.h
+#     src/DB/ntrip_client_table.cpp
+#     include/DB/ntrip_server_table.h
+#     src/DB/ntrip_server_table.cpp
+#     include/DB/ntrip_subclient_table.h
+#     src/DB/ntrip_subclient_table.cpp
+#     include/DB/relay_account_table.h
+#     src/DB/relay_account_table.cpp
+# )
 
 set(CONNECT_TYPE_SOURCE
-    include/connect_type.h
-    src/Connect/que_client.cpp
-    src/Connect/ntrip_client.cpp
-    src/Connect/ntrip_server.cpp
-    src/Connect/relay_client.cpp
-    src/Connect/relay_server.cpp
-    src/Connect/tcp_connect.cpp
+    include/Connect/client_ntrip.h
+    include/Connect/client_source.h
+    include/Connect/client_tcpcli.h
+    include/Connect/server_ntrip.h
+    include/Connect/server_relay.h
+    include/Connect/server_tcpcli.h
+    include/Connect/server_tcpsvr.h
+    src/Connect/client_ntrip.cpp
+    src/Connect/client_source.cpp
+    src/Connect/client_tcpcli.cpp
+    src/Connect/server_ntrip.cpp
+    src/Connect/server_relay.cpp
+    src/Connect/server_tcpcli.cpp
+    src/Connect/server_tcpsvr.cpp
 )
 
 set(MAIN_SOURCES
     include/ntrip_global.h
-    include/ntripcenter.h
+    include/ntrip_caster.h
     src/main.cpp
-    src/ntripcenter.cpp
+    src/ntrip_caster.cpp
 )
 
-add_executable(${PROJECT_NAME} 
-        ${BASIC_SOUCE}
-        ${CONNECT_TYPE_SOURCE} 
-        ${DB_TABLE_SOURCE}
-        ${MAIN_SOURCES}
-        )
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CONNECT_TYPE_SOURCE})
 
 #生成的可执行文件名称和包含的文件
 

@@ -2,6 +2,8 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
+#include "knt/base64.h"
+
 using json = nlohmann::json;
 
 // 哈希函数，对键不作处理
@@ -23,70 +25,6 @@ static int relay_account_ht_equel(struct relay_account_entry *e1, struct relay_a
 // 特例化对应的哈希表结构
 HT_PROTOTYPE(relay_account_ht, relay_account_entry, relay_account_node, relay_account_ht_cal_key, relay_account_ht_equel)
 HT_GENERATE(relay_account_ht, relay_account_entry, relay_account_node, relay_account_ht_cal_key, relay_account_ht_equel, 0.5, malloc, realloc, free)
-
-char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-//------------------------------------------------------
-int util_base64_encode(char *base64code, char *user_pwd)
-{
-    char message[64] = {'\0'};
-
-    strcpy(message, user_pwd);
-
-    char *encoded;
-    unsigned long length, encoded_length;
-    unsigned long left, bitqueue, i = 0, j = 0;
-
-    length = strlen(message);
-
-    if (length == 0)
-        return 1;
-
-    encoded_length = (4 * (length + ((3 - (length % 3)) % 3)) / 3);
-    encoded = (char *)malloc(sizeof(char) * (encoded_length + 1));
-
-    while (i < length)
-    {
-        left = length - i;
-
-        if (left > 2)
-        {
-            bitqueue = message[i++];
-            bitqueue = (bitqueue << 8) + message[i++];
-            bitqueue = (bitqueue << 8) + message[i++];
-
-            encoded[j++] = alphabet[(bitqueue & 0xFC0000) >> 18];
-            encoded[j++] = alphabet[(bitqueue & 0x3F000) >> 12];
-            encoded[j++] = alphabet[(bitqueue & 0xFC0) >> 6];
-            encoded[j++] = alphabet[bitqueue & 0x3F];
-        }
-        else if (left == 2)
-        {
-            bitqueue = message[i++];
-            bitqueue = (bitqueue << 8) + message[i++];
-            bitqueue <<= 8;
-
-            encoded[j++] = alphabet[(bitqueue & 0xFC0000) >> 18];
-            encoded[j++] = alphabet[(bitqueue & 0x3F000) >> 12];
-            encoded[j++] = alphabet[(bitqueue & 0xFC0) >> 6];
-            encoded[j++] = '=';
-        }
-        else
-        {
-            bitqueue = message[i++];
-            bitqueue <<= 16;
-
-            encoded[j++] = alphabet[(bitqueue & 0xFC0000) >> 18];
-            encoded[j++] = alphabet[(bitqueue & 0x3F000) >> 12];
-            encoded[j++] = '=';
-            encoded[j++] = '=';
-        }
-    }
-
-    encoded[encoded_length] = '\0'; // added. ajd
-
-    strcpy(base64code, encoded);
-    return 0;
-}
 
 relay_account_table::relay_account_table()
 {
@@ -120,7 +58,7 @@ int relay_account_table::load_account_file(char *conf_path)
             std::string user_pwd;
             user_pwd = one_conf["username_pwd"].at(j);
 
-            unique_account *one_account=create_unique_account(user_pwd.c_str());
+            unique_account *one_account = create_unique_account(user_pwd.c_str());
 
             for (int k = 0; k < one_conf["user_config"].size(); k++)
             {
@@ -188,9 +126,10 @@ int relay_account_table::add_new_sys_relay_mount(const char *MapingMount, const 
     unique_account *insert_account = new unique_account;
     strcpy(insert_account->userName_pwd, user_pwd);
 
-    char encode_userID[64] = {'\0'};
-    util_base64_encode(encode_userID, insert_account->userName_pwd);
-    strcpy(insert_account->Base64_userID, encode_userID);
+
+    std::string unencode_userID = insert_account->userName_pwd;
+    std::string encode_userID = util_base64_encode(unencode_userID);
+    strcpy(insert_account->Base64_userID, encode_userID.c_str());
 
     insert_account->state = 0;
 
@@ -372,7 +311,7 @@ unique_account *relay_account_table::create_unique_account(const char *user_pwd)
 
     strcpy(account->userName_pwd, user_pwd);
 
-    util_base64_encode(account->Base64_userID, account->userName_pwd);
+    //util_base64_encode(account->Base64_userID, account->userName_pwd);
 
     account->state = 0;
 
@@ -381,7 +320,7 @@ unique_account *relay_account_table::create_unique_account(const char *user_pwd)
 
 int relay_account_table::add_unique_account(const char *MapingMount, unique_account *account)
 {
- // 唯一锁定
+    // 唯一锁定
 #ifdef ENABLE_TABLE_MUTEX
     std::unique_lock<std::shared_mutex> lck(_lock); // 执行mutex_.lock();
 #endif
@@ -417,8 +356,6 @@ int relay_account_table::add_unique_account(const char *MapingMount, unique_acco
     {
         return 1;
     }
-
-
 
     return 0;
 }
@@ -479,7 +416,7 @@ unique_account *relay_account_table::find_idle_account_by_MapingMount(char *Mapi
 
         if (match_entry->account_last->account->state == 0)
         {
-           match_entry->account_last->account->state = 1;
+            match_entry->account_last->account->state = 1;
             return match_entry->account_last->account;
         }
     }

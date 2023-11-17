@@ -13,11 +13,12 @@
 int Decode_base64(char *base64, char *username, char *password)
 {
 
+
     std::string undecode = base64;
 
     std::string decode;
 
-    decode = base64_decode(undecode, false);
+    decode = util_base64_decode(undecode);
 
     char user_and_pwd[64];
     strcpy(user_and_pwd, decode.c_str());

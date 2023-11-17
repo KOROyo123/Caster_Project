@@ -8,16 +8,16 @@
 
 
 
-#define SOFTWARE_NAME       "CDC++"
+#define SOFTWARE_NAME       "KORO_Caster"
 #define SOFTWARE_VERSION    "0.0.1"
 
 
 // 数据传输
 //连接类型
-#define TCP_CONNECT_TYPE_COMMON_NTRIP             01  //被动连接类型
-#define TCP_CONNECT_TYPE_ACTIVE_NTRIP             02  //主动连接类型
-#define TCP_CONNECT_TYPE_COMMON_DIRECT            03  //TCP直连 主动
-#define TCP_CONNECT_TYPE_ACTIVE_DIRECT            04  //TCP直连 被动
+#define TCP_CONNECT_TYPE_COMMON_NTRIP             01  //被动连接类型    通过NTRIP_ACCEPT监听的端口连入的连接  适用于 client sever  relayclient
+#define TCP_CONNECT_TYPE_ACTIVE_NTRIP             02  //主动连接类型    通过NTRIP_CONNECT主动连接的端口
+#define TCP_CONNECT_TYPE_COMMON_DIRECT            03  //TCP直连 主动    通过TCP_CONNECT主动连接的端口
+#define TCP_CONNECT_TYPE_ACTIVE_DIRECT            04  //TCP直连 被动    通过TCP_ACCEPT监听的端口连入的连接
 
 // 用户类型
 #define TCP_CONNECT_TYPE_CLIENT_NTRIP       10  // Ntrip Client类型连接（挂载点访问模式）   【已支持】
@@ -29,7 +29,9 @@
 #define TCP_CONNECT_TYPE_SERVER_NTRIP       20  // Ntrip Server类型连接(被动连接的挂载点）  【已支持】
 #define TCP_CONNECT_TYPE_SERVER_RELAY       21  // Ntrip Server类型连接(主动连接的挂载点）  【未支持】
 #define TCP_CONNECT_TYPE_SERVER_VIRTAL      22  // Ntrip Server类型连接(虚拟产生的挂载点）
+// 直连类型
 #define TCP_CONNECT_TYPE_TCPSVR_RELAY       30  // TCP Server类型连接（主动连接TCP数据流）
+#define TCP_CONNECT_TYPE_TCPCLI_RELAY       31  // TCP Server类型连接（主动连接TCP数据流）
 // 交互与控制
 #define TCP_CONNECT_TYPE_QUEUE_GUI_CLIENT   40  // 图形化用户程序连接（用于图形化桌面程序）  【开发中】
 #define TCP_CONNECT_TYPE_QUEUE_CUI_CLIENT   41  // 控制台用户程序连接（用于控制台指令程序）

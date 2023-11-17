@@ -69,6 +69,10 @@ int ntrip_client::start()
     printf("挂载点 %s 用户：%s 已接入，\n", _connect_info->LocalMount, _connect_info->UserName);
 
 
+    //redis:查询订阅指定消息是否存在，订阅指定消息
+
+    //libevent：将bufferevent发送给指定的分发者
+
     return 0;
 }
 

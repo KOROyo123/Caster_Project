@@ -54,10 +54,6 @@ void ntrip_server::ReadCallback(bufferevent *bev, void *arg)
 {
     ntrip_server *con = (ntrip_server *)arg;
 
-    // char data[BUFFEVENT_READ_DATA_SIZE] = {'\0'};
-    // bufferevent_read(bev, data, BUFFEVENT_READ_DATA_SIZE);
-    // printf("%s", data);
-    //  锁定表(读锁)
 
     // 接收到基站的数据
     evbuffer *recv_data = evbuffer_new();
@@ -68,23 +64,10 @@ void ntrip_server::ReadCallback(bufferevent *bev, void *arg)
     con->data_decode(recv_data);
     // 释放数据
 
-    // char *line=evbuffer_readline(recv_data);
 
-    // if(line)
-    // {
-    //     printf("%s\n",line);
-    // }
-    
-    // free(line);
-    
     evbuffer_free(recv_data);
 
-    // 引用到指定桶的bufferevent
 
-    // 数据分发
-    //  锁定表
-    //  检索所有挂载在该点下的用户，依次将数据写入到对应的bev缓冲区
-    //
 }
 
 int ntrip_server::start()
@@ -174,6 +157,12 @@ int ntrip_server::del_to_table()
 
 int ntrip_server::data_dispatch(evbuffer *recv_data)
 {
+    //libevent:向pair bufferevent发送数据，采用引用的形式？
+
+
+    //redis：向redis发布，指定名字的数据
+
+
 
     ntrip_subclient_entry *trans_entry;
     evbuffer *trans_evbuf=evbuffer_new();

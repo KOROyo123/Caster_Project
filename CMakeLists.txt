@@ -10,6 +10,9 @@ add_definitions(-DWIN32)
 ENDIF()
 
 
+
+
+
 add_subdirectory(lib/)
 add_subdirectory(app/)
 
