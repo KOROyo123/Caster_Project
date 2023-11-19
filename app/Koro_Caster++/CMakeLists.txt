@@ -8,13 +8,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #包含的源文件和头文件
 include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include)
-include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Connect)
+include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Carrier)
+include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Connector)
 
 include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
 
 
-# add_definitions(-DNTRIP_MULT_THREAD)
-# add_definitions(-DENABLE_TABLE_MUTEX)
+add_definitions(-DNTRIP_MULT_THREAD)
+add_definitions(-DENABLE_TABLE_MUTEX)
 
 # set(DB_TABLE_SOURCE
 #     include/DB/hash_table.h
@@ -30,22 +31,35 @@ include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
 #     src/DB/relay_account_table.cpp
 # )
 
-set(CONNECT_TYPE_SOURCE
-    include/Connect/client_ntrip.h
-    include/Connect/client_source.h
-    include/Connect/client_tcpcli.h
-    include/Connect/server_ntrip.h
-    include/Connect/server_relay.h
-    include/Connect/server_tcpcli.h
-    include/Connect/server_tcpsvr.h
-    src/Connect/client_ntrip.cpp
-    src/Connect/client_source.cpp
-    src/Connect/client_tcpcli.cpp
-    src/Connect/server_ntrip.cpp
-    src/Connect/server_relay.cpp
-    src/Connect/server_tcpcli.cpp
-    src/Connect/server_tcpsvr.cpp
+set(CARRIER_TYPE_SOURCE
+    include/Carrier/client_ntrip.h
+    include/Carrier/client_source.h
+    include/Carrier/client_tcpcli.h
+    include/Carrier/server_ntrip.h
+    include/Carrier/server_relay.h
+    include/Carrier/server_tcpcli.h
+    include/Carrier/server_tcpsvr.h
+    src/Carrier/client_ntrip.cpp
+    src/Carrier/client_source.cpp
+    src/Carrier/client_tcpcli.cpp
+    src/Carrier/server_ntrip.cpp
+    src/Carrier/server_relay.cpp
+    src/Carrier/server_tcpcli.cpp
+    src/Carrier/server_tcpsvr.cpp
 )
+
+
+set(CONNECTOR_TYPE_SOURCE
+    include/Connector/ntrip_common_listener.h
+    include/Connector/ntrip_relay_connector.h
+    include/Connector/tcpsvr_common_listener.h
+    include/Connector/tcpcli_relay_connector.h
+    src/Connector/ntrip_common_listener.cpp
+    src/Connector/ntrip_relay_connector.cpp
+    src/Connector/tcpsvr_common_listener.cpp
+    src/Connector/tcpcli_relay_connector.cpp
+)
+
 
 set(MAIN_SOURCES
     include/ntrip_global.h
@@ -54,7 +68,7 @@ set(MAIN_SOURCES
     src/ntrip_caster.cpp
 )
 
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CONNECT_TYPE_SOURCE})
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CARRIER_TYPE_SOURCE}  ${CONNECTOR_TYPE_SOURCE})
 
 #生成的可执行文件名称和包含的文件
 
