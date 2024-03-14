@@ -143,7 +143,7 @@ int ntrip_relay_connector::send_login_request(bufferevent *bev, std::string Conn
         evbuffer_add_printf(evbuf, "GET %s HTTP/1.1\r\n", mount.c_str());
         evbuffer_add_printf(evbuf, "Host: %s:%d\r\n", addr.c_str(), port);
         evbuffer_add_printf(evbuf, "Ntrip-Version: Ntrip/2.0\r\n");
-        evbuffer_add_printf(evbuf, "User-Agent: %s/%s\r\n", SOFTWARE_NAME, SOFTWARE_VERSION);
+        evbuffer_add_printf(evbuf, "User-Agent: %s/%s\r\n", PROJECT_SET_NAME, PROJECT_SET_VERSION);
         evbuffer_add_printf(evbuf, "Authorization: Basic %s\r\n", userID.c_str());
         evbuffer_add_printf(evbuf, "Connection: close\r\n");
         evbuffer_add_printf(evbuf, "\r\n");
@@ -151,7 +151,7 @@ int ntrip_relay_connector::send_login_request(bufferevent *bev, std::string Conn
     else
     {
         evbuffer_add_printf(evbuf, "GET %s HTTP/1.0\r\n", mount.c_str());
-        evbuffer_add_printf(evbuf, "User-Agent: %s/%s\r\n", SOFTWARE_NAME, SOFTWARE_VERSION);
+        evbuffer_add_printf(evbuf, "User-Agent: %s/%s\r\n", PROJECT_SET_NAME, PROJECT_SET_VERSION);
         evbuffer_add_printf(evbuf, "Authorization: Basic %s\r\n", userID.c_str());
         evbuffer_add_printf(evbuf, "\r\n");
     }

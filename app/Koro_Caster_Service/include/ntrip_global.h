@@ -4,9 +4,9 @@
 #pragma once
 
 // 工程配置
-
-#define SOFTWARE_NAME "KORO_Caster"
-#define SOFTWARE_VERSION "0.0.2"
+#include "version.h"
+// #define SOFTWARE_NAME "KORO_Caster"
+// #define SOFTWARE_VERSION "0.0.2"
 
 // 指令类型与编号
 

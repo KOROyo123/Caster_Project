@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Koro_Caster_Service VERSION 0.0.5.5 LANGUAGES CXX)
+project(Koro_Caster_Service VERSION 0.0.6 LANGUAGES CXX)
 
 find_package(Git)
  
 if(GIT_FOUND)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty=-dev
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE PROJECT_TAG_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -23,6 +23,8 @@ else()
     set(PROJECT_TAG_VERSION "unknown")
 endif()
  
+message(STATUS "")
+message(STATUS "------- ${PROJECT_NAME} -------")
 
 message(STATUS "Dev version: ${PROJECT_VERSION}")
 message(STATUS "Git version: ${PROJECT_GIT_VERSION}")
