@@ -1,6 +1,0 @@
-15:31:35.443:Log Init OK
-15:31:35.443:[info] Start Ntrip Center
-15:31:35.444:[info] Black and white list initialize error.
-15:31:35.445:[info] Init BaseStation black/white list failed.
-15:31:35.445:[err] LoadJsonConfig:GetJsonObject: failed
-15:31:35.445:[err] NtripCenter_Create:LoadConfig fail, abort
