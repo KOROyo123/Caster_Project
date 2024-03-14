@@ -1,13 +1,32 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Koro_Caster_Service VERSION 0.0.5 LANGUAGES CXX)
+project(Koro_Caster_Service VERSION 0.0.5.5 LANGUAGES CXX)
 
-configure_file(
-  version.h.in
-  generated/version.h
-  @ONLY
+find_package(Git)
+ 
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE PROJECT_TAG_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE PROJECT_GIT_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
+else()
+    set(PROJECT_GIT_VERSION "unknown")
+    set(PROJECT_TAG_VERSION "unknown")
+endif()
+ 
+
+message(STATUS "Dev version: ${PROJECT_VERSION}")
+message(STATUS "Git version: ${PROJECT_GIT_VERSION}")
+message(STATUS "TAG version: ${PROJECT_TAG_VERSION}")
 
 
 #版本14以下可能会导致abseil不支持
@@ -84,9 +103,15 @@ add_executable(${PROJECT_NAME}
                 ${CONNECTOR_TYPE_SOURCE}
                 ${COMPONTENT_TYPE_SOURCE}    
                 ${DB_TABLE_SOURCE} 
-                ${EXTRA_SOURCE})
+                ${EXTRA_SOURCE}
+                ${VERSION_SOURCES})
 
 #生成的可执行文件名称和包含的文件
+
+#基于 version.h.in 生成 version.h
+configure_file(${CMAKE_SOURCE_DIR}/version.h.in version.h @ONLY)
+target_include_directories(${PROJECT_NAME}  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 
 #Koro_NavTool
 target_link_libraries(${PROJECT_NAME} knt)
@@ -119,9 +144,6 @@ target_link_libraries(${PROJECT_NAME} event)
 target_link_libraries(${PROJECT_NAME} event_core)
 target_link_libraries(${PROJECT_NAME} event_extra)
 
-
-
-
 #hiredis 
 target_link_libraries(${PROJECT_NAME} hiredis)
 
@@ -133,3 +155,6 @@ target_link_libraries(${PROJECT_NAME} spdlog)
 # include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/include)
 # include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib)
 # target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib/libcurl.a)
+
+
+
