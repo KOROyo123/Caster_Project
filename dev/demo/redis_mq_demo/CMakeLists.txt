@@ -20,8 +20,7 @@ target_link_libraries(${PROJECT_NAME} rtklib)
 
 
 #redismq
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/tool/redis_mq/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/tool/redis_mq/libredis_mq.a)
+target_link_libraries(${PROJECT_NAME} redis_mq)
 
 #spdlog
 target_link_libraries(${PROJECT_NAME} spdlog)

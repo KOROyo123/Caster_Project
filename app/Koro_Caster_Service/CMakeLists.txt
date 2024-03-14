@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Koro_Caster_Service_0.0.5 LANGUAGES CXX)
+project(Koro_Caster_Service VERSION 0.0.5 LANGUAGES CXX)
+
+configure_file(
+  version.h.in
+  generated/version.h
+  @ONLY
+  )
+
+
 
 #版本14以下可能会导致abseil不支持
 set(CMAKE_CXX_STANDARD 20)

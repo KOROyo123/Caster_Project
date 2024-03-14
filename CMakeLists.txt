@@ -15,8 +15,7 @@ ENDIF()
 add_subdirectory(rely/)
 add_subdirectory(lib/)
 add_subdirectory(app/)
-add_subdirectory(tool/)
-add_subdirectory(demo/)
+add_subdirectory(dev/)
 
 
 
