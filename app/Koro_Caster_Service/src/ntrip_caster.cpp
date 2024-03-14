@@ -549,7 +549,12 @@ int ntrip_caster::mount_not_online_close_connect(json req)
     std::string mount = req["mount_point"];
 
     auto item = _connect_map.find(Connect_Key);
-    bufferevent *bev = static_cast<bufferevent *>(item->second);
+    if (item == _connect_map.end())
+    {
+        spdlog::warn("[{}]:can't find need close connect. mount: [{}] ,connect key: [{}], req type: [{}]", __class__, mount, Connect_Key, reqtype);
+        return 1;
+    }
+    bufferevent *bev = item->second;
 
     int fd = bufferevent_getfd(bev);
     std::string ip = util_get_user_ip(fd);
@@ -784,10 +789,11 @@ void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c
     auto svr = arg->first;
     auto req = arg->second;
 
-    // 根据查询结果，在线，创建一个transfer，将client传入
+    std::string mount_point = req["mount_point"];
+    std::string connect_key = req["connect_key"];
 
-    // 如果不在线，直接断开连接？
-    if (reply->type == REDIS_REPLY_NIL)
+    auto item = svr->_server_key.find(mount_point);
+    if (item == svr->_server_key.end())
     {
         svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
     }
@@ -795,7 +801,20 @@ void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c
     {
         svr->transfer_add_create_client(req);
     }
-    delete arg;
+
+        // 根据查询结果，在线，创建一个transfer，将client传入
+
+        // 如果不在线，直接断开连接？
+        // if (reply->type == REDIS_REPLY_NIL)
+        // {
+        //     svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
+        // }
+        // else
+        // {
+        //     svr->transfer_add_create_client(req);
+        // }
+
+        delete arg;
 }
 
 void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata)
@@ -836,7 +855,6 @@ void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, 
         spdlog::info("[{}]:login a same name mount point [{}], kick out the login connection mount point!", __class__, mount_point);
 
         svr->_queue->push_and_active(req, MOUNT_ALREADY_ONLINE_CLOSE_CONNCET);
-
     }
 }
 
