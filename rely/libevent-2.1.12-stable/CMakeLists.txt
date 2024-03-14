@@ -41,7 +41,7 @@ string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
 # what? why would you get id of other useful build types? - Ellzey
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Limited configurations" FORCE)
 
-set(EVENT__LIBRARY_TYPE DEFAULT CACHE STRING
+set(EVENT__LIBRARY_TYPE STATIC CACHE STRING
     "Set library type to SHARED/STATIC/BOTH (default SHARED for MSVC, otherwise BOTH)")
 
 project(libevent C)
@@ -95,26 +95,26 @@ set(EVENT_STAGE_NAME ${EVENT_VERSION_STAGE})
 
 # a list that defines what can set for EVENT_STAGE_VERSION
 set(EVENT__ALLOWED_STAGE_NAMES
-	rc
-	beta
-	alpha
-	alpha-dev
-	release
-	stable
+        rc
+        beta
+        alpha
+        alpha-dev
+        release
+        stable
 )
 list(
-	FIND EVENT__ALLOWED_STAGE_NAMES
-	"${EVENT_STAGE_NAME}"
-	EVENT__STAGE_RET
+        FIND EVENT__ALLOWED_STAGE_NAMES
+        "${EVENT_STAGE_NAME}"
+        EVENT__STAGE_RET
 )
 if (EVENT__STAGE_RET EQUAL -1)
-	message(WARNING
-		"stage ${EVENT_STAGE_NAME} is not allowed, reset to beta")
-	set(EVENT_STAGE_NAME beta)
+        message(WARNING
+                "stage ${EVENT_STAGE_NAME} is not allowed, reset to beta")
+        set(EVENT_STAGE_NAME beta)
 endif()
 
 set(EVENT_VERSION
-	"${EVENT_VERSION_MAJOR}.${EVENT_VERSION_MINOR}.${EVENT_VERSION_PATCH}-${EVENT_STAGE_NAME}")
+        "${EVENT_VERSION_MAJOR}.${EVENT_VERSION_MINOR}.${EVENT_VERSION_PATCH}-${EVENT_STAGE_NAME}")
 
 option(EVENT__DISABLE_DEBUG_MODE
     "Define if libevent should build without support for a debug mode" OFF)
@@ -129,19 +129,19 @@ option(EVENT__DISABLE_THREAD_SUPPORT
     "Define if libevent should not be compiled with thread support" OFF)
 
 option(EVENT__DISABLE_OPENSSL
-    "Define if libevent should build without support for OpenSSL encryption" OFF)
+    "Define if libevent should build without support for OpenSSL encryption" ON)
 
 option(EVENT__DISABLE_BENCHMARK
     "Defines if libevent should build without the benchmark executables" ON)
 
 option(EVENT__DISABLE_TESTS
-    "If tests should be compiled or not" OFF)
+    "If tests should be compiled or not" ON)
 
 option(EVENT__DISABLE_REGRESS
-    "Disable the regress tests" OFF)
+    "Disable the regress tests" ON)
 
 option(EVENT__DISABLE_SAMPLES
-    "Disable sample files" OFF)
+    "Disable sample files" ON)
 
 option(EVENT__DISABLE_CLOCK_GETTIME
     "Do not use clock_gettime even if it is available" OFF)
@@ -628,7 +628,7 @@ CHECK_TYPE_SIZE(pid_t EVENT__SIZEOF_PID_T)
 if(NOT EVENT__SIZEOF_PID_T)
   set(EVENT__SIZEOF_PID_T ${EVENT__SIZEOF_INT})
 else()
-	set(EVENT__SIZEOF_PID_T EVENT__SIZEOF_PID_T)
+        set(EVENT__SIZEOF_PID_T EVENT__SIZEOF_PID_T)
 endif()
 
 if (NOT EVENT__DISABLE_THREAD_SUPPORT)
@@ -1537,14 +1537,14 @@ endif()
 
 
 if (NOT TARGET uninstall)
-	# Create the uninstall target.
-	# https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
-	configure_file(${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake.in
-				   ${PROJECT_BINARY_DIR}/Uninstall.cmake
-				   @ONLY)
+        # Create the uninstall target.
+        # https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
+        configure_file(${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake.in
+                                   ${PROJECT_BINARY_DIR}/Uninstall.cmake
+                                   @ONLY)
 
-	add_custom_target(uninstall
-					  COMMAND ${CMAKE_COMMAND} -P ${PROJECT_BINARY_DIR}/Uninstall.cmake)
+        add_custom_target(uninstall
+                                          COMMAND ${CMAKE_COMMAND} -P ${PROJECT_BINARY_DIR}/Uninstall.cmake)
 endif()
 
 message(STATUS "")

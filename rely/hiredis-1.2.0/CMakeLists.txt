@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
 
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 OPTION(ENABLE_SSL "Build hiredis_ssl for SSL support" OFF)
-OPTION(DISABLE_TESTS "If tests should be compiled or not" OFF)
+OPTION(DISABLE_TESTS "If tests should be compiled or not" ON)
 OPTION(ENABLE_SSL_TESTS "Should we test SSL connections" OFF)
 OPTION(ENABLE_EXAMPLES "Enable building hiredis examples" OFF)
 OPTION(ENABLE_ASYNC_TESTS "Should we run all asynchronous API tests" OFF)

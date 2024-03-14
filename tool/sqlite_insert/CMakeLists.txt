@@ -19,8 +19,7 @@ src/main.cpp
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 #spdlog
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/spdlog-1.12.0/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/spdlog-1.12.0/build/libspdlog.a)
+target_link_libraries(${PROJECT_NAME} spdlog)
 
 #Json-develop
 include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/third/json-3.11.2/include)

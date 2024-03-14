@@ -3,6 +3,7 @@
 #include "MsgSwitch.h"
 
 #include "spdlog/spdlog.h"
+#include "rtklib.h"
 
 int recv1(const char *data)
 {
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
 
         PostMsg("test", "222", "bbbb");
 
-        sleep(1);
+        sleepms(1000);
     }
 
     ShutDown();

@@ -81,8 +81,7 @@ add_executable(${PROJECT_NAME}
 #生成的可执行文件名称和包含的文件
 
 #Koro_NavTool
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/lib/KNT/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/lib/KNT/libknt.a)
+target_link_libraries(${PROJECT_NAME} knt)
 
 #Json-develop
 include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/third/json-3.11.2/include)
@@ -97,9 +96,7 @@ target_link_libraries(${PROJECT_NAME} m pthread)
 ENDIF()
 
 #rtklib
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/rtklib-2.4.3-b34/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/rtklib-2.4.3-b34/build/librtklib.a)
-
+target_link_libraries(${PROJECT_NAME} rtklib)
 
 #openssl (找不到就安装一下 sudo apt install libssl-dev)
 find_package(OpenSSL REQUIRED)
@@ -110,26 +107,21 @@ target_link_libraries(${PROJECT_NAME}  OpenSSL::Crypto OpenSSL::SSL)
 # target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libssl.a)
 
 #libevent 
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/)
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/include)
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/lib/libevent.a)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/lib/libevent_core.a)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/lib/libevent_extra.a)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/lib/libevent_pthreads.a)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/libevent-2.1.12-stable/build/lib/libevent_openssl.a)
+target_link_libraries(${PROJECT_NAME} event)
+target_link_libraries(${PROJECT_NAME} event_core)
+target_link_libraries(${PROJECT_NAME} event_extra)
 
-#Redis 
-# include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/redis-7.2.1/deps/hiredis)
-#target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/redis-7.2.1/build/libhiredisd.a)
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/hiredis-1.2.0)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/rely/hiredis-1.2.0/libhiredis.a)
+
+
+
+#hiredis 
+target_link_libraries(${PROJECT_NAME} hiredis)
 
 #spdlog
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/spdlog-1.12.0/include)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/spdlog-1.12.0/build/libspdlog.a)
+target_link_libraries(${PROJECT_NAME} spdlog)
 
-#curl
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/include)
-include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib)
-target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib/libcurl.a)
+
+# #curl
+# include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/include)
+# include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib)
+# target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib/libcurl.a)

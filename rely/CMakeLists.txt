@@ -1,2 +1,4 @@
 add_subdirectory(rtklib-2.4.3-b34)
-add_subdirectory(hiredis-1.2.0)
+add_subdirectory(libevent-2.1.12-stable/)
+add_subdirectory(hiredis-1.2.0/)
+add_subdirectory(spdlog-1.12.0/)
