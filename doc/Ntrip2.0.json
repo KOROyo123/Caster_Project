@@ -52,7 +52,7 @@
         ],     
         "Ntrip2.0_reply_GNSS_data": [
             "HTTP/1.1 200 OK\r\n",
-            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n",
             "Server: Ntrip ExampleCaster/2.0\r\n",
             "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
             "Cache-Control: no-store, no-cache, max-age=0\r\n",
@@ -87,7 +87,7 @@
         ],
         "Ntrip2.0_reply_Server": [
             "HTTP/1.1 200 OK\r\n",
-            "Ntrip-Version: Ntrip/2.0\r\n\r\n",
+            "Ntrip-Version: Ntrip/2.0\r\n",
             "Server: Ntrip ExampleCaster/2.0\r\n",
             "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n",
             "Connection: close\r\n",
@@ -146,7 +146,7 @@
     },
     {
         "Ntripx.0_request_": [
-            "\r\n",
+            "Transfer-Encoding: chunked\r\n",
             "\r\n",
             "\r\n",
             "\r\n",

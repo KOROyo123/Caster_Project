@@ -1,0 +1,31 @@
+name: Java Build
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'java/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'java/**'
+jobs:
+  java_build:
+    name: "Java (${{ matrix.os }}, JDK-${{ matrix.jdk }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, windows-2019]
+        jdk: [11, 17]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: "adopt"
+          cache: maven
+      - name: Build with Maven
+        working-directory: ./java
+        run: mvn -B package --file pom.xml

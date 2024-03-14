@@ -1,0 +1,9 @@
+{
+    "module":"CDC_Plus",
+    "node":"192.168.2.167",
+    "PID":13996,
+    "onlineTime":1386400,
+    "gpssecond":64534,
+    "onlineServer":1234,
+    "onlineclient":2345
+}

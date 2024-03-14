@@ -3,6 +3,25 @@
         {
             "Maping": [
                 {
+                    "Maping_Mount": "CMCC-GRCEJ",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "RTCM33_GRCEJ"
+                },
+                {
+                    "Maping_Mount": "CMCC-GRCE",
+                    "addr": "49.234.134.179",
+                    "port": 4202,
+                    "Mount": "RTCM33_GRCE"
+                }
+            ],
+            "username_pwd": [
+                "cshf981:tdr6va8c"
+            ]
+        },
+        {
+            "Maping": [
+                {
                     "Maping_Mount": "RTCM32_A1",
                     "addr": "49.234.134.179",
                     "port": 4202,
@@ -79,27 +98,8 @@
                 "adminc:123456",
                 "admind:123456"
             ]
-        },
-        {
-            "Maping": [
-                {
-                    "Maping_Mount": "RTCM32_C1",
-                    "addr": "49.234.134.179",
-                    "port": 4202,
-                    "Mount": "SDQDSK01"
-                },
-                {
-                    "Maping_Mount": "RTCM32_C2",
-                    "addr": "49.234.134.179",
-                    "port": 4202,
-                    "Mount": "SDQDSK01"
-                }
-            ],
-            "username_pwd": [
-                "admina:123456",
-                "adminb:123456"
-            ]
         }
+        
     ],
     "sys_config": [
         {

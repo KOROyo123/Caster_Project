@@ -1,0 +1,55 @@
+一、修改coredump的生成路径
+
+1、编辑 /etc/sysctl.conf 文件
+        sudo vi /etc/sysctl.conf
+2、在文件中添加或修改两行内容
+        kernel.core_pattern = core-%e.%p
+        fs.suid_dumpable = 1
+    第一行设置coredump文件的生成路径和格式,格式为core-文件名.pid
+    第二行将suid_dumpable参数设置为1,这样非root用户也能创建core dump文件
+3、保存退出,重新加载配置文件
+        sudo sysctl -p
+4、查看coredump生成路径
+        cat /proc/sys/kernel/core_pattern 
+
+二、启用coredump 
+
+方式一、在程序中添加启用coredump的代码
+
+    包含的头文件
+    #include <sys/prctl.h>
+    #include <sys/resource.h>
+
+    //启用dump
+    prctl(PR_SET_DUMPABLE, 1);
+
+    // 设置core dunp大小
+    struct rlimit rlimit_core;
+    rlimit_core.rlim_cur = RLIM_INFINITY; //设置大小为无限
+    rlimit_core.rlim_max = RLIM_INFINITY;
+    setrlimit(RLIMIT_CORE, &rlimit_core);
+
+方式二、在单个shell中修改corefile的限制
+
+1、查看core file size （默认为0，即不开启coredump）
+        ulimit -a 
+2、修改coredump文件的大小无限制(只对当前的shell有效)
+        ulimit -c unlimited
+    （只有大于零才会生成dump文件，且生成的dump文件要小于限制才能正常生成） 
+3、后续在该shell内启动的程序即可生成coredump文件
+    
+三、其他
+    （1）系统重启后 cat /proc/sys/kernel/core_pattern 发现路径和第二步设置的路径不同
+        再执行一遍 sudo sysctl -p 指令，即可生效
+        也可在修改开机自启动脚本rc.local文件
+            sudo vi /etc/rc.local
+        在文件中添加一行
+            sysctl -p
+        保存，后续开机会自动加载一次/etc/sysctl.conf文件的配置
+    （2）永久生效 ulimit （所有的崩溃都会生成doredump文件，不推荐在正式环境使用）
+            sudo vi /etc/security/limits.conf
+        添加两行
+            * soft core unlimited
+            * hard core unlimited
+        重启生效
+

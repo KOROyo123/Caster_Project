@@ -24,11 +24,10 @@ namespace NMEA
     {
         return nullptr;
     }
-    void Free_Decode(auto *decode_nmea)
-    {
+    // void Free_Decode(auto *decode_nmea)
+    // {
 
-
-       free(decode_nmea);
+    //    free(decode_nmea);
        
-    }
+    // }
 }

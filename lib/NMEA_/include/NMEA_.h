@@ -61,6 +61,6 @@ namespace NMEA
 
     RMC* Decode_RMC(char * message);
 
-    void Free_Decode(auto *decode_nmea);
+    //void Free_Decode(auto *decode_nmea);
 
 }

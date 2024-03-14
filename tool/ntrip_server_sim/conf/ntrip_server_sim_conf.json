@@ -1,0 +1,11 @@
+{
+    "Caster_IP": "127.0.0.1",
+    "Caster_Port": "8125",
+    "Random_UserID": 1,
+    "Ntrip_Version":2,
+    "Push_Mount_Head": "KORO",
+    "Auto_Add_NO":1,
+    "Push_Mount_Num": 10,
+    "Source_IP":"127.0.0.1",
+    "Source_Port":"10001"
+}

@@ -1,0 +1,5 @@
+add_subdirectory(ntrip_client_sim/)
+add_subdirectory(ntrip_server_sim/)
+add_subdirectory(tcpsvr_loger/)
+add_subdirectory(sqlite_insert/)
+add_subdirectory(redis_mq/)

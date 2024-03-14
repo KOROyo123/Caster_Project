@@ -1,0 +1,11 @@
+{
+    "Caster_IP": "10.0.4.4",
+    "Caster_Port": "4202",
+    "Connection_Mount": [
+        "KORO"
+    ],
+    "Eatch_Mount_Connect_Num": 5000,
+    "Auto_Add_NO":1,
+    "Random_UserID": 1,
+    "Ntrip_Version": 1
+}

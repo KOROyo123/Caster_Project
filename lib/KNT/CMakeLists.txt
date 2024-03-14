@@ -12,7 +12,12 @@ include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include)
 #包含的源文件和头文件
 set(SOURCES
     include/knt/base64.h
-    src/base64.cpp)
+    src/base64.cpp
+    include/knt/network.h
+    src/network.cpp
+    include/knt/knt.h
+    src/knt.cpp)
+    
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 

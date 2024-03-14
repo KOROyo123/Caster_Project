@@ -171,13 +171,13 @@ static char *base64_decode(const char *message)
 	return decoded;
 }
 
-std::string util_base64_encode(std::string message)
+std::string util_base64_encode(const char *message)
 {
-	char *c_encode = base64_encode(message.c_str());
+	char *c_encode = base64_encode(message);
 
 	if (c_encode == NULL)
 	{
-		return nullptr;
+		return std::string();
 	}
 
 	std::string encode = c_encode;
@@ -186,14 +186,14 @@ std::string util_base64_encode(std::string message)
 	return encode;
 }
 
-std::string util_base64_decode(std::string message)
+std::string util_base64_decode(const char *message)
 {
 
-	char *c_decode = base64_decode(message.c_str());
+	char *c_decode = base64_decode(message);
 
 	if (c_decode == NULL)
 	{
-		return nullptr;
+		return std::string();
 	}
 
 	std::string decode = c_decode;

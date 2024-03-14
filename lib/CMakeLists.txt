@@ -1,5 +1,4 @@
-add_subdirectory(SMTP_/)
+
 add_subdirectory(NMEA_/)
-add_subdirectory(HASH_/)
+
 add_subdirectory(KNT/)
-add_subdirectory(PS_libevent/)
