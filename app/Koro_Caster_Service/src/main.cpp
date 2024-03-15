@@ -87,14 +87,13 @@ int main(int argc, char **argv)
     if (logfile) // 输出到文件
     {
         spdlog::info("Write log to File...");
-        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(logpath, file_hour, file_min));
+        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logpath, file_hour, file_min));
     }
     if (logstd) // 输出到控制台
     {
         spdlog::info("Write log to Std...");
-        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(logpath, file_hour, file_min));
+        sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
     }
-    sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
     // 把所有sink放入logger
     auto logger = std::make_shared<spdlog::logger>("log", begin(sinks), end(sinks));
 

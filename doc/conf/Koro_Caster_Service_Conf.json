@@ -122,8 +122,8 @@
         "Info_Log":{
             "Switch":true,
             "Save_Path":"CasterRecord/Info_log.log",
-            "File_Hour":23,
-            "File_Min":59
+            "File_Swap_Hour":0,
+            "File_Swap_Min":0
 
         },
         "User_Log":{
