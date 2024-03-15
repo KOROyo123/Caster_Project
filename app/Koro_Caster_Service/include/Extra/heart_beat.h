@@ -20,7 +20,6 @@ struct heart_beat_setting
     bool onlineTime;
     bool runningtime;
     bool memory;
-    bool IP;
 };
 struct heart_beat_info
 {
@@ -31,7 +30,6 @@ struct heart_beat_info
     int onlineTime;
     int runningtime;
     int memory;
-    std::string IP;
 };
 
 enum heart_beat_method
@@ -102,7 +100,6 @@ private:
     int update_out_set(json conf);
 
     json build_beat_msg();
-    std::string getIP();
     double getGnsssecond();
     int getMemory();
 };

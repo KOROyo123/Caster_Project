@@ -13,8 +13,6 @@ include_directories(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/include)
 set(SOURCES
     include/knt/base64.h
     src/base64.cpp
-    include/knt/network.h
-    src/network.cpp
     include/knt/knt.h
     src/knt.cpp)
     

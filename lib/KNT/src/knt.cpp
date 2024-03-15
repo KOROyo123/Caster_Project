@@ -3,10 +3,17 @@
 #include <ctime>
 #include <iomanip>
 #include <chrono>
+
+#include <unistd.h>
+#ifdef WIN32
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#else
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#endif
 
 #include <random>
 
@@ -95,6 +102,31 @@ std::string util_cal_connect_key(const char *ServerIP, int serverPort, const cha
 
 std::string util_cal_connect_key(int fd)
 {
+    std::string ServerIP,ClientIP;
+    int ServerPort,ClientPort;
+
+    // // 获取本地端点信息
+    // sockaddr_in localAddress;
+    // int localAddressLength = sizeof(localAddress);
+    // getsockname(fd, reinterpret_cast<sockaddr*>(&localAddress), &localAddressLength);
+    // char localIP[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &localAddress.sin_addr, localIP, INET_ADDRSTRLEN);
+    // //std::cout << "Local IP: " << localIP << ", Port: " << ntohs(localAddress.sin_port) << std::endl;
+
+    // ServerIP=localIP;
+    // ServerPort=ntohs(localAddress.sin_port);
+
+    // // 获取远程端点信息
+    // sockaddr_in remoteAddress;
+    // int remoteAddressLength = sizeof(remoteAddress);
+    // getpeername(fd, reinterpret_cast<sockaddr*>(&remoteAddress), &remoteAddressLength);
+    // char remoteIP[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &remoteAddress.sin_addr, remoteIP, INET_ADDRSTRLEN);
+    // //std::cout << "Remote IP: " << remoteIP << ", Port: " << ntohs(remoteAddress.sin_port) << std::endl;
+
+    // ClientIP=remoteIP;
+    // ClientPort=ntohs(remoteAddress.sin_port);
+
     struct sockaddr_in sa1;
     socklen_t len1 = sizeof(sa1);
     if (getsockname(fd, (struct sockaddr *)&sa1, &len1))
@@ -108,17 +140,17 @@ std::string util_cal_connect_key(int fd)
     {
         return std::string();
     }
-    std::string Serverip = inet_ntoa(sa1.sin_addr);
-    int serverport = ntohs(sa1.sin_port);
-    std::string Clientip = inet_ntoa(sa2.sin_addr);
-    int clientport = ntohs(sa2.sin_port);
+    ServerIP = inet_ntoa(sa1.sin_addr);
+    ServerPort = ntohs(sa1.sin_port);
+    ClientIP = inet_ntoa(sa2.sin_addr);
+    ClientPort = ntohs(sa2.sin_port);
 
-    return util_cal_connect_key(Serverip.c_str(), serverport, Clientip.c_str(), clientport);
+
+    return util_cal_connect_key(ServerIP.c_str(), ServerPort, ClientIP.c_str(), ClientPort);
 }
 
 std::string util_port_to_key(int port)
 {
-
     std::string base = "0123456789ABCDEF"; // 定义16进制表示的基本符号集合
 
     char key[5] = "";
@@ -145,14 +177,12 @@ std::string util_get_user_ip(int fd)
 }
 int util_get_user_port(int fd)
 {
-
     struct sockaddr_in sa2;
     socklen_t len2 = sizeof(sa2);
     if (getpeername(fd, (struct sockaddr *)&sa2, &len2))
     {
         return 0;
     }
-
     std::string Clientip = inet_ntoa(sa2.sin_addr);
     int clientport = ntohs(sa2.sin_port);
 

@@ -147,7 +147,7 @@ int ntrip_caster::start()
 {
     // 添加定时事件
     _timeout_tv.tv_sec = 10;
-    _timeout_tv.tv_usec = 0;
+    _timeout_tv.tv_usec = 1;
     _timeout_ev = event_new(_base, -1, EV_PERSIST, TimeoutCallback, this);
     event_add(_timeout_ev, &_timeout_tv);
 

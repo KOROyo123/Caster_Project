@@ -3,11 +3,21 @@
 #include <unistd.h>
 
 #include <sys/types.h>
+
+#ifdef WIN32
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
+#else
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 #include <sys/resource.h>
+#endif
+
 
 #include "rtklib.h"
 
@@ -161,8 +171,6 @@ json redis_heart_beat::build_beat_msg()
         beat_msg["runningtime"] = _msg_info.runningtime;
     if (_msg_set.memory)
         beat_msg["memory"] = _msg_info.memory;
-    if (_msg_set.IP)
-        beat_msg["IP"] = _msg_info.IP;
 
     return beat_msg;
 }
@@ -205,7 +213,6 @@ int redis_heart_beat::refresh_beat_info()
     _msg_info.onlineTime = time(0) - _start_tm;
     _msg_info.runningtime = time(0) - _start_tm;
     _msg_info.memory = getMemory();
-    _msg_info.IP = getIP();
 
     return 0;
 }
@@ -219,36 +226,10 @@ int redis_heart_beat::update_out_set(json conf)
     _msg_set.onlineTime = conf["onlineTime"];
     _msg_set.runningtime = conf["runningtime"];
     _msg_set.memory = conf["memory"];
-    _msg_set.IP = conf["IP"];
 
     return 0;
 }
 
-std::string redis_heart_beat::getIP()
-{
-    std::string IP;
-
-    struct ifaddrs *ifaddr;
-    getifaddrs(&ifaddr); // 获取网络接口信息列表
-    for (struct ifaddrs *addr = ifaddr; addr != nullptr; addr = addr->ifa_next)
-    {
-        int family = addr->ifa_addr->sa_family;
-
-        if (family == AF_INET)
-        {
-            char ip[INET_ADDRSTRLEN];
-
-            inet_ntop(AF_INET, &((sockaddr_in *)addr->ifa_addr)->sin_addr, ip, INET_ADDRSTRLEN);
-            // std::cout << "Interface: " << addr->ifa_name << ", IP Address: " << ip << std::endl;
-
-            IP = ip;
-        }
-    }
-
-    freeifaddrs(ifaddr); // 释放内存资源
-
-    return IP;
-}
 
 double redis_heart_beat::getGnsssecond()
 {
@@ -258,8 +239,27 @@ double redis_heart_beat::getGnsssecond()
 
 int redis_heart_beat::getMemory()
 {
-    struct rusage usage;
+#ifdef WIN32
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    SIZE_T virtualMemUsedByMe;
+    SIZE_T physicalMemUsedByMe;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
+    {
+        virtualMemUsedByMe = pmc.PrivateUsage; // 当前进程使用的虚拟内存大小
+        physicalMemUsedByMe = pmc.WorkingSetSize; // 当前进程使用的物理内存大小
 
+        //std::cout << "Virtual Memory Used: " << virtualMemUsedByMe / (1024 * 1024) << " MB" << std::endl;
+        //std::cout << "Physical Memory Used: " << physicalMemUsedByMe / (1024 * 1024) << " MB" << std::endl;
+    } else
+    {
+        virtualMemUsedByMe = 0; // 当前进程使用的虚拟内存大小
+        physicalMemUsedByMe = 0; // 当前进程使用的物理内存大小
+        //std::cerr << "GetProcessMemoryInfo failed\n";
+    }
+    return virtualMemUsedByMe;
+
+#else
+    struct rusage usage;
     // 调用 getrusage() 函数获取当前进程的资源使用情况
     if (getrusage(RUSAGE_SELF, &usage) == -1)
     {
@@ -271,4 +271,5 @@ int redis_heart_beat::getMemory()
     // std::cout << "Memory used by the program in bytes: " << usage.ru_maxrss * 1024 << std::endl;
 
     return usage.ru_maxrss;
+#endif
 }

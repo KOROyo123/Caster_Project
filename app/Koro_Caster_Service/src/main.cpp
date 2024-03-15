@@ -1,9 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <coroutine>
+
+#ifdef WIN32
+
+#else
 #include <sys/prctl.h>
 #include <sys/resource.h>
-#include <coroutine>
+#endif
+
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>
@@ -24,6 +31,9 @@ using json = nlohmann::json;
 
 int main(int argc, char **argv)
 {
+#ifdef WIN32
+
+#else
     // 启用dump
     prctl(PR_SET_DUMPABLE, 1);
 
@@ -32,6 +42,7 @@ int main(int argc, char **argv)
     rlimit_core.rlim_cur = RLIM_INFINITY; // 设置大小为无限
     rlimit_core.rlim_max = RLIM_INFINITY;
     setrlimit(RLIMIT_CORE, &rlimit_core);
+#endif
 
     // 程序启动
     spdlog::info("{}/{} Start", PROJECT_SET_NAME, PROJECT_SET_VERSION);
@@ -74,12 +85,16 @@ int main(int argc, char **argv)
     bool logstd = true;
     bool logfile = cfg["Log_File_Setting"]["Info_Log"]["Switch"];
     std::string logpath = cfg["Log_File_Setting"]["Info_Log"]["Save_Path"];
-    int file_hour = cfg["Log_File_Setting"]["Info_Log"]["File_Hour"];
-    int file_min = cfg["Log_File_Setting"]["Info_Log"]["File_Min"];
+    int file_hour = cfg["Log_File_Setting"]["Info_Log"]["File_Swap_Hour"];
+    int file_min = cfg["Log_File_Setting"]["Info_Log"]["File_Swap_Min"];
 
     if (!Core_Dump) // 是否需要关闭 coredump
     {
+#ifdef WIN32
+
+#else
         prctl(PR_SET_DUMPABLE, 0);
+#endif
     }
 
     // 初始化日志系统
@@ -114,11 +129,24 @@ int main(int argc, char **argv)
     spdlog::info("Software: {}/{}", PROJECT_SET_NAME, PROJECT_SET_VERSION);
     spdlog::info("Version : {}-{}", PROJECT_GIT_VERSION, PROJECT_TAG_VERSION);
 
+#ifdef WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        spdlog::info("WSAStartup failed! exit.");;
+        return 1;
+    }
+#endif
+
+
     spdlog::info("Init Server...");
     ntrip_caster a(cfg); // 创建一个对象，传入config
 
     spdlog::info("Start Server...");
     a.start(); // 原神，启动！
+
+#ifdef WIN32
+    WSACleanup();
+#endif
 
     return 0;
 }

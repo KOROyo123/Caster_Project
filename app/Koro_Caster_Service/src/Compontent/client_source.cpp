@@ -13,6 +13,7 @@ client_source::client_source(json req, event_base *base, std::shared_ptr<process
     _sub_context = sub_context;
 
     _source_update_tv.tv_sec = req["Update_Interval"];
+    _source_update_tv.tv_usec = 0;
     // 源列表输出选项
     _send_common = req["Common_Mount"]["Visibility"];       // 普通挂载点
     _send_trd_relay = req["Trd_Relay_Mount"]["Visibility"]; // 用户连接的第三方挂载点

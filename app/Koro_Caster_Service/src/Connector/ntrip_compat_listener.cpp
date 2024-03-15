@@ -1,6 +1,11 @@
 #include "ntrip_compat_listener.h"
 
+#ifdef WIN32
+
+#else
 #include <arpa/inet.h>
+#endif
+
 
 #define __class__ "ntrip_compat_listener"
 

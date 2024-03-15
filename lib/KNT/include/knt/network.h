@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include <time.h>
 #include <sys/types.h>
-#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -16,11 +15,15 @@
 #include <math.h>
 #include <sys/timeb.h>
 #include <sys/time.h>
-#include <sys/sysinfo.h>
 #include <sys/types.h>
+#ifdef WIN32
+
+#else
+#include <arpa/inet.h>
+#include <sys/sysinfo.h>
 #include <sys/socket.h>
 #include <netdb.h>
- 
+#endif
 
 #include <string>
 

@@ -36,7 +36,7 @@ private:
     bool _NtripVersion2 = false;
     bool _transfer_with_chunked = false;
 
-    int _chuncked_size = 0;
+    size_t _chuncked_size = 0;
 
     evhttp_request *_hev;
     bufferevent *_bev;

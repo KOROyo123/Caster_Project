@@ -134,12 +134,25 @@ ENDIF()
 target_link_libraries(${PROJECT_NAME} rtklib)
 
 #openssl (找不到就安装一下 sudo apt install libssl-dev)
-find_package(OpenSSL REQUIRED)
-target_link_libraries(${PROJECT_NAME}  OpenSSL::Crypto OpenSSL::SSL)
-# 采用自编译的方式解决openeular版本找不到ssl库的问题
-# include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/include)
-# target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libcrypto.a)
-# target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libssl.a)
+# IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+# #windows版本(是否有效还需要验证）
+#     set(OPENSSL_ROOT_DIR "C:/ProgramFiles/OpenSSL-Win64")
+#     set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
+#     set(OPENSSL_LIBRARIES "${OPENSSL_ROOT_DIR}/lib/libssl_static.lib"
+#                           "${OPENSSL_ROOT_DIR}/lib/libcrypto_static.lib")
+#     include_directories(${OPENSSL_INCLUDE_DIR})
+#     target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES})
+# ENDIF()
+# IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+#     find_package(OpenSSL REQUIRED)
+#     target_link_libraries(${PROJECT_NAME}  OpenSSL::Crypto OpenSSL::SSL)
+#     # 采用自编译的方式解决openeular版本找不到ssl库的问题
+#     # include_directories(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/include)
+#     # target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libcrypto.a)
+#     # target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libssl.a)
+# ENDIF()
+
+
 
 #libevent 
 target_link_libraries(${PROJECT_NAME} event)

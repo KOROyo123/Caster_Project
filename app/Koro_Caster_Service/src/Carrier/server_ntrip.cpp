@@ -223,9 +223,9 @@ int server_ntrip::publish_data_from_chunck()
 
 int server_ntrip::publish_data_from_evbuf()
 {
-    int length = evbuffer_get_length(_evbuf);
+    size_t length = evbuffer_get_length(_evbuf);
 
-    char *data = new char[length + 1];
+    unsigned char *data = new unsigned char[length + 1];
     data[length] = '\0';
 
     evbuffer_remove(_evbuf, data, length);
