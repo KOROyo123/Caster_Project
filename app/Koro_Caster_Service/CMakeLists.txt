@@ -114,6 +114,8 @@ add_executable(${PROJECT_NAME}
 configure_file(${CMAKE_SOURCE_DIR}/version.h.in version.h @ONLY)
 target_include_directories(${PROJECT_NAME}  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
+#基于 工程目录下的破i之文件 生成 执行目录下的配置文件
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Koro_Caster_Service_Conf.json ${CMAKE_CURRENT_BINARY_DIR}/Koro_Caster_Service_Conf.json @ONLY)
 
 #Koro_NavTool
 target_link_libraries(${PROJECT_NAME} knt)
