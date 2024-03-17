@@ -107,6 +107,16 @@ void client_ntrip::ReadCallback(bufferevent *bev, void *arg)
 void client_ntrip::EventCallback(bufferevent *bev, short events, void *arg)
 {
     auto svr = static_cast<client_ntrip *>(arg);
+
+    spdlog::info("[{}:{}]: {}{}{}{}{}{} , user [{}], mount [{}], addr:[{}:{}]",
+                 __class__, __func__,
+                 (events & BEV_EVENT_READING) ? "read" : "-",
+                 (events & BEV_EVENT_WRITING) ? "write" : "-",
+                 (events & BEV_EVENT_EOF) ? "eof" : "-",
+                 (events & BEV_EVENT_ERROR) ? "error" : "-",
+                 (events & BEV_EVENT_TIMEOUT) ? "timeout" : "-",
+                 (events & BEV_EVENT_CONNECTED) ? "connected" : "-", svr->_user_name, svr->_mount_point, svr->_ip, svr->_port);
+
     svr->stop();
 }
 
@@ -118,6 +128,16 @@ void client_ntrip::Evhttp_Close_Callback(evhttp_connection *evcon, void *arg)
 
 int client_ntrip::data_transfer(evbuffer *evbuf)
 {
+
+    auto UnsendBufferSize = evbuffer_get_length(bufferevent_get_output(_bev));
+
+    if (UnsendBufferSize > 4096 * 20)
+    {
+        spdlog::info("Client Info: send to user [{}]'s date unsend size is too large :[{}], close the connect! using mount [{}], addr:[{}:{}]", _user_name, UnsendBufferSize, _mount_point, _ip, _port);
+        stop();
+        return -1;
+    }
+
     if (_transfer_with_chunked)
     {
         evbuffer_add_printf(_evbuf, "%x\r\n", (unsigned)evbuffer_get_length(evbuf));
