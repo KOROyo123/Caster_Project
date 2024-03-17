@@ -1,5 +1,5 @@
 # C++ objects and libs
 .vscode
 .cache
-.user
+*.user
 build
