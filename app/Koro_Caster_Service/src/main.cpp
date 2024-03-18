@@ -119,6 +119,7 @@ int main(int argc, char **argv)
     if (Debug_Info) // 设置输出日志的级别
     {
         spdlog::set_level(spdlog::level::debug);
+         spdlog::flush_on(spdlog::level::debug); 
     }
     if (Info_Record)
     {
