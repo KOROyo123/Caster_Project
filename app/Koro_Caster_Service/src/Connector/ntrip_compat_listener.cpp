@@ -42,7 +42,7 @@ int ntrip_compat_listener::start()
     sin.sin_addr.s_addr = inet_addr("0.0.0.0");
     sin.sin_port = htons(_listen_port);
 
-    _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_LEAVE_SOCKETS_BLOCKING | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+    _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_LEAVE_SOCKETS_BLOCKING| LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
     evconnlistener_set_error_cb(_listener, AcceptErrorCallback);
 
     if (!_listener)
@@ -124,20 +124,21 @@ void ntrip_compat_listener::AcceptErrorCallback(evconnlistener *listener, void *
 {
     spdlog::warn("[{}]: listener error!", __class__);
 
-    auto svr = static_cast<ntrip_compat_listener *>(arg);
+    auto svr=static_cast<ntrip_compat_listener *>(arg);
 
     struct event_base *base;
     base = evconnlistener_get_base(listener);
 
     //----------------等待验证功能，连接出错后重连-------------------------
     spdlog::info("[{}]:create new listener!", __class__);
-    evconnlistener_free(svr->_listener); // 释放旧连接
+    evconnlistener_free(svr->_listener);//释放旧连接
 
-    if (svr->start()) // 启动新连接
+    if(svr->start())//启动新连接
     {
-        // 重连失败，那就只好先退出了
+        //重连失败，那就只好先退出了
         event_base_loopexit(base, NULL); // TODO:有必要调用此函数么 进程退出么 最后一个参数的意义
     }
+
 }
 
 void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
@@ -367,8 +368,8 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     json item;
 
     size_t headerlen = 0;
-    char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
-    while (header != NULL)
+    char *header;
+    while (header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF))
     {
         std::string key_value = header;
         if (key_value.size() == 0)
