@@ -9,21 +9,7 @@ IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 add_definitions(-DWIN32)
 ENDIF()
 
-
-
-
-
 add_subdirectory(rely/)
 add_subdirectory(lib/)
 add_subdirectory(app/)
 add_subdirectory(dev/)
-
-
-
-
-
-
-
-
-
-
