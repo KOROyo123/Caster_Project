@@ -11,7 +11,7 @@
     },
     "Reids_Connect_Setting": {
         "Redis_IP": "127.0.0.1",
-        "Redis_Port": 6379,
+        "Redis_Port": 16379,
         "Redis_Requirepass": "snLW_1234"
     },
     "Data_Transfer_Setting":{
@@ -71,7 +71,7 @@
         "Switch":true,
         "Reids_Connect_Setting":{
             "Redis_IP": "127.0.0.1",
-            "Redis_Port": 6379,
+            "Redis_Port": 16379,
             "Redis_Requirepass": "snLW_1234"
         },
         "Heart_Beat_Interval":5,

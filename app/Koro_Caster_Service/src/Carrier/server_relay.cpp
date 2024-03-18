@@ -168,7 +168,7 @@ int server_relay::publish_data_from_evbuf()
 
     // redisFreeCommand
 
-    delete data;
+    delete[] data;
 
     return 0;
 }

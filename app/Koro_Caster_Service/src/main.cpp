@@ -150,7 +150,5 @@ int main(int argc, char **argv)
 #endif
 
     spdlog::info("Exit!");
-    sleep(2000);
-
     return 0;
 }
