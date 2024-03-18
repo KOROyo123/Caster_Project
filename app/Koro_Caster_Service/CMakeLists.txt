@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Koro_Caster_Service VERSION 0.0.6 LANGUAGES CXX)
+project(Koro_Caster_Service VERSION 0.1.0 LANGUAGES CXX)
 
 find_package(Git)
 
@@ -24,7 +24,7 @@ else()
 endif()
 
 
-set(EXE_NAME "${PROJECT_NAME}-${PROJECT_GIT_VERSION}-${PROJECT_TAG_VERSION}")
+set(EXE_NAME "${PROJECT_NAME}_v${PROJECT_VERSION}-${PROJECT_GIT_VERSION}-${PROJECT_TAG_VERSION}")
 
 message(STATUS "")
 message(STATUS "------- ${PROJECT_NAME} -------")
