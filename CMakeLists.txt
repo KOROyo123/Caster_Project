@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Koro_Caster)
+project(Caster_Project)
 
 IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
 add_definitions(-DLINUX)
