@@ -113,8 +113,8 @@ int main(int argc, char **argv)
     auto logger = std::make_shared<spdlog::logger>("log", begin(sinks), end(sinks));
 
     spdlog::set_default_logger(logger);
-    spdlog::flush_every(std::chrono::seconds(5)); // 设置日志刷新时间
-    spdlog::flush_on(spdlog::level::warn);        // 如果遇到警告以上的信息则立即刷新日志，避免丢失记录
+    //spdlog::flush_every(std::chrono::seconds(5)); // 设置日志刷新时间
+    spdlog::flush_on(spdlog::level::info);        // 立即刷新日志
 
     if (Debug_Info) // 设置输出日志的级别
     {
@@ -147,6 +147,9 @@ int main(int argc, char **argv)
 #ifdef WIN32
     WSACleanup();
 #endif
+
+    spdlog::info("Exit!");
+    sleep(2000);
 
     return 0;
 }

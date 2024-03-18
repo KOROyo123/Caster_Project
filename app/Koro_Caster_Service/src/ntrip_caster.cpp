@@ -894,5 +894,7 @@ void *ntrip_caster::event_base_thread(void *arg)
     spdlog::info("Server is runing...");
     event_base_dispatch(base);
 
+    spdlog::warn("Server is stop!");//不应当主动发生
+
     return nullptr;
 }

@@ -1,6 +1,6 @@
 {
-    "Caster_IP": "10.0.4.4",
-    "Caster_Port": "4202",
+    "Caster_IP": "101.43.168.239",
+    "Caster_Port": "8888",
     "Random_UserID": 1,
     "Ntrip_Version":1,
     "Push_Mount_Head": "KORO",

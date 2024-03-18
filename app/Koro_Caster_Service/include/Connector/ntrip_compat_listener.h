@@ -87,6 +87,7 @@ public:
 public:
     //新建连接相关
     static void AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg);
+    static void AcceptErrorCallback(struct evconnlistener * listener, void * ctx);
     static void Ntrip_Decode_Request_cb(bufferevent *bev, void *arg);
     static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 

@@ -6,7 +6,6 @@
 #include <arpa/inet.h>
 #endif
 
-
 #define __class__ "ntrip_compat_listener"
 
 ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map)
@@ -43,7 +42,8 @@ int ntrip_compat_listener::start()
     sin.sin_addr.s_addr = inet_addr("0.0.0.0");
     sin.sin_port = htons(_listen_port);
 
-    _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+    _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_LEAVE_SOCKETS_BLOCKING| LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
+    evconnlistener_set_error_cb(_listener, AcceptErrorCallback);
 
     if (!_listener)
     {
@@ -118,6 +118,27 @@ void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_sock
     auto ctx = new std::pair<ntrip_compat_listener *, std::string>(svr, Connect_Key);
     bufferevent_setcb(bev, Ntrip_Decode_Request_cb, NULL, Bev_EventCallback, ctx);
     bufferevent_enable(bev, EV_READ | EV_PERSIST);
+}
+
+void ntrip_compat_listener::AcceptErrorCallback(evconnlistener *listener, void *arg)
+{
+    spdlog::warn("[{}]: listener error!", __class__);
+
+    auto svr=static_cast<ntrip_compat_listener *>(arg);
+
+    struct event_base *base;
+    base = evconnlistener_get_base(listener);
+
+    //----------------等待验证功能，连接出错后重连-------------------------
+    spdlog::info("[{}]:create new listener!", __class__);
+    evconnlistener_free(svr->_listener);//释放旧连接
+
+    if(svr->start())//启动新连接
+    {
+        //重连失败，那就只好先退出了
+        event_base_loopexit(base, NULL); // TODO:有必要调用此函数么 进程退出么 最后一个参数的意义
+    }
+
 }
 
 void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
@@ -250,7 +271,6 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
 
-
     std::string pwd = secret;
     if (pwd != "")
     {
@@ -328,13 +348,13 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
         ntrip_gga           Ntrip-GGA
         http_chunked        Transfer-Encoding
         http_host           Host
-        
+
     */
     json info;
     info["mount_point"] = "none";
     info["mount_para"] = "none";
     info["mount_group"] = "common";
-    info["mount_info"]="none";
+    info["mount_info"] = "none";
     info["http_host"] = "none";
     info["http_chunked"] = "unchunked";
     info["user_agent"] = "unknown";
@@ -380,7 +400,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     {
         info["user_agent"] = item["User-Agent"];
     }
-    else if(item["Source-Agent"].is_string())
+    else if (item["Source-Agent"].is_string())
     {
         info["user_agent"] = item["Source-Agent"];
     }
