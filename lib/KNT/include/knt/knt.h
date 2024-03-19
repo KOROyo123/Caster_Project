@@ -17,3 +17,6 @@ std::string util_get_date_time();
 std::string util_get_space_time();
 
 std::string util_get_http_date();
+
+
+int util_get_use_memory();

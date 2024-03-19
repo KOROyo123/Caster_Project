@@ -35,6 +35,8 @@ client_ntrip::~client_ntrip()
     auto fd = bufferevent_getfd(_bev);
     bufferevent_free(_bev);
     evutil_closesocket(fd);
+
+    evbuffer_free(_evbuf);
 }
 
 int client_ntrip::start()
@@ -63,14 +65,6 @@ int client_ntrip::stop()
     return 0;
 }
 
-int client_ntrip::hev_send_reply()
-{
-    // for Ntrip 2.0
-
-    evhttp_send_reply_start(_hev, 200, "OK");
-
-    return 0;
-}
 
 int client_ntrip::bev_send_reply()
 {

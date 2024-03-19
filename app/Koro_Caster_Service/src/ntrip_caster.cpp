@@ -8,6 +8,8 @@
 #include <event2/event_struct.h>
 #include <event2/http.h>
 
+#include "malloc.h"
+
 #define __class__ "ntrip_caster"
 
 int ntrip_caster::init_state_info()
@@ -124,7 +126,12 @@ int ntrip_caster::extra_init()
 int ntrip_caster::periodic_task()
 {
     // 定时任务
-    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} ", _connect_map.size(), _server_map.size(), _client_map.size());
+    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} BYTE BEFORE.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
+
+    malloc_trim(0);//测试功能，将空闲内存返还
+
+    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} BYTE AFTER.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
+
 
     // 更新记录的状态信息
     update_state_info();
@@ -747,10 +754,14 @@ void ntrip_caster::Request_Process_Cb(evutil_socket_t fd, short what, void *arg)
 {
     ntrip_caster *svr = static_cast<ntrip_caster *>(arg);
 
-    while (svr->_queue->not_null())
+    if (svr->_queue->not_null())
     {
         json req = svr->_queue->poll();
         svr->request_process(req);
+    }
+    if (svr->_queue->not_null())
+    {
+        svr->_queue->active_prrocesser();
     }
 }
 
@@ -802,19 +813,19 @@ void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c
         svr->transfer_add_create_client(req);
     }
 
-        // 根据查询结果，在线，创建一个transfer，将client传入
+    // 根据查询结果，在线，创建一个transfer，将client传入
 
-        // 如果不在线，直接断开连接？
-        // if (reply->type == REDIS_REPLY_NIL)
-        // {
-        //     svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
-        // }
-        // else
-        // {
-        //     svr->transfer_add_create_client(req);
-        // }
+    // 如果不在线，直接断开连接？
+    // if (reply->type == REDIS_REPLY_NIL)
+    // {
+    //     svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
+    // }
+    // else
+    // {
+    //     svr->transfer_add_create_client(req);
+    // }
 
-        delete arg;
+    delete arg;
 }
 
 void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata)
@@ -894,7 +905,7 @@ void *ntrip_caster::event_base_thread(void *arg)
     spdlog::info("Server is runing...");
     event_base_dispatch(base);
 
-    spdlog::warn("Server is stop!");//不应当主动发生
+    spdlog::warn("Server is stop!"); // 不应当主动发生
 
     return nullptr;
 }

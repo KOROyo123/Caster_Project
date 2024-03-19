@@ -35,9 +35,7 @@ server_ntrip::server_ntrip(json conf, json req, bufferevent *bev, std::shared_pt
 
 server_ntrip::~server_ntrip()
 {
-
     bufferevent_free(_bev);
-
     evbuffer_free(_evbuf);
 }
 
@@ -80,6 +78,7 @@ int server_ntrip::start()
 int server_ntrip::stop()
 {
     event_del(_timeout_ev);
+    event_free(_timeout_ev);
 
     bufferevent_disable(_bev, EV_READ);
 

@@ -9,14 +9,18 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
+#include <iostream>
+#include <windows.h>
+#include <psapi.h>
 #else
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <ifaddrs.h>
+#include <sys/resource.h>
 #endif
 
 #include <random>
-
 
 std::string util_random_string(int string_len)
 {
@@ -102,8 +106,8 @@ std::string util_cal_connect_key(const char *ServerIP, int serverPort, const cha
 
 std::string util_cal_connect_key(int fd)
 {
-    std::string ServerIP,ClientIP;
-    int ServerPort,ClientPort;
+    std::string ServerIP, ClientIP;
+    int ServerPort, ClientPort;
 
     // // 获取本地端点信息
     // sockaddr_in localAddress;
@@ -144,7 +148,6 @@ std::string util_cal_connect_key(int fd)
     ServerPort = ntohs(sa1.sin_port);
     ClientIP = inet_ntoa(sa2.sin_addr);
     ClientPort = ntohs(sa2.sin_port);
-
 
     return util_cal_connect_key(ServerIP.c_str(), ServerPort, ClientIP.c_str(), ClientPort);
 }
@@ -207,12 +210,50 @@ std::string util_get_space_time()
 std::string util_get_http_date()
 {
     std::time_t now = std::time(nullptr);
-    std::tm* gmt = std::gmtime(&now);
- 
+    std::tm *gmt = std::gmtime(&now);
+
     std::ostringstream oss;
     oss << std::put_time(gmt, "%a, %d %b %Y %H:%M:%S GMT");
     return oss.str();
 
-
     return std::string();
+}
+
+int util_get_use_memory()
+{
+
+#ifdef WIN32
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    SIZE_T virtualMemUsedByMe;
+    SIZE_T physicalMemUsedByMe;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmc), sizeof(pmc)))
+    {
+        virtualMemUsedByMe = pmc.PrivateUsage;    // 当前进程使用的虚拟内存大小
+        physicalMemUsedByMe = pmc.WorkingSetSize; // 当前进程使用的物理内存大小
+
+        // std::cout << "Virtual Memory Used: " << virtualMemUsedByMe / (1024 * 1024) << " MB" << std::endl;
+        // std::cout << "Physical Memory Used: " << physicalMemUsedByMe / (1024 * 1024) << " MB" << std::endl;
+    }
+    else
+    {
+        virtualMemUsedByMe = 0;  // 当前进程使用的虚拟内存大小
+        physicalMemUsedByMe = 0; // 当前进程使用的物理内存大小
+        // std::cerr << "GetProcessMemoryInfo failed\n";
+    }
+    return virtualMemUsedByMe; // BYTE
+
+#else
+    struct rusage usage;
+    // 调用 getrusage() 函数获取当前进程的资源使用情况
+    if (getrusage(RUSAGE_SELF, &usage) == -1)
+    {
+        // std::cerr << "Failed to retrieve resource usage." << std::endl;
+        return 0;
+    }
+
+    // 输出程序占用的物理内存大小（单位为字节）
+    // std::cout << "Memory used by the program in bytes: " << usage.ru_maxrss * 1024 << std::endl;
+
+    return usage.ru_maxrss; // BYTE
+#endif
 }

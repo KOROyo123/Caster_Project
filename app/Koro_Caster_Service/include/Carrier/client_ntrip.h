@@ -33,7 +33,6 @@ private:
     bool _NtripVersion2 = false;
     bool _transfer_with_chunked = false;
 
-    evhttp_request *_hev;
     bufferevent *_bev;
     evbuffer *_evbuf;
     redisAsyncContext *_pub_context;
@@ -46,7 +45,6 @@ public:
     int start();
     int stop();
 
-    int hev_send_reply();
     int bev_send_reply();
 
     static void ReadCallback(struct bufferevent *bev, void *arg);
