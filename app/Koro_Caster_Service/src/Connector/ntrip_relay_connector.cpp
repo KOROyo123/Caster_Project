@@ -12,6 +12,18 @@ ntrip_relay_connector::ntrip_relay_connector(event_base *base, std::shared_ptr<p
 
 ntrip_relay_connector::~ntrip_relay_connector()
 {
+    _req_map.clear();
+
+}
+
+int ntrip_relay_connector::start()
+{
+    return 0;
+}
+
+int ntrip_relay_connector::stop()
+{
+    return 0;
 }
 
 std::string ntrip_relay_connector::create_new_connection(json con_info)

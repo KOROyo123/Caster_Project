@@ -50,8 +50,6 @@ public:
     static void ReadCallback(struct bufferevent *bev, void *arg);
     static void EventCallback(struct bufferevent *bev, short events, void *arg);
 
-    static void Evhttp_Close_Callback(evhttp_connection *evcon, void *arg);
-
     int data_transfer(evbuffer *evbuf);
 
     int publish_data_from_evbuf();

@@ -240,7 +240,7 @@ int util_get_use_memory()
         physicalMemUsedByMe = 0; // 当前进程使用的物理内存大小
         // std::cerr << "GetProcessMemoryInfo failed\n";
     }
-    return virtualMemUsedByMe; // BYTE
+    return virtualMemUsedByMe; // 
 
 #else
     struct rusage usage;
@@ -254,6 +254,6 @@ int util_get_use_memory()
     // 输出程序占用的物理内存大小（单位为字节）
     // std::cout << "Memory used by the program in bytes: " << usage.ru_maxrss * 1024 << std::endl;
 
-    return usage.ru_maxrss; // BYTE
+    return usage.ru_maxrss; // KB
 #endif
 }

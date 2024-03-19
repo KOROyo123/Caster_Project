@@ -70,8 +70,12 @@ private:
     //
 private:
     int auto_init();
-    int task_init();
+    int compontent_init();
     int extra_init();
+
+    int auto_stop();
+    int compontent_stop();
+    int extra_stop();
 
     // 定期任务
     int periodic_task();
@@ -81,16 +85,20 @@ private:
     int request_process(json req);
 
     // redis相关
-    int redis_conncet_to(json req);
-    int redis_reconnect_to(json req);
+    int create_redis_conncet(json req);
+    int destroy_redis_conncet(json req);
+    int reconnect_redis_connect(json req);
 
     // data_transfer 相关
     int create_data_transfer(json req);
-    int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
+    int destroy_data_transfer(json req);
 
     // ntrip common 相关
     int create_ntrip_listener(json req);
+    int destroy_ntrip_listener(json req);
     int create_client_source(json req);
+    int destroy_client_source(json req);
+
     int create_client_ntrip(json req); // 用Ntrip协议登录的用户(一个挂载点一个)
     int close_client_ntrip(json req);
     int create_server_ntrip(json req); // 基站主动接入产生的数据源
@@ -102,6 +110,7 @@ private:
     int close_realy_req_connection(json req);
     int create_server_relay(json req); // 主动连接其他caster的数据源
     int close_server_relay(json req);
+    int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
 
     // 施工中----------------------------------------------------------------------------------------------
     int tcpsvr_listen_to(json req);  // bufferevent   根据请求端口，构建类型  传入参数（对于server_tcpsvr

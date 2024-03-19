@@ -114,12 +114,6 @@ void client_ntrip::EventCallback(bufferevent *bev, short events, void *arg)
     svr->stop();
 }
 
-void client_ntrip::Evhttp_Close_Callback(evhttp_connection *evcon, void *arg)
-{
-    auto svr = static_cast<client_ntrip *>(arg);
-    svr->stop();
-}
-
 int client_ntrip::data_transfer(evbuffer *evbuf)
 {
 
@@ -153,6 +147,6 @@ int client_ntrip::publish_data_from_evbuf()
     data[length] = '\0';
     evbuffer_remove(_evbuf, data, length);
     redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH CSTR_%s %b", _connect_key.c_str(), data, length);
-    free(data);
+    delete[] data;
     return 0;
 }

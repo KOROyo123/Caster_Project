@@ -84,6 +84,7 @@ int redis_heart_beat::start()
 
 int redis_heart_beat::stop()
 {
+    event_del(_timeout_ev);
     return 0;
 }
 

@@ -8,7 +8,6 @@
 #include <event2/event_struct.h>
 #include <event2/http.h>
 
-
 #define __class__ "ntrip_caster"
 
 int ntrip_caster::init_state_info()
@@ -40,38 +39,53 @@ ntrip_caster::ntrip_caster(json cfg)
 
     spdlog::debug("load conf info:\n{}", dump_conf);
 
-    // 系统开关参数、变量的初始化
-    auto_init();
-    // 核心模块初始化（核心业务）
-    task_init();
-    // 附加模块初始化（不影响核心业务）
-    extra_init();
+    _base = event_base_new();
+
+    _SYS_Relay_Support = _server_config["Function_Switch"]["SYS_Relay_Support"];
+    _TRD_Relay_Support = _server_config["Function_Switch"]["TRD_Relay_Support"];
+    _HTTP_Ctrl_Support = _server_config["Function_Switch"]["HTTP_Ctrl_Support"];
 }
 
 ntrip_caster::~ntrip_caster()
 {
 }
 
-int ntrip_caster::task_init()
+int ntrip_caster::auto_init()
+{
+    // 初始化event_base
+
+    // 初始化请求处理事件
+    _process_event = event_new(_base, -1, EV_PERSIST, Request_Process_Cb, this);
+    _queue->add_processer(_process_event);
+
+    return 0;
+}
+
+int ntrip_caster::auto_stop()
+{
+    return 0;
+}
+
+int ntrip_caster::compontent_init()
 {
     // 根据配置文件，解析并创建初始化任务
 
     // 必要任务  注意启动的先后顺序-------------------------------------
     // 添加redis连接请求
     json redis_req = _server_config["Reids_Connect_Setting"];
-    _queue->push(redis_req, CONNECT_TO_REDIS_SERVER);
+    create_redis_conncet(redis_req);
 
     // 添加创建data_tansfer
     json transfer_req = _server_config["Data_Transfer_Setting"];
-    _queue->push(transfer_req, CREATE_DATA_TRANSFER);
+    create_data_transfer(transfer_req);
 
     // 创建client_source
     json source_req = _server_config["Source_Setting"];
-    _queue->push(source_req, CREATE_NTRIP_SOURCE);
+    create_client_source(source_req);
 
     // 添加listener请求
     json listener_req = _server_config["Ntrip_Listener_Setting"];
-    _queue->push(listener_req, CREATE_NEW_NTRIP_LISTENER);
+    create_ntrip_listener(listener_req);
 
     // 可选任务-------------------------------------
 
@@ -79,7 +93,7 @@ int ntrip_caster::task_init()
     {
         // 启动一个 connectorr
         json connector_req;
-        _queue->push(connector_req, CREATE_NEW_NTRIP_CONNECTOR);
+        create_relay_connector(connector_req);
     }
 
     if (_SYS_Relay_Support)
@@ -103,6 +117,25 @@ int ntrip_caster::task_init()
     return 0;
 }
 
+int ntrip_caster::compontent_stop()
+{
+    _compat_listener->stop();
+
+    _relay_connetcotr->stop();
+    delete _relay_connetcotr;
+
+    _transfer->stop();
+
+    _sourcelist->stop();
+
+    redisAsyncDisconnect(_sub_context);
+    redisAsyncFree(_sub_context);
+    redisAsyncDisconnect(_pub_context);
+    redisAsyncFree(_pub_context);
+
+    return 0;
+}
+
 int ntrip_caster::extra_init()
 {
     if (!_server_config["Redis_Heart_Beat"].is_null())
@@ -122,10 +155,22 @@ int ntrip_caster::extra_init()
     return 0;
 }
 
+int ntrip_caster::extra_stop()
+{
+
+    if (!_server_config["Redis_Heart_Beat"].is_null())
+    {
+        _redis_beat->stop();
+        delete _redis_beat;
+    }
+
+    return 0;
+}
+
 int ntrip_caster::periodic_task()
 {
     // 定时任务
-    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} BYTE.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
+    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} KB.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
 
     // 更新记录的状态信息
     update_state_info();
@@ -134,6 +179,16 @@ int ntrip_caster::periodic_task()
     if (_redis_beat)
     {
         _redis_beat->update_msg(_state_info);
+    }
+
+    static int i = 0;
+    if (i > 1)
+    {
+        stop();
+    }
+    else
+    {
+        i++;
     }
 
     // if(_info_smtp)
@@ -146,6 +201,14 @@ int ntrip_caster::periodic_task()
 
 int ntrip_caster::start()
 {
+
+    // 系统开关参数、变量的初始化
+    auto_init();
+    // 核心模块初始化（核心业务）
+    compontent_init();
+    // 附加模块初始化（不影响核心业务）
+    extra_init();
+
     // 添加定时事件
     _timeout_tv.tv_sec = 10;
     _timeout_tv.tv_usec = 1;
@@ -161,6 +224,17 @@ int ntrip_caster::start()
 int ntrip_caster::stop()
 {
     event_del(_timeout_ev);
+
+    extra_stop();
+
+    compontent_stop();
+
+    auto_stop();
+
+    // 关闭所有连接，关闭listener;
+
+    event_base_loopexit(_base, NULL);
+
     return 0;
 }
 
@@ -174,9 +248,8 @@ int ntrip_caster::set_setting(json config)
     return 0;
 }
 
-int ntrip_caster::redis_conncet_to(json req)
+int ntrip_caster::create_redis_conncet(json req)
 {
-
     _redis_IP = req["Redis_IP"];
     _redis_port = req["Redis_Port"];
     _redis_Requirepass = req["Redis_Requirepass"];
@@ -216,7 +289,12 @@ int ntrip_caster::redis_conncet_to(json req)
     return 0;
 }
 
-int ntrip_caster::redis_reconnect_to(json req)
+int ntrip_caster::destroy_redis_conncet(json req)
+{
+    return 0;
+}
+
+int ntrip_caster::reconnect_redis_connect(json req)
 {
     return 0;
 }
@@ -243,10 +321,20 @@ int ntrip_caster::create_ntrip_listener(json req)
     return 0;
 }
 
+int ntrip_caster::destroy_ntrip_listener(json req)
+{
+    return 0;
+}
+
 int ntrip_caster::create_client_source(json req)
 {
     _sourcelist = new client_source(req, _base, _queue, _sub_context, _pub_context);
     _sourcelist->start();
+    return 0;
+}
+
+int ntrip_caster::destroy_client_source(json req)
+{
     return 0;
 }
 
@@ -276,6 +364,11 @@ int ntrip_caster::create_data_transfer(json req)
     _transfer = new data_transfer(req, _queue, _sub_context, _pub_context);
     _transfer->start();
 
+    return 0;
+}
+
+int ntrip_caster::destroy_data_transfer(json req)
+{
     return 0;
 }
 
@@ -405,7 +498,8 @@ int ntrip_caster::close_server_relay(json req)
     }
     else
     {
-        obj->second->~server_relay();
+        delete obj->second;
+        //obj->second->~server_relay();
         _relays_map.erase(obj);
     }
 
@@ -477,7 +571,8 @@ int ntrip_caster::close_server_ntrip(json req)
     }
     else
     {
-        obj->second->~server_ntrip();
+        delete obj->second;
+        //obj->second->~server_ntrip();
         _server_map.erase(obj);
     }
 
@@ -517,7 +612,8 @@ int ntrip_caster::close_client_ntrip(json req)
     }
     else
     {
-        obj->second->~client_ntrip();
+        //obj->second->~client_ntrip();
+        delete obj->second;
         _client_map.erase(obj);
     }
 
@@ -609,23 +705,6 @@ int ntrip_caster::request_process(json req)
     case ENABLE_HTTP_SERVER:
         break;
     case DISABLE_HTTP_SERVER:
-        break;
-
-    // 核心组件操作请求----------------------------------
-    case CONNECT_TO_REDIS_SERVER:
-        redis_conncet_to(req);
-        break;
-    case CREATE_NEW_NTRIP_LISTENER:
-        create_ntrip_listener(req);
-        break;
-    case CREATE_NEW_NTRIP_CONNECTOR:
-        create_relay_connector(req);
-        break;
-    case CREATE_DATA_TRANSFER:
-        create_data_transfer(req);
-        break;
-    case CREATE_NTRIP_SOURCE:
-        create_client_source(req);
         break;
 
     // 一般ntrip请求-------------------------------------
@@ -861,23 +940,6 @@ void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, 
 
         svr->_queue->push_and_active(req, MOUNT_ALREADY_ONLINE_CLOSE_CONNCET);
     }
-}
-
-int ntrip_caster::auto_init()
-{
-
-    _SYS_Relay_Support = _server_config["Function_Switch"]["SYS_Relay_Support"];
-    _TRD_Relay_Support = _server_config["Function_Switch"]["TRD_Relay_Support"];
-    _HTTP_Ctrl_Support = _server_config["Function_Switch"]["HTTP_Ctrl_Support"];
-
-    // 初始化event_base
-    _base = event_base_new();
-    // 初始化请求处理事件
-    _process_event = event_new(_base, -1, EV_PERSIST, Request_Process_Cb, this);
-
-    _queue->add_processer(_process_event);
-
-    return 0;
 }
 
 int ntrip_caster::start_server_thread()

@@ -33,7 +33,7 @@ private:
     redisAsyncContext *_sub_context;
 
     std::unordered_map<std::string, std::unordered_map<std::string, client_ntrip *>> _sub_map; // mount /connect_key/client_ntrip
-    std::unordered_map<std::string, client_ntrip *> _sub_client;
+
     std::shared_ptr<process_queue> _queue;
 
 public:

@@ -29,15 +29,19 @@ int data_transfer::start()
 
 int data_transfer::stop()
 {
-
     // redisAsyncCommand(_pub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", _transfer_mount.c_str());
 
     // redisAsyncDisconnect(_sub_context);
     // redisAsyncFree(_sub_context);
 
-    for (auto iter : _sub_client)
+    for (auto iter : _sub_map)
     {
-        iter.second->stop();
+        std::string mountpoint = iter.first;
+        redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", mountpoint.c_str());
+        for (auto item : iter.second)
+        {
+            item.second->stop();
+        }
     }
 
     // json req;

@@ -58,6 +58,8 @@ int ntrip_compat_listener::start()
 
 int ntrip_compat_listener::stop()
 {
+    evconnlistener_free(_listener);
+
     spdlog::info("ntrip listener: stop bind port %d , stop listener.", _listen_port);
     return 0;
 }

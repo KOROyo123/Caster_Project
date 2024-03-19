@@ -231,7 +231,7 @@ int server_ntrip::publish_data_from_evbuf()
 
     redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
 
-    free(data);
+    delete[] data;
 
     return 0;
 }

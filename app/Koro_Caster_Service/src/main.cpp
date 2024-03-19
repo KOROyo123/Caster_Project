@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     bool Debug_Info = cfg["Debug_Mode"]["Debug_Info"];
     bool Info_Record = cfg["Debug_Mode"]["Info_Record"];
 
-    bool logstd = true;
+    bool logstd = false;
     bool logfile = cfg["Log_File_Setting"]["Info_Log"]["Switch"];
     std::string logpath = cfg["Log_File_Setting"]["Info_Log"]["Save_Path"];
     int file_hour = cfg["Log_File_Setting"]["Info_Log"]["File_Swap_Hour"];

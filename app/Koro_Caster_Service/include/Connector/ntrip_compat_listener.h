@@ -51,14 +51,12 @@ private:
     std::string _server_IP;   // 运行该程序的主机IP  和实际连接无关
     int _listen_port;
     int _connect_timeout = 0;
-    // bool _Server_Login_With_Password = false;
-    // bool _Client_Login_With_Password = false;
+
     bool _Nearest_Support = false;
     bool _Virtal_Support = false;
 
     event_base *_base;
     evconnlistener *_listener;
-    //redisAsyncContext *_pub_context;
 
     std::shared_ptr<process_queue> _queue;
     std::unordered_map<std::string, bufferevent *> *_connect_map;

@@ -5,7 +5,7 @@
     "Ntrip_Version":1,
     "Push_Mount_Head": "KORO",
     "Random_Mount": 1,
-    "Push_Mount_Num": 5000,
+    "Push_Mount_Num": 1000,
     "Source_IP":"127.0.0.1",
     "Source_Port":"10005"
 }
