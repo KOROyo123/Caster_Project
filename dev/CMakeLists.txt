@@ -1,2 +1,2 @@
 # add_subdirectory(demo/)
-# add_subdirectory(tools/)
+add_subdirectory(tools/)

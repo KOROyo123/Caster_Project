@@ -3,6 +3,8 @@
 #include "event2/buffer.h"
 #include "event2/bufferevent.h"
 
+#define __class__ "client_source"
+
 client_source::client_source(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
 {
     _setting = req;

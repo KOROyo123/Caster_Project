@@ -216,14 +216,15 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     }
 
     // 删除定时器
-    bufferevent_set_timeouts(bev,NULL,NULL);
+    bufferevent_set_timeouts(bev, NULL, NULL);
     auto timer = svr->_timer_map.find(key);
     delete timer->second;
     svr->_timer_map.erase(key);
 
     // 清理
     bufferevent_disable(bev, EV_READ); // 暂停/停止接收数据
-    delete arg;
+    delete arg;                        // 这个时候把arg删除了，后续再触发新的错误连接的时候，会导致event无法正常的被触发
+    bufferevent_setcb(bev, NULL, NULL, NULL, NULL);//暂时不给这个连接绑定回调?
     free(header);
 }
 

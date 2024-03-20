@@ -4,7 +4,7 @@
     "Connection_Mount": [
         "KORO"
     ],
-    "Eatch_Mount_Connect_Num": 1000,
+    "Eatch_Mount_Connect_Num": 5000,
     "Auto_Add_NO":1,
     "Random_UserID": 1,
     "Ntrip_Version": 1

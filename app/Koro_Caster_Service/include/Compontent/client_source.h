@@ -105,9 +105,8 @@ private:
     std::string _ntrip1_source_table;
     std::string _ntrip2_source_table;
 
-
     std::list<json> _delay_close_list[2];
-    std::list<json>* _using_delay_close_list;
+    std::list<json> *_using_delay_close_list;
 
 public:
     client_source(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
@@ -124,6 +123,8 @@ public:
 private:
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
     static void DelayCloseCallback(evutil_socket_t fd, short events, void *arg);
+
+    static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
     static void Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata);
     static void Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata);
