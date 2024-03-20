@@ -24,7 +24,7 @@ else()
 endif()
 
 
-set(EXE_NAME "${PROJECT_NAME}-${PROJECT_TAG_VERSION}")
+set(EXE_NAME "${PROJECT_NAME}-${PROJECT_GIT_VERSION}-${PROJECT_TAG_VERSION}")
 
 message(STATUS "")
 message(STATUS "------- ${PROJECT_NAME} -------")
