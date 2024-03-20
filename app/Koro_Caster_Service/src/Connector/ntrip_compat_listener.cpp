@@ -216,6 +216,7 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     }
 
     // 删除定时器
+    bufferevent_set_timeouts(bev,NULL,NULL);
     auto timer = svr->_timer_map.find(key);
     delete timer->second;
     svr->_timer_map.erase(key);
