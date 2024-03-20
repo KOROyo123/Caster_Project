@@ -92,12 +92,12 @@ std::string ntrip_relay_connector::create_new_connection(json con_info)
     return intel_mount;
 }
 
-void ntrip_relay_connector::EventCallback(bufferevent *bev, short events, void *arg)
+void ntrip_relay_connector::EventCallback(bufferevent *bev, short events, void *ctx)
 {
-    auto ctx = static_cast<std::pair<ntrip_relay_connector *, std::string> *>(arg);
+    auto arg = static_cast<std::pair<ntrip_relay_connector *, std::string> *>(ctx);
 
-    ntrip_relay_connector *svr = ctx->first;
-    std::string key = ctx->second;
+    ntrip_relay_connector *svr = arg->first;
+    std::string key = arg->second;
     // 如果是连接建立成功，发送验证消息
     // 连接建立成功
     if (events == BEV_EVENT_CONNECTED)
@@ -117,16 +117,17 @@ void ntrip_relay_connector::EventCallback(bufferevent *bev, short events, void *
 
     bufferevent_free(bev);
 
+    delete arg;
     svr->request_give_back_account(key);
 
     //  如果是连接建立失败，关闭连接，移除
 }
 
-void ntrip_relay_connector::ReadCallback(bufferevent *bev, void *arg)
+void ntrip_relay_connector::ReadCallback(bufferevent *bev, void *ctx)
 {
-    auto ctx = static_cast<std::pair<ntrip_relay_connector *, std::string> *>(arg);
-    ntrip_relay_connector *svr = ctx->first;
-    std::string key = ctx->second;
+    auto arg = static_cast<std::pair<ntrip_relay_connector *, std::string> *>(ctx);
+    ntrip_relay_connector *svr = arg->first;
+    std::string key = arg->second;
 
     if (svr->verify_login_response(bev, key))
     {
@@ -135,6 +136,8 @@ void ntrip_relay_connector::ReadCallback(bufferevent *bev, void *arg)
     }
 
     svr->request_new_relay_server(key);
+    bufferevent_disable(bev,EV_READ);
+    delete arg;
 }
 
 int ntrip_relay_connector::send_login_request(bufferevent *bev, std::string Conncet_Key)

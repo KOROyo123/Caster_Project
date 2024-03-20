@@ -126,11 +126,11 @@ int server_relay::publish_data_from_chunck()
 
     // 判断长剩余长度是否满足chunck长度（即块数据都已接收到）
 
-    int length = evbuffer_get_length(_evbuf);
+    size_t length = evbuffer_get_length(_evbuf);
 
     if (_chuncked_size + 2 <= length) // 还有回车换行
     {
-        char *data = new char[_chuncked_size + 3];
+        unsigned char *data = new unsigned char[_chuncked_size + 3];
         data[_chuncked_size + 2] = '\0';
 
         evbuffer_remove(_evbuf, data, _chuncked_size);
@@ -138,7 +138,7 @@ int server_relay::publish_data_from_chunck()
         redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
 
         _chuncked_size = 0;
-        free(data);
+        delete[] data;
     }
     else
     {

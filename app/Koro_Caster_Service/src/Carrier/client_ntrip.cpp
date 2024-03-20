@@ -41,7 +41,6 @@ client_ntrip::~client_ntrip()
 
 int client_ntrip::start()
 {
-
     bufferevent_setcb(_bev, ReadCallback, NULL, EventCallback, this);
     bufferevent_enable(_bev, EV_READ | EV_WRITE);
 
@@ -64,7 +63,6 @@ int client_ntrip::stop()
     spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
     return 0;
 }
-
 
 int client_ntrip::bev_send_reply()
 {

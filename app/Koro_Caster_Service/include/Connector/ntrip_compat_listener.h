@@ -60,6 +60,7 @@ private:
 
     std::shared_ptr<process_queue> _queue;
     std::unordered_map<std::string, bufferevent *> *_connect_map;
+    std::unordered_map<std::string, timeval *> _timer_map;
 
     std::set<std::string> _support_virtual_mount;
 
@@ -72,30 +73,30 @@ public:
     int start();
     int stop();
 
-    //最近挂载点模式相关
+    // 最近挂载点模式相关
     int enable_Nearest_Support();
     int disable_Nearest_Support();
 
-    //虚拟挂载点相关
+    // 虚拟挂载点相关
     int enable_Virtal_Support();
     int disable_Virtal_Support();
     int add_Virtal_Mount(std::string mount_point);
     int del_Virtal_Mount(std::string mount_point);
 
 public:
-    //新建连接相关
+    // 新建连接相关
     static void AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg);
-    static void AcceptErrorCallback(struct evconnlistener * listener, void * ctx);
+    static void AcceptErrorCallback(struct evconnlistener *listener, void *ctx);
     static void Ntrip_Decode_Request_cb(bufferevent *bev, void *arg);
     static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
-    //解析请求相关
+    // 解析请求相关
     int Process_GET_Request(bufferevent *bev, const char *path);
     int Process_POST_Request(bufferevent *bev, const char *path);
     int Process_SOURCE_Request(bufferevent *bev, const char *path, const char *secret);
     int Process_Unknow_Request(bufferevent *bev);
 
-    //处理请求相关
+    // 处理请求相关
     void Ntrip_Source_Request_cb(bufferevent *bev, json req); // 获取源列表       GET /
     void Ntrip_Client_Request_cb(bufferevent *bev, json req); // 对已有挂载点的访问回调  GET /XXXX
     void Ntrip_Virtal_Request_cb(bufferevent *bev, json req);
@@ -103,7 +104,7 @@ public:
     void Ntrip_Server_Request_cb(bufferevent *bev, json req);
 
 private:
-    //内部函数
+    // 内部函数
     std::string get_conncet_key(bufferevent *bev);
     json decode_bufferevent_req(bufferevent *bev);
     std::string extract_path(std::string path);

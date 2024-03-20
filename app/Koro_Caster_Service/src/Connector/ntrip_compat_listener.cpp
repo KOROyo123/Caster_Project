@@ -117,9 +117,16 @@ void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_sock
 
     std::string Connect_Key = util_cal_connect_key(fd);
     svr->_connect_map->insert(std::make_pair(Connect_Key, bev));
+
+    auto timer = new timeval;
+    timer->tv_sec = 30;
+    timer->tv_usec = 0;
+    svr->_timer_map.insert(std::make_pair(Connect_Key, timer));
+
     auto ctx = new std::pair<ntrip_compat_listener *, std::string>(svr, Connect_Key);
     bufferevent_setcb(bev, Ntrip_Decode_Request_cb, NULL, Bev_EventCallback, ctx);
-    bufferevent_enable(bev, EV_READ | EV_PERSIST);
+    bufferevent_set_timeouts(bev, timer, NULL);
+    bufferevent_enable(bev, EV_READ);
 }
 
 void ntrip_compat_listener::AcceptErrorCallback(evconnlistener *listener, void *arg)
@@ -151,61 +158,71 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     auto svr = arg->first;
     auto key = arg->second;
 
+    int fd = bufferevent_getfd(bev);
+    std::string ip = util_get_user_ip(fd);
+    int port = util_get_user_port(fd);
+
     evbuffer *evbuf = bufferevent_get_input(bev);
 
     size_t header_len = 0;
     char *header = evbuffer_readln(evbuf, &header_len, EVBUFFER_EOL_CRLF);
 
-    if (header == NULL | header_len > 255)
+    try
     {
-        spdlog::warn("[{}:{}]: error respone", __class__, __func__);
-        svr->Process_Unknow_Request(bev);
-        free(header);
-        return;
-    }
-
-    int fd = bufferevent_getfd(bev);
-    std::string ip = util_get_user_ip(fd);
-    int port = util_get_user_port(fd);
-
-    spdlog::info("[{}]: receive request header: [{}], from: [ip: {} port: {}]", __class__, header, ip, port);
-
-    char ele[4][256] = {'\0'};
-    sscanf(header, "%[^ |\n] %[^ |\n] %[^ |\n] %[^ |\n]", ele[0], ele[1], ele[2], ele[3]);
-
-    // 判断是否是Server还是Client
-    if (strcmp(ele[0], "GET") == 0)
-    {
-        svr->Process_GET_Request(bev, ele[1]);
-    }
-    else if (strcmp(ele[0], "POST") == 0)
-    {
-        svr->Process_POST_Request(bev, ele[1]);
-    }
-    else if (strcmp(ele[0], "SOURCE") == 0)
-    {
-        if (strcmp(ele[2], "HTTP/1.1") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
+        if (header == NULL | header_len > 255)
         {
-            svr->Process_SOURCE_Request(bev, ele[1], "");
+            spdlog::warn("[{}:{}]: error respone, from: [ip: {} port: {}]", __class__, __func__, ip, port);
+            svr->Process_Unknow_Request(bev);
+            throw 1;
         }
-        else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
+        spdlog::info("[{}]: receive request header: [{}], from: [ip: {} port: {}]", __class__, header, ip, port);
+
+        char ele[4][256] = {'\0'};
+        sscanf(header, "%[^ |\n] %[^ |\n] %[^ |\n] %[^ |\n]", ele[0], ele[1], ele[2], ele[3]);
+
+        // 判断是否是Server还是Client
+        if (strcmp(ele[0], "GET") == 0)
         {
-            svr->Process_SOURCE_Request(bev, ele[1], "");
+            svr->Process_GET_Request(bev, ele[1]);
         }
-        else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
+        else if (strcmp(ele[0], "POST") == 0)
         {
-            svr->Process_SOURCE_Request(bev, ele[2], ele[1]);
+            svr->Process_POST_Request(bev, ele[1]);
+        }
+        else if (strcmp(ele[0], "SOURCE") == 0)
+        {
+            if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
+            {
+                svr->Process_SOURCE_Request(bev, ele[1], "");
+            }
+            else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
+            {
+                svr->Process_SOURCE_Request(bev, ele[1], "");
+            }
+            else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
+            {
+                svr->Process_SOURCE_Request(bev, ele[2], ele[1]);
+            }
+        }
+        else
+        {
+            // 不支持的方法
+            spdlog::info("[{}:{}]: receive unsuppose request", __class__, __func__);
+            svr->Process_Unknow_Request(bev);
         }
     }
-    else
+    catch (int i)
     {
-        // 不支持的方法
-        spdlog::info("[{}:{}]: receive unsuppose request", __class__, __func__);
-        svr->Process_Unknow_Request(bev);
     }
 
-    bufferevent_disable(bev, EV_READ); // 停止接收数据，等待后续再启用？
+    // 删除定时器
+    auto timer = svr->_timer_map.find(key);
+    delete timer->second;
+    svr->_timer_map.erase(key);
 
+    // 清理
+    bufferevent_disable(bev, EV_READ); // 暂停/停止接收数据
+    delete arg;
     free(header);
 }
 
@@ -229,8 +246,16 @@ void ntrip_compat_listener::Bev_EventCallback(bufferevent *bev, short events, vo
                  (events & BEV_EVENT_TIMEOUT) ? "timeout" : "-",
                  (events & BEV_EVENT_CONNECTED) ? "connected" : "-");
 
-    svr->_connect_map->erase(key);
+    // 删除连接bev
     bufferevent_free(bev);
+    svr->_connect_map->erase(key);
+
+    // 删除定时器
+    auto timer = svr->_timer_map.find(key);
+    delete timer->second;
+    svr->_timer_map.erase(key);
+
+    delete arg; // 发生事件之后，参数已经没有用，但是是new出来的pair，需要释放
 }
 
 int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, const char *url)

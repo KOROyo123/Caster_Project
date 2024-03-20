@@ -8,6 +8,10 @@
 #include <event2/event_struct.h>
 #include <event2/http.h>
 
+#include <malloc.h> //试图解决linux下（glibc）内存不自动释放问题
+//https://blog.csdn.net/kenanxiuji/article/details/48547285
+//https://blog.csdn.net/u013259321/article/details/112031002
+
 #define __class__ "ntrip_caster"
 
 int ntrip_caster::init_state_info()
@@ -172,6 +176,8 @@ int ntrip_caster::periodic_task()
     // 定时任务
     spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} KB.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
 
+    malloc_trim(0); //尝试归还、释放内存
+
     // 更新记录的状态信息
     update_state_info();
 
@@ -181,15 +187,15 @@ int ntrip_caster::periodic_task()
         _redis_beat->update_msg(_state_info);
     }
 
-    static int i = 0;
-    if (i > 1)
-    {
-        stop();
-    }
-    else
-    {
-        i++;
-    }
+    // static int i = 0;
+    // if (i > 1)
+    // {
+    //     stop();
+    // }
+    // else
+    // {
+    //     i++;
+    // }
 
     // if(_info_smtp)
     //  {
@@ -349,16 +355,6 @@ int ntrip_caster::create_relay_connector(json req)
     return 0;
 }
 
-int ntrip_caster::tcpsvr_listen_to(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::tcpsvr_connect_to(json req)
-{
-    return 0;
-}
-
 int ntrip_caster::create_data_transfer(json req)
 {
     _transfer = new data_transfer(req, _queue, _sub_context, _pub_context);
@@ -499,7 +495,7 @@ int ntrip_caster::close_server_relay(json req)
     else
     {
         delete obj->second;
-        //obj->second->~server_relay();
+        // obj->second->~server_relay();
         _relays_map.erase(obj);
     }
 
@@ -535,22 +531,6 @@ int ntrip_caster::close_realy_req_connection(json req)
     return 0;
 }
 
-int ntrip_caster::create_client_tcpcli(json req)
-{
-
-    return 0;
-}
-
-int ntrip_caster::create_server_tcpcli(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::create_server_tcpsvr(json req)
-{
-    return 0;
-}
-
 int ntrip_caster::close_server_ntrip(json req)
 {
     json origin_req = req["origin_req"];
@@ -572,7 +552,6 @@ int ntrip_caster::close_server_ntrip(json req)
     else
     {
         delete obj->second;
-        //obj->second->~server_ntrip();
         _server_map.erase(obj);
     }
 
@@ -612,7 +591,7 @@ int ntrip_caster::close_client_ntrip(json req)
     }
     else
     {
-        //obj->second->~client_ntrip();
+        // obj->second->~client_ntrip();
         delete obj->second;
         _client_map.erase(obj);
     }
@@ -802,24 +781,20 @@ int ntrip_caster::close_unsuccess_req_connect(json req)
 int ntrip_caster::add_relay_mount_to_listener(json req)
 {
     auto mpt = _relay_accounts.get_usr_mpt();
-
     for (auto iter : mpt)
     {
         _compat_listener->add_Virtal_Mount(iter);
     }
-
     return 0;
 }
 
 int ntrip_caster::add_relay_mount_to_sourcelist(json req)
 {
     auto mpt = _relay_accounts.get_usr_mpt();
-
     for (auto iter : mpt)
     {
         _sourcelist->add_Virtal_Mount(iter);
     }
-
     return 0;
 }
 
@@ -886,18 +861,6 @@ void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c
         svr->transfer_add_create_client(req);
     }
 
-    // 根据查询结果，在线，创建一个transfer，将client传入
-
-    // 如果不在线，直接断开连接？
-    // if (reply->type == REDIS_REPLY_NIL)
-    // {
-    //     svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
-    // }
-    // else
-    // {
-    //     svr->transfer_add_create_client(req);
-    // }
-
     delete arg;
 }
 
@@ -940,6 +903,8 @@ void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, 
 
         svr->_queue->push_and_active(req, MOUNT_ALREADY_ONLINE_CLOSE_CONNCET);
     }
+
+    delete arg;
 }
 
 int ntrip_caster::start_server_thread()
