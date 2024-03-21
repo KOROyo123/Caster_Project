@@ -59,7 +59,6 @@ int client_source::stop()
 int client_source::send_source_list_to_client(json req, void *connect_obj)
 {
     // 解析req
-
     bufferevent *bev = static_cast<bufferevent *>(connect_obj);
 
     // 根据是1.0还是2.0协议，发送不同的头

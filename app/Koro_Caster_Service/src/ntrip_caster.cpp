@@ -9,8 +9,8 @@
 #include <event2/http.h>
 
 #include <malloc.h> //试图解决linux下（glibc）内存不自动释放问题
-//https://blog.csdn.net/kenanxiuji/article/details/48547285
-//https://blog.csdn.net/u013259321/article/details/112031002
+// https://blog.csdn.net/kenanxiuji/article/details/48547285
+// https://blog.csdn.net/u013259321/article/details/112031002
 
 #define __class__ "ntrip_caster"
 
@@ -176,7 +176,7 @@ int ntrip_caster::periodic_task()
     // 定时任务
     spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} KB.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
 
-    malloc_trim(0); //尝试归还、释放内存
+    malloc_trim(0); // 尝试归还、释放内存
 
     // 更新记录的状态信息
     update_state_info();
@@ -381,8 +381,13 @@ int ntrip_caster::create_client_ntrip(json req)
 int ntrip_caster::send_souce_list(json req)
 {
     // 将该请求，加入到source对象中去，由source来处理对应请求
-
-    auto con = _connect_map.find(req["connect_key"]);
+    std::string connect_key = req["connect_key"];
+    auto con = _connect_map.find(connect_key);
+    if (con == _connect_map.end())
+    {
+        spdlog::warn("[{}:{}]: fand connect fail, con not in connect_map", __class__, __func__);
+        return 1;
+    }
 
     _sourcelist->send_source_list_to_client(req, con->second);
 
