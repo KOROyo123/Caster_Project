@@ -128,9 +128,9 @@ int ntrip_caster::compontent_stop()
     _relay_connetcotr->stop();
     delete _relay_connetcotr;
 
-    _transfer->stop();
+    _data_transfer->stop();
 
-    _sourcelist->stop();
+    _source_transfer->stop();
 
     redisAsyncDisconnect(_sub_context);
     redisAsyncFree(_sub_context);
@@ -334,8 +334,8 @@ int ntrip_caster::destroy_ntrip_listener(json req)
 
 int ntrip_caster::create_client_source(json req)
 {
-    _sourcelist = new client_source(req, _base, _queue, _sub_context, _pub_context);
-    _sourcelist->start();
+    _source_transfer = new source_transfer(req, _base, _queue, _sub_context, _pub_context);
+    _source_transfer->start();
     return 0;
 }
 
@@ -357,8 +357,8 @@ int ntrip_caster::create_relay_connector(json req)
 
 int ntrip_caster::create_data_transfer(json req)
 {
-    _transfer = new data_transfer(req, _queue, _sub_context, _pub_context);
-    _transfer->start();
+    _data_transfer = new data_transfer(req, _queue, _sub_context, _pub_context);
+    _data_transfer->start();
 
     return 0;
 }
@@ -389,7 +389,7 @@ int ntrip_caster::send_souce_list(json req)
         return 1;
     }
 
-    _sourcelist->send_source_list_to_client(req, con->second);
+    _source_transfer->send_source_list_to_client(req, con->second);
 
     //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
 
@@ -588,7 +588,7 @@ int ntrip_caster::close_client_ntrip(json req)
         _connect_map.erase(con);
     }
 
-    _transfer->del_sub_client(mount_point, connect_key);
+    _data_transfer->del_sub_client(mount_point, connect_key);
 
     auto obj = _client_map.find(connect_key);
     if (obj == _client_map.end())
@@ -760,9 +760,9 @@ int ntrip_caster::request_process(json req)
 
 int ntrip_caster::transfer_add_create_client(json req)
 {
-    if (!_transfer->mount_point_exist(req["mount_point"]))
+    if (!_data_transfer->mount_point_exist(req["mount_point"]))
     {
-        _transfer->add_pub_server(req["mount_point"]);
+        _data_transfer->add_pub_server(req["mount_point"]);
     }
 
     // 创建一个client，加入到表中
@@ -770,7 +770,7 @@ int ntrip_caster::transfer_add_create_client(json req)
     _client_map.insert(std::make_pair(req["connect_key"], cli));
 
     // 将client加入到transfer中
-    _transfer->add_sub_client(req["mount_point"], req["connect_key"], cli);
+    _data_transfer->add_sub_client(req["mount_point"], req["connect_key"], cli);
 
     // 一切准备就绪，启动client（向用户回应）
     cli->start();
@@ -798,7 +798,7 @@ int ntrip_caster::add_relay_mount_to_sourcelist(json req)
     auto mpt = _relay_accounts.get_usr_mpt();
     for (auto iter : mpt)
     {
-        _sourcelist->add_Virtal_Mount(iter);
+        _source_transfer->add_Virtal_Mount(iter);
     }
     return 0;
 }

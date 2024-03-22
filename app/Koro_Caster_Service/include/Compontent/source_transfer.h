@@ -6,7 +6,7 @@
 #include <set>
 
 #include "ntrip_global.h"
-#include "client_source.h"
+#include "source_ntrip.h"
 
 #include <event2/util.h>
 #include <event2/event.h>
@@ -61,7 +61,7 @@ struct mount_info
 // bitrate;          9600
 // misc;             caster.koroyo.xyz:2101/KORO996
 
-class client_source
+class source_transfer
 {
 private:
     json _setting;
@@ -109,8 +109,8 @@ private:
     std::list<json> *_using_delay_close_list;
 
 public:
-    client_source(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
-    ~client_source();
+    source_transfer(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    ~source_transfer();
 
     int start();
     int stop();
@@ -124,7 +124,6 @@ private:
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
     static void DelayCloseCallback(evutil_socket_t fd, short events, void *arg);
 
-    static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
     static void Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata);
     static void Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata);

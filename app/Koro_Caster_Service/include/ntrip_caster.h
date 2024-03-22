@@ -7,7 +7,8 @@
 #include "Carrier/client_ntrip.h"
 #include "Carrier/server_ntrip.h"
 #include "Carrier/server_relay.h"
-#include "Compontent/client_source.h"
+#include "Carrier/source_ntrip.h"
+#include "Compontent/source_transfer.h"
 #include "Compontent/data_transfer.h"
 #include "Compontent/auth_verifier.h"
 #include "DB/relay_account_tb.h"
@@ -134,14 +135,15 @@ private:
     ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
 
     // 核心组件
-    data_transfer *_transfer;   // 数据转发
-    client_source *_sourcelist; // 挂载点列表
-    auth_verifier *_verifier;   // 密码验证
+    data_transfer *_data_transfer;   // 数据转发
+    source_transfer *_source_transfer; // 挂载点列表维护
+    auth_verifier *_auth_verifier;   // 密码验证
 
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp
     std::unordered_map<std::string, server_ntrip *> _server_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, client_ntrip *> _client_map; // Connect_Key,client_ntrip
+    std::unordered_map<std::string, source_ntrip *> _source_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, server_relay *> _relays_map; // Connect_Key,server_relay // 挂载点名为XXXX-F1A6(虚拟挂载点名-本地连接第三方时采用的端口转为4位16进制)
     
     //挂载点-对象索引

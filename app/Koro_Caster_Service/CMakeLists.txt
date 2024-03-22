@@ -24,7 +24,7 @@ else()
 endif()
 
 
-set(EXE_NAME "${PROJECT_NAME}-${PROJECT_GIT_VERSION}-${PROJECT_TAG_VERSION}")
+set(EXE_NAME "${PROJECT_NAME}-${PROJECT_TAG_VERSION}")
 
 message(STATUS "")
 message(STATUS "------- ${PROJECT_NAME} -------")
@@ -64,8 +64,8 @@ set(COMPONTENT_TYPE_SOURCE
     src/Compontent/auth_verifier.cpp
     include/Compontent/data_transfer.h
     src/Compontent/data_transfer.cpp
-    include/Compontent/client_source.h
-    src/Compontent/client_source.cpp
+    include/Compontent/source_transfer.h
+    src/Compontent/source_transfer.cpp
     include/Compontent/file_loger.h
     src/Compontent/file_loger.cpp
 )
@@ -78,6 +78,8 @@ set(CARRIER_TYPE_SOURCE
     src/Carrier/client_ntrip.cpp
     src/Carrier/server_ntrip.cpp
     src/Carrier/server_relay.cpp
+    include/Carrier/source_ntrip.h
+    src/Carrier/source_ntrip.cpp
 )
 
 

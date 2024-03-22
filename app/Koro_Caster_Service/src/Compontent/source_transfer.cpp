@@ -1,11 +1,11 @@
-#include "client_source.h"
+#include "source_transfer.h"
 
 #include "event2/buffer.h"
 #include "event2/bufferevent.h"
 
-#define __class__ "client_source"
+#define __class__ "source_transfer"
 
-client_source::client_source(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+source_transfer::source_transfer(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
 {
     _setting = req;
     _base = base;
@@ -24,11 +24,11 @@ client_source::client_source(json req, event_base *base, std::shared_ptr<process
     _send_virtual = req["Virtual_Mount"]["Visibility"];     // Virtual是否可见//设置的挂载点
 }
 
-client_source::~client_source()
+source_transfer::~source_transfer()
 {
 }
 
-int client_source::start()
+int source_transfer::start()
 {
     get_online_mount_point();
 
@@ -49,14 +49,14 @@ int client_source::start()
     return 0;
 }
 
-int client_source::stop()
+int source_transfer::stop()
 {
     event_del(_source_update_ev);
     event_del(_delay_close_ev);
     return 0;
 }
 
-int client_source::send_source_list_to_client(json req, void *connect_obj)
+int source_transfer::send_source_list_to_client(json req, void *connect_obj)
 {
     // 解析req
     bufferevent *bev = static_cast<bufferevent *>(connect_obj);
@@ -79,21 +79,21 @@ int client_source::send_source_list_to_client(json req, void *connect_obj)
     return 0;
 }
 
-int client_source::add_Virtal_Mount(std::string mount_point)
+int source_transfer::add_Virtal_Mount(std::string mount_point)
 {
     _support_virtual_mount.insert(mount_point);
     return 0;
 }
 
-int client_source::del_Virtal_Mount(std::string mount_point)
+int source_transfer::del_Virtal_Mount(std::string mount_point)
 {
     _support_virtual_mount.erase(mount_point);
     return 0;
 }
 
-void client_source::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
+void source_transfer::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
 {
-    auto svr = static_cast<client_source *>(arg);
+    auto svr = static_cast<source_transfer *>(arg);
 
     svr->get_online_mount_point();
 
@@ -101,9 +101,9 @@ void client_source::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
     svr->build_source_table();
 }
 
-void client_source::DelayCloseCallback(evutil_socket_t fd, short events, void *arg)
+void source_transfer::DelayCloseCallback(evutil_socket_t fd, short events, void *arg)
 {
-    auto svr = static_cast<client_source *>(arg);
+    auto svr = static_cast<source_transfer *>(arg);
     static bool close_delay_list1 = true;
 
     close_delay_list1 = !close_delay_list1;
@@ -124,10 +124,10 @@ void client_source::DelayCloseCallback(evutil_socket_t fd, short events, void *a
     //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
 }
 
-void client_source::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata)
+void source_transfer::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata)
 {
     auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<client_source *>(privdata);
+    auto arg = static_cast<source_transfer *>(privdata);
 
     if (!reply)
     {
@@ -141,10 +141,10 @@ void client_source::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r
     }
 }
 
-void client_source::Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata)
+void source_transfer::Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata)
 {
     auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<client_source *>(privdata);
+    auto arg = static_cast<source_transfer *>(privdata);
 
     if (reply->type != REDIS_REPLY_NIL)
     {
@@ -153,19 +153,19 @@ void client_source::Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void
     return;
 }
 
-void client_source::Redis_Callback_Get_TRD_Relay_List(redisAsyncContext *c, void *r, void *privdata)
+void source_transfer::Redis_Callback_Get_TRD_Relay_List(redisAsyncContext *c, void *r, void *privdata)
 {
 }
 
-void client_source::Redis_Callback_Get_All_List(redisAsyncContext *c, void *r, void *privdata)
+void source_transfer::Redis_Callback_Get_All_List(redisAsyncContext *c, void *r, void *privdata)
 {
 }
 
-void client_source::Redis_Callback_Get_One_info(redisAsyncContext *c, void *r, void *privdata)
+void source_transfer::Redis_Callback_Get_One_info(redisAsyncContext *c, void *r, void *privdata)
 {
 }
 
-int client_source::get_online_mount_point()
+int source_transfer::get_online_mount_point()
 {
 
     if (_send_common)
@@ -184,7 +184,7 @@ int client_source::get_online_mount_point()
     return 0;
 }
 
-int client_source::build_source_list()
+int source_transfer::build_source_list()
 {
     _all_items.clear();
 
@@ -217,7 +217,7 @@ int client_source::build_source_list()
     return 0;
 }
 
-int client_source::build_source_table()
+int source_transfer::build_source_table()
 {
     // evbuffer_add_printf(_ntrip1_source_table,"SOURCETABLE 200 OK\r\n");
     // evbuffer_add_printf(_ntrip1_source_table,"Server: Ntrip ExampleCaster 2.0/1.0\r\n");
@@ -251,7 +251,7 @@ int client_source::build_source_table()
     return 0;
 }
 
-int client_source::close_delay_close()
+int source_transfer::close_delay_close()
 {
     for (auto iter : *_using_delay_close_list)
     {
@@ -264,7 +264,7 @@ int client_source::close_delay_close()
     return 0;
 }
 
-std::string client_source::update_list_item(std::set<std::string> group)
+std::string source_transfer::update_list_item(std::set<std::string> group)
 {
     std::string items;
     for (auto iter : group)
@@ -284,7 +284,7 @@ std::string client_source::update_list_item(std::set<std::string> group)
     return items;
 }
 
-std::string client_source::build_mount_info_to_string(mount_info i)
+std::string source_transfer::build_mount_info_to_string(mount_info i)
 {
     std::string item;
 
@@ -311,7 +311,7 @@ std::string client_source::build_mount_info_to_string(mount_info i)
     return item;
 }
 
-mount_info client_source::build_default_mount_info(std::string mount_point)
+mount_info source_transfer::build_default_mount_info(std::string mount_point)
 {
     // STR;              STR;
     // mountpoint;       KORO996;
