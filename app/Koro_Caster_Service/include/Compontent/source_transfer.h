@@ -72,8 +72,8 @@ private:
     event_base *_base;
     event *_source_update_ev;
     timeval _source_update_tv;
-    event *_delay_close_ev;
-    timeval _delay_close_tv;
+    // event *_delay_close_ev;
+    // timeval _delay_close_tv;
     // 源列表输出选项
     bool _send_common;    // 普通挂载点
     bool _send_trd_relay; // 用户连接的第三方挂载点
@@ -105,8 +105,8 @@ private:
     std::string _ntrip1_source_table;
     std::string _ntrip2_source_table;
 
-    std::list<json> _delay_close_list[2];
-    std::list<json> *_using_delay_close_list;
+    // std::list<json> _delay_close_list[2];
+    // std::list<json> *_using_delay_close_list;
 
 public:
     source_transfer(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
@@ -115,14 +115,16 @@ public:
     int start();
     int stop();
 
-    int send_source_list_to_client(json req, void *connect_obj);
+    // int send_source_list_to_client(json req, void *connect_obj);
+
+    std::string get_souce_list();
 
     int add_Virtal_Mount(std::string mount_point);
     int del_Virtal_Mount(std::string mount_point);
 
 private:
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
-    static void DelayCloseCallback(evutil_socket_t fd, short events, void *arg);
+    //static void DelayCloseCallback(evutil_socket_t fd, short events, void *arg);
 
 
     static void Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata);

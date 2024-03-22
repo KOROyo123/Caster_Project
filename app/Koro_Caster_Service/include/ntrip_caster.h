@@ -106,7 +106,8 @@ private:
     int create_server_ntrip(json req); // 基站主动接入产生的数据源
     int close_server_ntrip(json req);
     int create_client_nearest(json req);
-    int send_souce_list(json req); // 用Ntrip协议获取源列表
+    int create_source_ntrip(json req); // 用Ntrip协议获取源列表
+    int close_source_ntrip(json req);  // 用Ntrip协议获取源列表
 
     // ntrip relay 相关
     int create_relay_connector(json req);
@@ -135,9 +136,9 @@ private:
     ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
 
     // 核心组件
-    data_transfer *_data_transfer;   // 数据转发
+    data_transfer *_data_transfer;     // 数据转发
     source_transfer *_source_transfer; // 挂载点列表维护
-    auth_verifier *_auth_verifier;   // 密码验证
+    auth_verifier *_auth_verifier;     // 密码验证
 
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp
@@ -145,8 +146,8 @@ private:
     std::unordered_map<std::string, client_ntrip *> _client_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, source_ntrip *> _source_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, server_relay *> _relays_map; // Connect_Key,server_relay // 挂载点名为XXXX-F1A6(虚拟挂载点名-本地连接第三方时采用的端口转为4位16进制)
-    
-    //挂载点-对象索引
+
+    // 挂载点-对象索引
     std::unordered_map<std::string, std::string> _server_key; // Mount_Point,Connect_Key
     std::unordered_map<std::string, std::string> _relays_key; // Mount_Point,Connect_Key
 
@@ -166,7 +167,7 @@ private:
 
     timeval _delay_exit_tv = {1, 0}; // 延迟关闭定时器
 
-    //redis发布订阅连接
+    // redis发布订阅连接
     redisAsyncContext *_pub_context;
     redisAsyncContext *_sub_context;
 

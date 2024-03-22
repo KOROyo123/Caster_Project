@@ -378,21 +378,65 @@ int ntrip_caster::create_client_ntrip(json req)
     return 0;
 }
 
-int ntrip_caster::send_souce_list(json req)
+int ntrip_caster::create_source_ntrip(json req)
 {
-    // 将该请求，加入到source对象中去，由source来处理对应请求
+
     std::string connect_key = req["connect_key"];
+
     auto con = _connect_map.find(connect_key);
     if (con == _connect_map.end())
     {
-        spdlog::warn("[{}:{}]: fand connect fail, con not in connect_map", __class__, __func__);
+        spdlog::warn("[{}:{}]: Create Source_Ntrip fail, con not in connect_map", __class__, __func__);
         return 1;
     }
 
-    _source_transfer->send_source_list_to_client(req, con->second);
+    auto *source = new source_ntrip(req, con->second, _queue, _sub_context, _pub_context);
+
+    _source_map.insert(std::make_pair(connect_key, source));
+    source->set_source_list(_source_transfer->get_souce_list());
+    source->start();
+
+    // 将该请求，加入到source对象中去，由source来处理对应请求
+    // std::string connect_key = req["connect_key"];
+    // auto con = _connect_map.find(connect_key);
+    // if (con == _connect_map.end())
+    // {
+    //     spdlog::warn("[{}:{}]: fand connect fail, con not in connect_map", __class__, __func__);
+    //     return 1;
+    // }
+
+    //_source_transfer->send_source_list_to_client(req, con->second);
 
     //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
 
+    return 0;
+}
+
+int ntrip_caster::close_source_ntrip(json req)
+{
+    json origin_req = req["origin_req"];
+    std::string connect_key = origin_req["connect_key"];
+
+    auto con = _connect_map.find(connect_key);
+
+    if (con == _connect_map.end())
+    {
+    }
+    else
+    {
+        _connect_map.erase(con);
+    }
+
+    auto obj = _source_map.find(connect_key);
+    if (obj == _source_map.end())
+    {
+    }
+    else
+    {
+        // obj->second->~client_ntrip();
+        delete obj->second;
+        _source_map.erase(obj);
+    }
     return 0;
 }
 
@@ -693,7 +737,7 @@ int ntrip_caster::request_process(json req)
 
     // 一般ntrip请求-------------------------------------
     case REQUEST_SOURCE_LOGIN:
-        send_souce_list(req);
+        create_source_ntrip(req);
         break;
     case REQUEST_CLIENT_LOGIN:
         create_client_ntrip(req);
@@ -709,6 +753,9 @@ int ntrip_caster::request_process(json req)
         break;
     case CLOSE_NTRIP_SERVER:
         close_server_ntrip(req);
+        break;
+    case CLOSE_NTRIP_SOURCE:
+        close_source_ntrip(req);
         break;
 
     // relay服务相关--------------------------------------

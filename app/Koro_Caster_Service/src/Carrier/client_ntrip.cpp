@@ -7,42 +7,38 @@
 client_ntrip::client_ntrip(json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
 {
     _info = req;
+    _bev = bev;
+    _pub_context = pub_context;
+    _queue = queue;
 
     _user_name = req["user_name"];
     _mount_point = req["mount_point"];
     _connect_key = req["connect_key"];
-
-    _bev = bev;
-
-    int fd = bufferevent_getfd(_bev);
-    _ip = util_get_user_ip(fd);
-    _port = util_get_user_port(fd);
-
     if (req["ntrip_version"] == "Ntrip/2.0")
     {
         _NtripVersion2 = true;
         _transfer_with_chunked = true;
     }
 
-    _pub_context = pub_context;
-    _queue = queue;
+    int fd = bufferevent_getfd(_bev);
+    _ip = util_get_user_ip(fd);
+    _port = util_get_user_port(fd);
 
     _evbuf = evbuffer_new();
 }
 
 client_ntrip::~client_ntrip()
 {
-    auto fd = bufferevent_getfd(_bev);
+    // auto fd = bufferevent_getfd(_bev);
+    // evutil_closesocket(fd);
     bufferevent_free(_bev);
-    evutil_closesocket(fd);
-
     evbuffer_free(_evbuf);
 }
 
 int client_ntrip::start()
 {
     bufferevent_setcb(_bev, ReadCallback, NULL, EventCallback, this);
-    bufferevent_enable(_bev, EV_READ | EV_WRITE);
+    bufferevent_enable(_bev, EV_READ);
 
     bev_send_reply();
 

@@ -408,7 +408,13 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     char *header;
     while (header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF))
     {
+        if (headerlen > 1024)
+        {
+            break;
+        }
         std::string key_value = header;
+        spdlog::debug("[{}:{}]: header line info: {}", __class__, __func__, key_value);
+
         if (key_value.size() == 0)
         {
             free(header);
@@ -418,7 +424,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
         if (x == key_value.npos)
         {
             spdlog::warn("[{}:{}]: decode key value fail ,item:", __class__, __func__, key_value);
-            continue;
+            break;
         }
         item[key_value.substr(0, x)] = key_value.substr(x + 2);
 

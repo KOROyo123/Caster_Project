@@ -40,11 +40,11 @@ int source_transfer::start()
     _source_update_ev = event_new(_base, -1, EV_PERSIST, TimeoutCallback, this);
     event_add(_source_update_ev, &_source_update_tv);
 
-    _using_delay_close_list = _delay_close_list;
-    _delay_close_tv.tv_sec = 1;
-    _delay_close_tv.tv_usec = 0;
-    _delay_close_ev = event_new(_base, -1, EV_PERSIST, DelayCloseCallback, this);
-    event_add(_delay_close_ev, &_delay_close_tv);
+    // _using_delay_close_list = _delay_close_list;
+    // _delay_close_tv.tv_sec = 1;
+    // _delay_close_tv.tv_usec = 0;
+    // _delay_close_ev = event_new(_base, -1, EV_PERSIST, DelayCloseCallback, this);
+    // event_add(_delay_close_ev, &_delay_close_tv);
 
     return 0;
 }
@@ -52,31 +52,36 @@ int source_transfer::start()
 int source_transfer::stop()
 {
     event_del(_source_update_ev);
-    event_del(_delay_close_ev);
+    // event_del(_delay_close_ev);
     return 0;
 }
 
-int source_transfer::send_source_list_to_client(json req, void *connect_obj)
+// int source_transfer::send_source_list_to_client(json req, void *connect_obj)
+// {
+//     // 解析req
+//     bufferevent *bev = static_cast<bufferevent *>(connect_obj);
+
+//     // 根据是1.0还是2.0协议，发送不同的头
+//     if (req["ntrip_version"] == "Ntrip/2.0")
+//     {
+//         // bufferevent_write_buffer(bev,_ntrip1_source_table);
+//         bufferevent_write(bev, _ntrip2_source_table.c_str(), _ntrip2_source_table.size());
+//     }
+//     else
+//     {
+//         // bufferevent_write_buffer(bev,_ntrip1_source_table);
+//         bufferevent_write(bev, _ntrip1_source_table.c_str(), _ntrip1_source_table.size());
+//     }
+
+//     // 将req放入延时关闭列表
+//     _using_delay_close_list->push_back(req);
+
+//     return 0;
+// }
+
+std::string source_transfer::get_souce_list()
 {
-    // 解析req
-    bufferevent *bev = static_cast<bufferevent *>(connect_obj);
-
-    // 根据是1.0还是2.0协议，发送不同的头
-    if (req["ntrip_version"] == "Ntrip/2.0")
-    {
-        // bufferevent_write_buffer(bev,_ntrip1_source_table);
-        bufferevent_write(bev, _ntrip2_source_table.c_str(), _ntrip2_source_table.size());
-    }
-    else
-    {
-        // bufferevent_write_buffer(bev,_ntrip1_source_table);
-        bufferevent_write(bev, _ntrip1_source_table.c_str(), _ntrip1_source_table.size());
-    }
-
-    // 将req放入延时关闭列表
-    _using_delay_close_list->push_back(req);
-
-    return 0;
+    return _all_items;
 }
 
 int source_transfer::add_Virtal_Mount(std::string mount_point)
@@ -101,28 +106,28 @@ void source_transfer::TimeoutCallback(evutil_socket_t fd, short events, void *ar
     svr->build_source_table();
 }
 
-void source_transfer::DelayCloseCallback(evutil_socket_t fd, short events, void *arg)
-{
-    auto svr = static_cast<source_transfer *>(arg);
-    static bool close_delay_list1 = true;
+// void source_transfer::DelayCloseCallback(evutil_socket_t fd, short events, void *arg)
+// {
+//     auto svr = static_cast<source_transfer *>(arg);
+//     static bool close_delay_list1 = true;
 
-    close_delay_list1 = !close_delay_list1;
+//     close_delay_list1 = !close_delay_list1;
 
-    // 将两次回调之间的source请求存储起来，
-    // 切换一下表，将上一次存储起来的连接删掉
-    if (close_delay_list1)
-    {
-        svr->_using_delay_close_list = &svr->_delay_close_list[0];
-    }
-    else
-    {
-        svr->_using_delay_close_list = &svr->_delay_close_list[1];
-    }
+//     // 将两次回调之间的source请求存储起来，
+//     // 切换一下表，将上一次存储起来的连接删掉
+//     if (close_delay_list1)
+//     {
+//         svr->_using_delay_close_list = &svr->_delay_close_list[0];
+//     }
+//     else
+//     {
+//         svr->_using_delay_close_list = &svr->_delay_close_list[1];
+//     }
 
-    // 关闭所有等待关闭的连接，具体延迟的时间为1t-2t
-    svr->close_delay_close();
-    //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
-}
+//     // 关闭所有等待关闭的连接，具体延迟的时间为1t-2t
+//     svr->close_delay_close();
+//     //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
+// }
 
 void source_transfer::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata)
 {
@@ -238,7 +243,7 @@ int source_transfer::build_source_table()
 
     _ntrip2_source_table.clear();
     _ntrip2_source_table += "HTTP/1.1 200 OK\r\n";
-    _ntrip2_source_table += "Ntrip-Version: Ntrip/2.0\r\n\r\n";
+    _ntrip2_source_table += "Ntrip-Version: Ntrip/2.0\r\n";
     _ntrip2_source_table += "Ntrip-Flag: st_filter,st_auth,st_match,st_strict,rtsp\r\n";
     _ntrip2_source_table += "Server: Ntrip ExampleCaster/2.0\r\n";
     _ntrip2_source_table += "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n";
@@ -251,18 +256,18 @@ int source_transfer::build_source_table()
     return 0;
 }
 
-int source_transfer::close_delay_close()
-{
-    for (auto iter : *_using_delay_close_list)
-    {
-        _queue->push_and_active(iter, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
-    }
+// int source_transfer::close_delay_close()
+// {
+//     for (auto iter : *_using_delay_close_list)
+//     {
+//         _queue->push_and_active(iter, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
+//     }
 
-    // 清除表
-    _using_delay_close_list->clear();
+//     // 清除表
+//     _using_delay_close_list->clear();
 
-    return 0;
-}
+//     return 0;
+// }
 
 std::string source_transfer::update_list_item(std::set<std::string> group)
 {
