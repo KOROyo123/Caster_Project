@@ -3,3 +3,4 @@
 .cache
 *.user
 build
+bin

@@ -1,6 +1,6 @@
 {
     "Ntrip_Listener_Setting": {
-        "Server_IP": "101.34.217.6",
+        "Server_IP": "10.0.4.4",
         "Listener_Port": 4202,
         "Listener_Type": "NTRIP1.0/2.0",
         "Connect_Timeout": 60,
@@ -12,16 +12,16 @@
     "Reids_Connect_Setting": {
         "Redis_IP": "127.0.0.1",
         "Redis_Port": 16379,
-        "Redis_Requirepass": "snLW_1234"
+        "Redis_Requirepass": ""
     },
     "Data_Transfer_Setting":{
 
     },
     "Server_Setting": {
         "Connect_Timeout": 30,
-        "Heart_Beat_Switch":true,
+        "Heart_Beat_Switch":false,
         "Heart_Beat_Interval":10,
-        "Heart_Beat_Msg":"CDC200\r\n"
+        "Heart_Beat_Msg":"\r\n"
     },
     "Client_Setting": {
         "Connect_Timeout": 0
@@ -68,17 +68,17 @@
         "Performance_Record":true
     },
     "Redis_Heart_Beat":{
-        "Switch":true,
+        "Switch":false,
         "Reids_Connect_Setting":{
             "Redis_IP": "127.0.0.1",
             "Redis_Port": 16379,
-            "Redis_Requirepass": "snLW_1234"
+            "Redis_Requirepass": ""
         },
         "Heart_Beat_Interval":5,
         "Heart_Beat_Method":"Pub",
-        "Heart_Beat_Key":"LW_WEBCORS_LIVEINFO_CDCPlus",
+        "Heart_Beat_Key":"CASTER_STATE_INFO",
         "Heart_Beat_Set_MSG":{
-            "module":"CDC_Plus",
+            "module":"KORO_CASTER",
             "node":"10.0.4.4"
         },
         "Heart_Beat_Out_MSG":{
@@ -94,11 +94,11 @@
     },
     "SMTP_Setting":
     {
-        "Switch":true,
+        "Switch":false,
         "Server_IP":"smtp.163.com",
         "Server_Port":465,
-        "Use_User":"rhg171281@163.com",
-        "Use_Auth":"MGDIXVETXSOMMREC ",
+        "Use_User":"",
+        "Use_Auth":"",
         "Recv_List":[
             "1121910079@qq.com",
             "1914805725@qq.com"
