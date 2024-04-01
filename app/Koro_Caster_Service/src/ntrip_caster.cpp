@@ -687,9 +687,6 @@ int ntrip_caster::mount_not_online_close_connect(json req)
 
     switch (reqtype)
     {
-    case ALREADY_SEND_SOURCELIST_CLOSE_CONNCET:
-        spdlog::info("[{}]:already send sourcelist close connect. addr:[{}:{}]", __class__, ip, port);
-        break;
     case MOUNT_NOT_ONLINE_CLOSE_CONNCET:
         spdlog::info("[{}]:mount point not online close connect. mount:[{}], addr:[{}:{}]", __class__, mount, ip, port);
         break;
@@ -781,9 +778,6 @@ int ntrip_caster::request_process(json req)
         break;
 
     // 关闭现有连接------------------------------------------
-    case ALREADY_SEND_SOURCELIST_CLOSE_CONNCET:
-        mount_not_online_close_connect(req);
-        break;
     case MOUNT_NOT_ONLINE_CLOSE_CONNCET:
         mount_not_online_close_connect(req);
         break;
