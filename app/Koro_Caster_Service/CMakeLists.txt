@@ -39,8 +39,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-
-
 #包含的源文件和头文件
 include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/include)
 include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Carrier)
@@ -50,10 +48,6 @@ include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/DB)
 include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/include/Extra)
 
 include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
-
-
-# add_definitions(-DNTRIP_MULT_THREAD)
-# add_definitions(-DENABLE_TABLE_MUTEX)
 
  set(DB_TABLE_SOURCE
     include/DB/relay_account_tb.h
@@ -70,7 +64,6 @@ set(COMPONTENT_TYPE_SOURCE
     src/Compontent/file_loger.cpp
 )
 
-
 set(CARRIER_TYPE_SOURCE
     include/Carrier/client_ntrip.h
     include/Carrier/server_ntrip.h
@@ -81,7 +74,6 @@ set(CARRIER_TYPE_SOURCE
     include/Carrier/source_ntrip.h
     src/Carrier/source_ntrip.cpp
 )
-
 
 set(CONNECTOR_TYPE_SOURCE
     include/Connector/ntrip_compat_listener.h
@@ -96,7 +88,6 @@ set(EXTRA_SOURCE
     include/Extra/smtp_ssl.h
     src/Extra/smtp_ssl.cpp
 )
-
 
 set(MAIN_SOURCES
     include/ntrip_global.h
@@ -162,8 +153,6 @@ target_link_libraries(${EXE_NAME} rtklib)
 #     # target_link_libraries(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libssl.a)
 # ENDIF()
 
-
-
 #libevent 
 target_link_libraries(${EXE_NAME} event)
 target_link_libraries(${EXE_NAME} event_core)
@@ -175,11 +164,6 @@ target_link_libraries(${EXE_NAME} hiredis)
 #spdlog
 target_link_libraries(${EXE_NAME} spdlog)
 
-
-# #curl
-# include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/include)
-# include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib)
-# target_link_libraries(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/curl-curl-8_4_0/build/lib/libcurl.a)
 
 
 
