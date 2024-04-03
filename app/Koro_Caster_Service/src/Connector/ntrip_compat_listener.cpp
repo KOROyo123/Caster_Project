@@ -107,8 +107,8 @@ int ntrip_compat_listener::del_Virtal_Mount(std::string mount_point)
 void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg)
 {
     auto svr = static_cast<ntrip_compat_listener *>(arg);
+    event_base *base = svr->_base;
 
-    event_base *base = evconnlistener_get_base(listener);
     bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
 
     std::string ip = util_get_user_ip(fd);
@@ -158,6 +158,18 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     auto svr = arg->first;
     auto key = arg->second;
 
+    //已经接收到请求，解析请求即可，这个请求决定了连接是进入下一步还是关闭
+    bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
+    bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 清空bev绑定的回调？  如果这个时候bev event_cb已经激活怎么办?是否就不继续执行了
+    //已经接收到请求，也需要关闭定时器
+    bufferevent_set_timeouts(bev, NULL, NULL);//解绑定时器
+    auto timer = svr->_timer_map.find(key);
+    if (timer != svr->_timer_map.end())
+    {
+        delete timer->second;//删除定时器
+        svr->_timer_map.erase(key);
+    }
+
     int fd = bufferevent_getfd(bev);
     std::string ip = util_get_user_ip(fd);
     int port = util_get_user_port(fd);
@@ -172,7 +184,6 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         if (header == NULL | header_len > 255)
         {
             spdlog::warn("[{}:{}]: error respone, from: [ip: {} port: {}]", __class__, __func__, ip, port);
-            svr->Process_Unknow_Request(bev);
             throw 1;
         }
         spdlog::info("[{}]: receive request header: [{}], from: [ip: {} port: {}]", __class__, header, ip, port);
@@ -208,27 +219,17 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         {
             // 不支持的方法
             spdlog::info("[{}:{}]: receive unsuppose request", __class__, __func__);
-            svr->Process_Unknow_Request(bev);
+            throw 1;
         }
     }
     catch (int i)
     {
+        svr->Process_Unknow_Request(bev);
     }
 
-    // 删除定时器
-    bufferevent_set_timeouts(bev, NULL, NULL);
-    auto timer = svr->_timer_map.find(key);
-    if (timer != svr->_timer_map.end())
-    {
-        delete timer->second;
-        svr->_timer_map.erase(key);
-    }
-
-    // 清理
-    bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
-    delete arg;                                     // 这个时候把arg删除了，后续再触发新的错误连接的时候，会导致event无法正常的被触发
-    bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 暂时不给这个连接绑定回调?
-    free(header);
+    //清理
+    delete arg; // 删除arg
+    free(header);//删除读取的文件头
 }
 
 void ntrip_compat_listener::Bev_EventCallback(bufferevent *bev, short events, void *ctx)
