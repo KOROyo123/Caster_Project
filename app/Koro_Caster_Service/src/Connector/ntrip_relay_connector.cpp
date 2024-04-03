@@ -13,7 +13,6 @@ ntrip_relay_connector::ntrip_relay_connector(event_base *base, std::shared_ptr<p
 ntrip_relay_connector::~ntrip_relay_connector()
 {
     _req_map.clear();
-
 }
 
 int ntrip_relay_connector::start()
@@ -68,7 +67,7 @@ std::string ntrip_relay_connector::create_new_connection(json con_info)
     }
 
     std::string Connect_Key = util_cal_connect_key(fd);
-    if(Connect_Key.empty())
+    if (Connect_Key.empty())
     {
         bufferevent_free(bev);
         return std::string();
@@ -82,12 +81,18 @@ std::string ntrip_relay_connector::create_new_connection(json con_info)
     con_info["mount_point"] = intel_mount;
     con_info["mount_group"] = "usr_relay";
 
-    auto arg = new std::pair<ntrip_relay_connector *, std::string>(this, Connect_Key);
-    bufferevent_setcb(bev, ReadCallback, NULL, EventCallback, arg);
-    bufferevent_enable(bev, EV_READ);
-
     _connect_map->insert(std::make_pair(Connect_Key, bev));
     _req_map.insert(std::make_pair(Connect_Key, con_info));
+
+    auto timer = new timeval;
+    timer->tv_sec = 30;
+    timer->tv_usec = 0;
+    _timer_map.insert(std::make_pair(Connect_Key, timer));
+
+    auto arg = new std::pair<ntrip_relay_connector *, std::string>(this, Connect_Key);
+    bufferevent_setcb(bev, ReadCallback, NULL, EventCallback, arg);
+    bufferevent_set_timeouts(bev, timer, NULL);
+    bufferevent_enable(bev, EV_READ);
 
     return intel_mount;
 }
@@ -126,17 +131,33 @@ void ntrip_relay_connector::EventCallback(bufferevent *bev, short events, void *
 void ntrip_relay_connector::ReadCallback(bufferevent *bev, void *ctx)
 {
     auto arg = static_cast<std::pair<ntrip_relay_connector *, std::string> *>(ctx);
-    ntrip_relay_connector *svr = arg->first;
+    auto svr = arg->first;
     std::string key = arg->second;
+
+    bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
+    bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 清空bev绑定的回调？  如果这个时候bev event_cb已经激活怎么办?是否就不继续执行了
+
+    bufferevent_set_timeouts(bev, NULL, NULL); // 解绑定时器
+    auto timer = svr->_timer_map.find(key);
+    if (timer != svr->_timer_map.end())
+    {
+        delete timer->second; // 删除定时器
+        svr->_timer_map.erase(key);
+    }
 
     if (svr->verify_login_response(bev, key))
     {
         spdlog::warn("[{}:{}]: verify login response fail", __class__, __func__);
-        return;
+        svr->request_give_back_account(key); // 归还账号
+        bufferevent_free(bev);//释放bev
+    }
+    else
+    {
+        spdlog::info("[{}:{}]: verify login response success", __class__, __func__);
+        svr->request_new_relay_server(key);
+        bufferevent_disable(bev, EV_READ);
     }
 
-    svr->request_new_relay_server(key);
-    bufferevent_disable(bev,EV_READ);
     delete arg;
 }
 
@@ -226,18 +247,22 @@ int ntrip_relay_connector::request_new_relay_server(std::string Conncet_Key)
 
     _queue->push_and_active(req, req["req_type"]);
 
+    _req_map.erase(Conncet_Key);
     return 0;
 }
 
 int ntrip_relay_connector::request_give_back_account(std::string Conncet_Key)
 {
-    _connect_map->erase(Conncet_Key);
-
-    auto req = _req_map.find(Conncet_Key);
+    auto item = _req_map.find(Conncet_Key);
+    auto req = item->second;
 
     json back_account_req;
-    back_account_req["origin_req"] = req->second;
+    back_account_req["origin_req"] = req;
     _queue->push_and_active(back_account_req, CLOSE_RELAY_REQ_CONNECT);
+
+    _req_map.erase(Conncet_Key);
+
+    _connect_map->erase(Conncet_Key); 
 
     return 0;
 }
@@ -245,10 +270,5 @@ int ntrip_relay_connector::request_give_back_account(std::string Conncet_Key)
 int ntrip_relay_connector::redis_Info_Record(json req)
 {
 
-
-
-
-
-    
     return 0;
 }

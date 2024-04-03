@@ -34,16 +34,16 @@ private:
     std::shared_ptr<process_queue> _queue;
     std::unordered_map<std::string, json> _req_map; // 这个req_map只有插入操作没有删除操作，后续应该修复！
     std::unordered_map<std::string, bufferevent *> *_connect_map;
-    std::unordered_map<std::string, timeval *> _timer_map; //用于超时检验（待做）
+    std::unordered_map<std::string, timeval *> _timer_map; // 用于超时检验（待做）
 
 public:
     ntrip_relay_connector(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map, redisAsyncContext *context);
     ~ntrip_relay_connector();
 
+    std::string create_new_connection(json con_info);
+
     int start();
     int stop();
-
-    std::string create_new_connection(json con_info);
 
     static void EventCallback(struct bufferevent *bev, short events, void *arg);
     static void ReadCallback(struct bufferevent *bev, void *arg);

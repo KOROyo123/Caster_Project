@@ -473,10 +473,6 @@ int ntrip_caster::create_relay_connect(json req)
         return 0;
     }
 
-    // req["mount_point"] = intel_mount;
-
-    // transfer_add_create_client(req);
-
     return 0;
 }
 
@@ -956,13 +952,11 @@ void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, 
 int ntrip_caster::start_server_thread()
 {
     event_base_thread(_base);
-
     return 0;
 }
 
 void *ntrip_caster::event_base_thread(void *arg)
 {
-
     event_base *base = static_cast<event_base *>(arg);
 
     evthread_make_base_notifiable(base);
