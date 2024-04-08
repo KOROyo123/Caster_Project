@@ -14,11 +14,6 @@
 
 #define __class__ "ntrip_caster"
 
-int ntrip_caster::init_state_info()
-{
-    return 0;
-}
-
 int ntrip_caster::update_state_info()
 {
 
@@ -58,10 +53,6 @@ int ntrip_caster::auto_init()
 {
     // 初始化event_base
 
-    // 初始化请求处理事件
-    _process_event = event_new(_base, -1, EV_PERSIST, Request_Process_Cb, this);
-    _queue->add_processer(_process_event);
-
     return 0;
 }
 
@@ -75,9 +66,14 @@ int ntrip_caster::compontent_init()
     // 根据配置文件，解析并创建初始化任务
 
     // 必要任务  注意启动的先后顺序-------------------------------------
-    // 添加redis连接请求
+    // 初始化请求处理队列
+    _process_event = event_new(_base, -1, EV_PERSIST, Request_Process_Cb, this);
+    QUEUE::Init(_process_event);
+
+    // 初始化Caster数据分发核心：当前采用的是Redis，后续开发支持脱离redis运行
     json redis_req = _server_config["Reids_Connect_Setting"];
-    create_redis_conncet(redis_req);
+    CASTER::Init(redis_req, _base);
+    // create_redis_conncet(redis_req);
 
     // 添加创建data_tansfer
     json transfer_req = _server_config["Data_Transfer_Setting"];
@@ -108,8 +104,8 @@ int ntrip_caster::compontent_init()
     if (_TRD_Relay_Support)
     {
         json relay_req;
-        _queue->push(relay_req, ADD_RELAY_MOUNT_TO_LISTENER);
-        _queue->push(relay_req, ADD_RELAY_MOUNT_TO_SOURCELIST);
+        QUEUE::Push(relay_req, ADD_RELAY_MOUNT_TO_LISTENER);
+        QUEUE::Push(relay_req, ADD_RELAY_MOUNT_TO_SOURCELIST);
         // 向listener添加准入请求
     }
 
@@ -117,7 +113,6 @@ int ntrip_caster::compontent_init()
     {
     }
 
-    _queue->active_prrocesser();
     return 0;
 }
 
@@ -132,10 +127,7 @@ int ntrip_caster::compontent_stop()
 
     _source_transfer->stop();
 
-    redisAsyncDisconnect(_sub_context);
-    redisAsyncFree(_sub_context);
-    redisAsyncDisconnect(_pub_context);
-    redisAsyncFree(_pub_context);
+    CASTER::Free();
 
     return 0;
 }
@@ -186,21 +178,6 @@ int ntrip_caster::periodic_task()
     {
         _redis_beat->update_msg(_state_info);
     }
-
-    // static int i = 0;
-    // if (i > 1)
-    // {
-    //     stop();
-    // }
-    // else
-    // {
-    //     i++;
-    // }
-
-    // if(_info_smtp)
-    //  {
-    //      _relay_smtp->update_msg(_info_info);
-    //  }
 
     return 0;
 }
@@ -256,42 +233,43 @@ int ntrip_caster::set_setting(json config)
 
 int ntrip_caster::create_redis_conncet(json req)
 {
-    _redis_IP = req["Redis_IP"];
-    _redis_port = req["Redis_Port"];
-    _redis_Requirepass = req["Redis_Requirepass"];
 
-    // 初始化redis连接
-    redisOptions options = {0};
-    REDIS_OPTIONS_SET_TCP(&options, _redis_IP.c_str(), _redis_port);
-    struct timeval tv = {0};
-    tv.tv_sec = 10;
-    options.connect_timeout = &tv;
+    // _redis_IP = req["Redis_IP"];
+    // _redis_port = req["Redis_Port"];
+    // _redis_Requirepass = req["Redis_Requirepass"];
 
-    _pub_context = redisAsyncConnectWithOptions(&options);
-    if (_pub_context->err)
-    {
-        /* Let *c leak for now... */
-        spdlog::error("redis eror: {}", _pub_context->errstr);
-        return 1;
-    }
+    // // 初始化redis连接
+    // redisOptions options = {0};
+    // REDIS_OPTIONS_SET_TCP(&options, _redis_IP.c_str(), _redis_port);
+    // struct timeval tv = {0};
+    // tv.tv_sec = 10;
+    // options.connect_timeout = &tv;
 
-    redisLibeventAttach(_pub_context, _base);
-    redisAsyncSetConnectCallback(_pub_context, Redis_Connect_Cb);
-    redisAsyncSetDisconnectCallback(_pub_context, Redis_Disconnect_Cb);
-    redisAsyncCommand(_pub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
+    // _pub_context = redisAsyncConnectWithOptions(&options);
+    // if (_pub_context->err)
+    // {
+    //     /* Let *c leak for now... */
+    //     spdlog::error("redis eror: {}", _pub_context->errstr);
+    //     return 1;
+    // }
 
-    _sub_context = redisAsyncConnectWithOptions(&options);
-    if (_sub_context->err)
-    {
-        /* Let *c leak for now... */
-        spdlog::error("redis eror: {}", _sub_context->errstr);
-        return 1;
-    }
+    // redisLibeventAttach(_pub_context, _base);
+    // redisAsyncSetConnectCallback(_pub_context, Redis_Connect_Cb);
+    // redisAsyncSetDisconnectCallback(_pub_context, Redis_Disconnect_Cb);
+    // redisAsyncCommand(_pub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
 
-    redisLibeventAttach(_sub_context, _base);
-    redisAsyncSetConnectCallback(_sub_context, Redis_Connect_Cb);
-    redisAsyncSetDisconnectCallback(_sub_context, Redis_Disconnect_Cb);
-    redisAsyncCommand(_sub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
+    // _sub_context = redisAsyncConnectWithOptions(&options);
+    // if (_sub_context->err)
+    // {
+    //     /* Let *c leak for now... */
+    //     spdlog::error("redis eror: {}", _sub_context->errstr);
+    //     return 1;
+    // }
+
+    // redisLibeventAttach(_sub_context, _base);
+    // redisAsyncSetConnectCallback(_sub_context, Redis_Connect_Cb);
+    // redisAsyncSetDisconnectCallback(_sub_context, Redis_Disconnect_Cb);
+    // redisAsyncCommand(_sub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
     return 0;
 }
 
@@ -312,7 +290,7 @@ int ntrip_caster::create_ntrip_listener(json req)
     std::string ntrip_version = req["Listener_Type"];
     if (ntrip_version == "NTRIP1.0/2.0")
     {
-        auto *listener = new ntrip_compat_listener(_base, _queue, &_connect_map);
+        auto *listener = new ntrip_compat_listener(_base, &_connect_map);
         listener->set_listen_conf(req);
         listener->start();
         _compat_listener = listener;
@@ -334,7 +312,7 @@ int ntrip_caster::destroy_ntrip_listener(json req)
 
 int ntrip_caster::create_client_source(json req)
 {
-    _source_transfer = new source_transfer(req, _base, _queue, _sub_context, _pub_context);
+    _source_transfer = new source_transfer(req, _base);
     _source_transfer->start();
     return 0;
 }
@@ -346,7 +324,7 @@ int ntrip_caster::destroy_client_source(json req)
 
 int ntrip_caster::create_relay_connector(json req)
 {
-    auto connector = new ntrip_relay_connector(_base, _queue, &_connect_map, _pub_context);
+    auto connector = new ntrip_relay_connector(_base, &_connect_map);
     _relay_connetcotr = connector;
 
     // 创建的时候，relay表才会生效，才需要读取配置文件
@@ -357,7 +335,7 @@ int ntrip_caster::create_relay_connector(json req)
 
 int ntrip_caster::create_data_transfer(json req)
 {
-    _data_transfer = new data_transfer(req, _queue, _sub_context, _pub_context);
+    _data_transfer = new data_transfer(req);
     _data_transfer->start();
 
     return 0;
@@ -370,10 +348,22 @@ int ntrip_caster::destroy_data_transfer(json req)
 
 int ntrip_caster::create_client_ntrip(json req)
 {
-    auto arg = new std::pair<ntrip_caster *, json>(this, req);
     std::string mount_group = req["mount_group"];
-    std::string Moint_Point = req["mount_point"];
-    redisAsyncCommand(_pub_context, Redis_Callback_for_Data_Transfer_add_sub, static_cast<void *>(arg), "HGET mp_ol_all %s", Moint_Point.c_str());
+    std::string moint_point = req["mount_point"];
+    std::string user_name = req["user_name"];
+    // redisAsyncCommand(_pub_context, Redis_Callback_for_Data_Transfer_add_sub, static_cast<void *>(arg), "HGET mp_ol_all %s", Moint_Point.c_str());
+
+    auto arg = new std::pair<ntrip_caster *, json>(this, req); // 在此处创建，在
+    if (true)
+    {
+        // 如果要限制用户登录数量,查询一下当前存在的用户，再去查询挂载点是否在线
+        CASTER::Check_Client_User_is_Online(user_name.c_str(), Caster_Client_Check_User_Exist_Cb, arg);
+    }
+    else
+    {
+        // 如果不限制用户登录数量，直接取查询挂载点
+        CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
+    }
 
     return 0;
 }
@@ -390,7 +380,7 @@ int ntrip_caster::create_source_ntrip(json req)
         return 1;
     }
 
-    auto *source = new source_ntrip(req, con->second, _queue, _sub_context, _pub_context);
+    auto *source = new source_ntrip(req, con->second);
 
     _source_map.insert(std::make_pair(connect_key, source));
     source->set_source_list(_source_transfer->get_souce_list());
@@ -407,7 +397,7 @@ int ntrip_caster::create_source_ntrip(json req)
 
     //_source_transfer->send_source_list_to_client(req, con->second);
 
-    //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
+    // QUEUE::Push(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
 
     return 0;
 }
@@ -454,7 +444,7 @@ int ntrip_caster::create_relay_connect(json req)
     if (account.empty())
     {
         // 没有可用账号
-        _queue->push_and_active(req, NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET);
+        QUEUE::Push(req, NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET);
         return 0;
     }
 
@@ -469,7 +459,7 @@ int ntrip_caster::create_relay_connect(json req)
         // 归还账号
         _relay_accounts.give_back_usr_account(account);
         // 关闭连接
-        _queue->push_and_active(req, CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET);
+        QUEUE::Push(req, CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET);
         return 0;
     }
 
@@ -481,7 +471,7 @@ int ntrip_caster::create_server_ntrip(json req)
 
     auto arg = new std::pair<ntrip_caster *, json>(this, req);
     std::string mount = req["mount_point"];
-    redisAsyncCommand(_pub_context, Redis_Callback_for_Create_Ntrip_Server, static_cast<void *>(arg), "HGET mp_ol_all %s", mount.c_str());
+    // redisAsyncCommand(_pub_context, Redis_Callback_for_Create_Ntrip_Server, static_cast<void *>(arg), "HGET mp_ol_all %s", mount.c_str());
 
     return 0;
 }
@@ -497,7 +487,7 @@ int ntrip_caster::create_server_relay(json req)
         spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
         return 1;
     }
-    auto relay = new server_relay(req, con->second, _queue, _sub_context, _pub_context);
+    auto relay = new server_relay(req, con->second);
     // 加入挂载点表中
     _relays_key.insert(std::make_pair(mount_point, connect_key));
     _relays_map.insert(std::make_pair(connect_key, relay));
@@ -545,7 +535,6 @@ int ntrip_caster::close_server_relay(json req)
     }
 
     // 返还账号
-
     _relay_accounts.give_back_usr_account(usr_pwd);
 
     return 0;
@@ -802,8 +791,16 @@ int ntrip_caster::transfer_add_create_client(json req)
         _data_transfer->add_pub_server(req["mount_point"]);
     }
 
+    std::string connect_key = req["connect_key"];
+    auto item = _connect_map.find(connect_key);
+
+    if (item == _connect_map.end())
+    {
+        return 1;
+    }
+
     // 创建一个client，加入到表中
-    client_ntrip *cli = new client_ntrip(req, _connect_map.find(req["connect_key"])->second, _queue, _sub_context, _pub_context);
+    client_ntrip *cli = new client_ntrip(req, item->second);
     _client_map.insert(std::make_pair(req["connect_key"], cli));
 
     // 将client加入到transfer中
@@ -843,15 +840,15 @@ int ntrip_caster::add_relay_mount_to_sourcelist(json req)
 void ntrip_caster::Request_Process_Cb(evutil_socket_t fd, short what, void *arg)
 {
     ntrip_caster *svr = static_cast<ntrip_caster *>(arg);
-
-    if (svr->_queue->not_null())
+    if (QUEUE::Not_Null())
     {
-        json req = svr->_queue->poll();
+        json req = QUEUE::Pop();
         svr->request_process(req);
     }
-    if (svr->_queue->not_null())
+
+    if (QUEUE::Not_Null())
     {
-        svr->_queue->active_prrocesser();
+        QUEUE::Active();
     }
 }
 
@@ -862,91 +859,109 @@ void ntrip_caster::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
     svr->periodic_task();
 }
 
-void ntrip_caster::Redis_Connect_Cb(const redisAsyncContext *c, int status)
+// void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c, void *r, void *privdata)
+// {
+//     auto reply = static_cast<redisReply *>(r);
+//     auto arg = static_cast<std::pair<ntrip_caster *, json> *>(privdata);
+
+//     auto svr = arg->first;
+//     auto req = arg->second;
+
+//     std::string mount_point = req["mount_point"];
+//     std::string connect_key = req["connect_key"];
+
+//     auto item = svr->_server_key.find(mount_point);
+//     if (item == svr->_server_key.end())
+//     {
+//         QUEUE::Push(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
+//     }
+//     else
+//     {
+//         svr->transfer_add_create_client(req);
+//     }
+
+//     delete arg;
+// }
+
+// void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata)
+// {
+//     auto reply = static_cast<redisReply *>(r);
+//     auto arg = static_cast<std::pair<ntrip_caster *, json> *>(privdata);
+
+//     auto svr = arg->first;
+//     auto req = arg->second;
+
+//     std::string mount_point = req["mount_point"];
+//     std::string connect_key = req["connect_key"];
+//     // if (reply->type != REDIS_REPLY_NIL)
+//     // {
+//     // }
+
+//     auto item = svr->_server_key.find(mount_point);
+//     if (item == svr->_server_key.end())
+//     {
+//         // 本地没有记录
+//         auto con = svr->_connect_map.find(connect_key);
+//         if (con == svr->_connect_map.end())
+//         {
+//             spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
+//             return;
+//         }
+//         req["Settings"] = svr->_server_config["Server_Setting"];
+//         server_ntrip *ntrips = new server_ntrip(req, con->second);
+//         // 加入挂载点表中
+//         svr->_server_key.insert(std::make_pair(mount_point, connect_key));
+//         svr->_server_map.insert(std::make_pair(connect_key, ntrips));
+
+//         // 一切准备就绪，启动server（向用户回应）
+//         ntrips->start();
+//     }
+//     else //(reply->type == REDIS_REPLY_STRING)
+//     {
+//         std::string mount_point = req["mount_point"];
+//         spdlog::info("[{}]:login a same name mount point [{}], kick out the login connection mount point!", __class__, mount_point);
+
+//         QUEUE::Push(req, MOUNT_ALREADY_ONLINE_CLOSE_CONNCET);
+//     }
+
+//     delete arg;
+// }
+
+void ntrip_caster::Caster_Client_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length)
 {
-    if (status != REDIS_OK)
-    {
-        spdlog::error("[{}]: redis eror: {}", __class__, c->errstr);
-        return;
-    }
-    spdlog::info("[{}]: Connected to Redis Success", __class__);
+    auto ctx = static_cast<std::pair<ntrip_caster *, json> *>(arg);
+    auto svr = ctx->first;
+    auto req = ctx->second;
+
+    std::string mount_group = req["mount_group"];
+    std::string moint_point = req["mount_point"];
+    std::string user_name = req["user_name"];
+
+    delete ctx;
 }
 
-void ntrip_caster::Redis_Disconnect_Cb(const redisAsyncContext *c, int status)
+void ntrip_caster::Caster_Client_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length)
 {
-    if (status != REDIS_OK)
-    {
-        spdlog::error("[{}]: redis eror: {}", __class__, c->errstr);
-        return;
-    }
-    spdlog::info("[{}]: redis info: Disconnected Redis", __class__);
+    auto ctx = static_cast<std::pair<ntrip_caster *, json> *>(arg);
+    auto svr = ctx->first;
+    auto req = ctx->second;
+
+    std::string mount_group = req["mount_group"];
+    std::string moint_point = req["mount_point"];
+    std::string user_name = req["user_name"];
+
+    // 根据结果来决定是否进行下一步
+
+    // 取查询挂载点
+    CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
 }
 
-void ntrip_caster::Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c, void *r, void *privdata)
+void ntrip_caster::Caster_Server_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length)
 {
-    auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<std::pair<ntrip_caster *, json> *>(privdata);
-
-    auto svr = arg->first;
-    auto req = arg->second;
-
-    std::string mount_point = req["mount_point"];
-    std::string connect_key = req["connect_key"];
-
-    auto item = svr->_server_key.find(mount_point);
-    if (item == svr->_server_key.end())
-    {
-        svr->_queue->push_and_active(req, MOUNT_NOT_ONLINE_CLOSE_CONNCET);
-    }
-    else
-    {
-        svr->transfer_add_create_client(req);
-    }
-
-    delete arg;
 }
 
-void ntrip_caster::Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata)
+void ntrip_caster::Caster_Server_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length)
 {
-    auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<std::pair<ntrip_caster *, json> *>(privdata);
-
-    auto svr = arg->first;
-    auto req = arg->second;
-
-    std::string mount_point = req["mount_point"];
-    std::string connect_key = req["connect_key"];
-    // if (reply->type != REDIS_REPLY_NIL)
-    // {
-    // }
-
-    auto item = svr->_server_key.find(mount_point);
-    if (item == svr->_server_key.end())
-    {
-        // 本地没有记录
-        auto con = svr->_connect_map.find(connect_key);
-        if (con == svr->_connect_map.end())
-        {
-            spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
-            return;
-        }
-        server_ntrip *ntrips = new server_ntrip(svr->_server_config["Server_Setting"], req, con->second, svr->_queue, svr->_sub_context, svr->_pub_context);
-        // 加入挂载点表中
-        svr->_server_key.insert(std::make_pair(mount_point, connect_key));
-        svr->_server_map.insert(std::make_pair(connect_key, ntrips));
-
-        // 一切准备就绪，启动server（向用户回应）
-        ntrips->start();
-    }
-    else //(reply->type == REDIS_REPLY_STRING)
-    {
-        std::string mount_point = req["mount_point"];
-        spdlog::info("[{}]:login a same name mount point [{}], kick out the login connection mount point!", __class__, mount_point);
-
-        svr->_queue->push_and_active(req, MOUNT_ALREADY_ONLINE_CLOSE_CONNCET);
-    }
-
-    delete arg;
 }
 
 int ntrip_caster::start_server_thread()

@@ -3,27 +3,20 @@
 
 #define __class__ "data_transfer"
 
-data_transfer::data_transfer(json req, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+data_transfer::data_transfer(json req)
 {
-
     _setting = req;
-
-    _queue = queue;
-
-    _sub_context = sub_context;
-
     _evbuf = evbuffer_new();
 }
 
 data_transfer::~data_transfer()
 {
-
     evbuffer_free(_evbuf);
 }
 
 int data_transfer::start()
 {
-    redisAsyncCommand(_sub_context, Redis_PubOff_Callback, static_cast<void *>(this), "SUBSCRIBE mp_offline");
+    // redisAsyncCommand(_sub_context, Redis_PubOff_Callback, static_cast<void *>(this), "SUBSCRIBE mp_offline");
     return 0;
 }
 
@@ -37,7 +30,7 @@ int data_transfer::stop()
     for (auto iter : _sub_map)
     {
         std::string mountpoint = iter.first;
-        redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", mountpoint.c_str());
+        // redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", mountpoint.c_str());
         for (auto item : iter.second)
         {
             item.second->stop();
@@ -59,7 +52,7 @@ int data_transfer::add_pub_server(std::string Mount_Point)
     std::unordered_map<std::string, client_ntrip *> item;
     _sub_map.insert(std::make_pair(Mount_Point, item));
 
-    redisAsyncCommand(_sub_context, Redis_RecvSub_Callback, static_cast<void *>(this), "SUBSCRIBE STR_%s", Mount_Point.c_str());
+    // redisAsyncCommand(_sub_context, Redis_RecvSub_Callback, static_cast<void *>(this), "SUBSCRIBE STR_%s", Mount_Point.c_str());
 
     return 0;
 }
@@ -93,7 +86,7 @@ int data_transfer::del_pub_server(std::string Mount_Point)
         return 1;
     }
 
-    redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", Mount_Point.c_str());
+    // redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", Mount_Point.c_str());
 
     _sub_map.erase(Mount_Point);
 
@@ -164,99 +157,14 @@ int data_transfer::del_sub_client(std::string Mount_Point, std::string Connect_K
     return 0;
 }
 
-void data_transfer::Redis_PubOff_Callback(redisAsyncContext *c, void *r, void *privdata)
+int data_transfer::transfer_date_to_sub(const char *mount_point, const char *data, size_t length)
 {
-    if (r == nullptr)
-    {
-        return;
-    }
-
-    auto reply = static_cast<redisReply *>(r);
-    auto svr = static_cast<data_transfer *>(privdata);
-
-    // for (int i = 0; i < reply->elements; i++)
-    // {
-    //     auto ele = reply->element[i];
-
-    //     switch (ele->type)
-    //     {
-    //     case REDIS_REPLY_STRING:
-    //         std::cout << ele->str << std::endl;
-    //         break;
-
-    //     case REDIS_REPLY_DOUBLE:
-    //         break;
-
-    //     case REDIS_REPLY_INTEGER:
-    //         std::cout << ele->integer << std::endl;
-    //         break;
-
-    //     default:
-    //         break;
-    //     }
-    // }
-
-    auto ele = reply->element[2];
-    if (ele->type == REDIS_REPLY_STRING)
-    {
-        if (svr->mount_point_exist(ele->str))
-        {
-            svr->stop_all_sub_client(ele->str);
-        }
-    }
-}
-
-void data_transfer::Redis_RecvSub_Callback(redisAsyncContext *c, void *r, void *privdata)
-{
-    if (r == nullptr)
-    {
-        return;
-    }
-
-    auto reply = static_cast<redisReply *>(r);
-    auto svr = static_cast<data_transfer *>(privdata);
-
-    svr->transfer_date_to_sub(reply, reply->elements);
-}
-
-void data_transfer::Redis_UnSub_Callback(redisAsyncContext *c, void *r, void *privdata)
-{
-}
-
-void data_transfer::Redis_Connect_Cb(const redisAsyncContext *c, int status)
-{
-    if (status != REDIS_OK)
-    {
-        spdlog::error("redis eror: {}", c->errstr);
-        return;
-    }
-    spdlog::trace("redis info: Connected to Redis Success");
-}
-
-void data_transfer::Redis_Disconnect_Cb(const redisAsyncContext *c, int status)
-{
-    if (status != REDIS_OK)
-    {
-        spdlog::error("redis eror: {}", c->errstr);
-        return;
-    }
-    spdlog::trace("redis info: Disconnected Redis");
-}
-
-int data_transfer::transfer_date_to_sub(redisReply *reply, int reply_num)
-{
-
-    char mount[128] = {'\0'};
-
-    sscanf(reply->element[1]->str, "STR_%s", mount);
-
-    auto item = _sub_map.find(mount);
-
-    evbuffer_add(_evbuf, reply->element[2]->str, reply->element[2]->len);
+    auto item = _sub_map.find(mount_point);
+    evbuffer_add(_evbuf, data, length);
 
     if (item == _sub_map.end())
     {
-        spdlog::debug("[{}:{}]: Receive {} data , but not in _sub_map", __class__, __func__, mount);
+        spdlog::debug("[{}:{}]: Receive {} data , but not in _sub_map", __class__, __func__, mount_point);
         return 1;
     }
 

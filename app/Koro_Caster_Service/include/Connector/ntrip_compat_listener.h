@@ -35,9 +35,7 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
+#include "Compontent/caster_core.h"
 
 #include <string>
 #include <memory>
@@ -58,14 +56,13 @@ private:
     event_base *_base;
     evconnlistener *_listener;
 
-    std::shared_ptr<process_queue> _queue;
     std::unordered_map<std::string, bufferevent *> *_connect_map;
     std::unordered_map<std::string, timeval *> _timer_map;
 
     std::set<std::string> _support_virtual_mount;
 
 public:
-    ntrip_compat_listener(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map);
+    ntrip_compat_listener(event_base *base,  std::unordered_map<std::string, bufferevent *> *connect_map);
     ~ntrip_compat_listener();
 
     int set_listen_conf(json conf);

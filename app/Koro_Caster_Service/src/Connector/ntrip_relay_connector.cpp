@@ -2,12 +2,10 @@
 
 #define __class__ "ntrip_relay_connector"
 
-ntrip_relay_connector::ntrip_relay_connector(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map, redisAsyncContext *pub_context)
+ntrip_relay_connector::ntrip_relay_connector(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map)
 {
     _base = base;
-    _queue = queue;
     _connect_map = connect_map;
-    _pub_context = pub_context;
 }
 
 ntrip_relay_connector::~ntrip_relay_connector()
@@ -245,7 +243,7 @@ int ntrip_relay_connector::request_new_relay_server(std::string Conncet_Key)
     auto item = _req_map.find(Conncet_Key);
     auto req = item->second;
 
-    _queue->push_and_active(req, req["req_type"]);
+    QUEUE::Push(req, req["req_type"]);
 
     _req_map.erase(Conncet_Key);
     return 0;
@@ -258,7 +256,7 @@ int ntrip_relay_connector::request_give_back_account(std::string Conncet_Key)
 
     json back_account_req;
     back_account_req["origin_req"] = req;
-    _queue->push_and_active(back_account_req, CLOSE_RELAY_REQ_CONNECT);
+    QUEUE::Push(back_account_req, CLOSE_RELAY_REQ_CONNECT);
 
     _req_map.erase(Conncet_Key);
 

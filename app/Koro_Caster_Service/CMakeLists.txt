@@ -62,6 +62,8 @@ set(COMPONTENT_TYPE_SOURCE
     src/Compontent/source_transfer.cpp
     include/Compontent/file_loger.h
     src/Compontent/file_loger.cpp
+    include/Compontent/caster_core.h
+    src/Compontent/caster_core.cpp
 )
 
 set(CARRIER_TYPE_SOURCE

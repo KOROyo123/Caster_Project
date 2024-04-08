@@ -4,12 +4,10 @@
 
 #define __class__ "client_ntrip"
 
-client_ntrip::client_ntrip(json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+client_ntrip::client_ntrip(json req, bufferevent *bev)
 {
     _info = req;
     _bev = bev;
-    _pub_context = pub_context;
-    _queue = queue;
 
     _user_name = req["user_name"];
     _mount_point = req["mount_point"];
@@ -42,6 +40,8 @@ int client_ntrip::start()
 
     bev_send_reply();
 
+    CASTER::Send_Rover_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+
     spdlog::info("Client Info: user [{}] is login, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
 
     return 0;
@@ -54,9 +54,12 @@ int client_ntrip::stop()
     json close_req;
     close_req["origin_req"] = _info;
 
-    _queue->push_and_active(close_req, CLOSE_NTRIP_CLIENT);
+    QUEUE::Push(close_req, CLOSE_NTRIP_CLIENT);
 
     spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
+
+    CASTER::Send_Rover_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+
     return 0;
 }
 
@@ -137,10 +140,12 @@ int client_ntrip::data_transfer(evbuffer *evbuf)
 int client_ntrip::publish_data_from_evbuf()
 {
     size_t length = evbuffer_get_length(_evbuf);
-    char *data = new char[length + 1];
+    unsigned char *data = new unsigned char[length + 1];
     data[length] = '\0';
     evbuffer_remove(_evbuf, data, length);
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH CSTR_%s %b", _connect_key.c_str(), data, length);
+
+    CASTER::Pub_Rover_Raw_Data(_mount_point.c_str(), data, length);
+    
     delete[] data;
     return 0;
 }

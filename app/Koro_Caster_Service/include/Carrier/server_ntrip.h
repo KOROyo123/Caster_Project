@@ -5,9 +5,7 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
+#include "Compontent/caster_core.h"
 
 #include <spdlog/spdlog.h>
 
@@ -25,9 +23,9 @@ private:
     int _heart_beat_interval;
     std::string _heart_beat_msg;
 
-    std::string _Connect_Key;
-    std::string _publish_mount;
-    std::string _mount_group;
+    std::string _connect_key;
+    std::string _mount_point;
+
     std::string _ip;
     int _port;
 
@@ -38,7 +36,6 @@ private:
 
     bufferevent *_bev;
     evbuffer *_evbuf;
-    redisAsyncContext *_pub_context;
 
     // 定时器和定时事件
     event *_timeout_ev;
@@ -46,10 +43,8 @@ private:
 
     timeval _bev_read_timeout_tv;
 
-    std::shared_ptr<process_queue> _queue;
-
 public:
-    server_ntrip(json conf, json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    server_ntrip(json req, bufferevent *bev);
     ~server_ntrip();
 
     std::string get_connect_key();

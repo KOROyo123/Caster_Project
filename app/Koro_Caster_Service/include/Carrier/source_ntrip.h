@@ -6,9 +6,7 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
+#include "Compontent/caster_core.h"
 
 #include <spdlog/spdlog.h>
 
@@ -29,13 +27,11 @@ private:
 
     bufferevent *_bev;
     evbuffer *_evbuf;
-    redisAsyncContext *_pub_context;
-    std::shared_ptr<process_queue> _queue;
 
     std::string _list;
 
 public:
-    source_ntrip(json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    source_ntrip(json req, bufferevent *bev);
     ~source_ntrip();
 
     int start();

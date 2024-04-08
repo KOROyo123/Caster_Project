@@ -11,6 +11,7 @@
 #include "Compontent/source_transfer.h"
 #include "Compontent/data_transfer.h"
 #include "Compontent/auth_verifier.h"
+#include "Compontent/caster_core.h"
 #include "DB/relay_account_tb.h"
 #include "Extra/heart_beat.h"
 
@@ -47,11 +48,6 @@ private:
     bool _HTTP_Ctrl_Support = false;
     bool _Extra_Module_Support = false;
 
-    // Redis连接相关
-    std::string _redis_IP;
-    int _redis_port;
-    std::string _redis_Requirepass;
-
 public:
     // 公开的接口
     ntrip_caster(json cfg);
@@ -66,7 +62,6 @@ public:
 private:
     // 状态数据
     json _state_info;
-    int init_state_info();
     int update_state_info();
 
     // 定期任务
@@ -156,7 +151,7 @@ private:
 
 private:
     // 任务队列
-    std::shared_ptr<process_queue> _queue = std::make_shared<process_queue>();
+    // QUEUE::
     // base
     event_base *_base;
     // process处理事件
@@ -167,10 +162,6 @@ private:
 
     timeval _delay_exit_tv = {1, 0}; // 延迟关闭定时器
 
-    // redis发布订阅连接
-    redisAsyncContext *_pub_context;
-    redisAsyncContext *_sub_context;
-
 public:
     int start_server_thread();
     static void *event_base_thread(void *arg);
@@ -179,10 +170,12 @@ public:
     static void Request_Process_Cb(evutil_socket_t fd, short what, void *arg);
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
 
-    // Redis回调
-    static void Redis_Connect_Cb(const redisAsyncContext *c, int status);
-    static void Redis_Disconnect_Cb(const redisAsyncContext *c, int status);
+    // static void Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata);
 
-    static void Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata);
+    static void Caster_Client_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length);
+    static void Caster_Client_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length);
+
+    static void Caster_Server_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length);
+    static void Caster_Server_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length);
 };

@@ -2,9 +2,9 @@
 #include "knt/knt.h"
 #define __class__ "server_ntrip"
 
-server_ntrip::server_ntrip(json conf, json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+server_ntrip::server_ntrip(json req, bufferevent *bev)
 {
-    _conf = conf;
+    _conf = req["Settings"];
     _info = req;
     _bev = bev;
 
@@ -20,12 +20,8 @@ server_ntrip::server_ntrip(json conf, json req, bufferevent *bev, std::shared_pt
 
     _evbuf = evbuffer_new();
 
-    _pub_context = pub_context;
-    _queue = queue;
-
-    _Connect_Key = _info["connect_key"];
-    _publish_mount = _info["mount_point"];
-    _mount_group = _info["mount_group"];
+    _connect_key = _info["connect_key"];
+    _mount_point = _info["mount_point"];
 
     _connect_timeout = _conf["Connect_Timeout"];
     _heart_beat_switch = _conf["Heart_Beat_Switch"];
@@ -41,12 +37,11 @@ server_ntrip::~server_ntrip()
 
 std::string server_ntrip::get_connect_key()
 {
-    return _Connect_Key;
+    return _connect_key;
 }
 
 int server_ntrip::start()
 {
-
     bufferevent_setcb(_bev, ReadCallback, NULL, EventCallback, this);
     bufferevent_enable(_bev, EV_READ | EV_WRITE);
 
@@ -60,12 +55,9 @@ int server_ntrip::start()
 
     bev_send_reply();
 
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_online %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HSET mp_ol_all %s %s", _publish_mount.c_str(), _Connect_Key.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HSET mp_ol_%s %s %s", _mount_group.c_str(), _publish_mount.c_str(), _Connect_Key.c_str());
-    // redisAsyncCommand(_pub_context, NULL, NULL, "EXPIRE MOUNT_STATE_%s 30 GT", _publish_mount.c_str());
+    CASTER::Send_Common_Base_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
 
-    spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _publish_mount, _ip, _port);
+    spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _mount_point, _ip, _port);
 
     _timeout_tv.tv_sec = _heart_beat_interval;
     _timeout_tv.tv_usec = 0;
@@ -85,13 +77,11 @@ int server_ntrip::stop()
     // 向xx发送销毁请求
     json close_req;
     close_req["origin_req"] = _info;
-    _queue->push_and_active(close_req, CLOSE_NTRIP_SERVER);
+    QUEUE::Push(close_req, CLOSE_NTRIP_SERVER);
 
-    spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _publish_mount, _ip, _port);
+    spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _mount_point, _ip, _port);
 
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_offline %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_all %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_%s %s ", _mount_group.c_str(), _publish_mount.c_str());
+    CASTER::Send_Common_Base_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     return 0;
 }
@@ -147,7 +137,7 @@ void server_ntrip::EventCallback(bufferevent *bev, short events, void *arg)
                  (events & BEV_EVENT_EOF) ? "eof" : "-",
                  (events & BEV_EVENT_ERROR) ? "error" : "-",
                  (events & BEV_EVENT_TIMEOUT) ? "timeout" : "-",
-                 (events & BEV_EVENT_CONNECTED) ? "connected" : "-", svr->_publish_mount, svr->_ip, svr->_port);
+                 (events & BEV_EVENT_CONNECTED) ? "connected" : "-", svr->_mount_point, svr->_ip, svr->_port);
 
     svr->stop();
 }
@@ -178,7 +168,7 @@ int server_ntrip::publish_data_from_chunck()
 
         if (!chunck_head_data)
         {
-            spdlog::warn("[{}:{}: chunked data error,close connect! {},{},{}", __class__, __func__, _publish_mount, _ip, _port);
+            spdlog::warn("[{}:{}: chunked data error,close connect! {},{},{}", __class__, __func__, _mount_point, _ip, _port);
             stop();
         }
         sscanf(chunck_head_data, "%lx", &chunck_head_size);
@@ -199,7 +189,8 @@ int server_ntrip::publish_data_from_chunck()
         data[_chuncked_size + 2] = '\0';
 
         evbuffer_remove(_evbuf, data, _chuncked_size);
-        redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
+        // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
+        CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, _chuncked_size);
 
         _chuncked_size = 0;
         delete[] data;
@@ -228,9 +219,9 @@ int server_ntrip::publish_data_from_evbuf()
 
     evbuffer_remove(_evbuf, data, length);
 
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
+    // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
+    CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, length);
 
     delete[] data;
-
     return 0;
 }

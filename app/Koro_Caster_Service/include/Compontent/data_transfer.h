@@ -14,52 +14,36 @@
 #include "ntrip_global.h"
 #include "client_ntrip.h"
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
+#include "Compontent/caster_core.h"
 
 #include <spdlog/spdlog.h>
-
 
 class data_transfer
 {
 private:
     // 一个用来接收tcp数据的bufferevent
-
     json _setting;
     std::string _transfer_mount;
 
     evbuffer *_evbuf;
-    redisAsyncContext *_sub_context;
 
     std::unordered_map<std::string, std::unordered_map<std::string, client_ntrip *>> _sub_map; // mount /connect_key/client_ntrip
 
-    std::shared_ptr<process_queue> _queue;
-
 public:
-    data_transfer(json req, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    data_transfer(json req);
     ~data_transfer();
 
     int start();
     int stop();
 
     int add_pub_server(std::string Mount_Point);
-    int stop_all_sub_client(std::string Mount_Point);  //会依次关闭所有用户，当最后一个用户关闭时，会调用del_pub_server 关闭订阅
-
+    int stop_all_sub_client(std::string Mount_Point); // 会依次关闭所有用户，当最后一个用户关闭时，会调用del_pub_server 关闭订阅
 
     bool mount_point_exist(std::string Mount_Point);
     int add_sub_client(std::string Mount_Point, std::string Connect_Key, client_ntrip *client);
     int del_sub_client(std::string Mount_Point, std::string Connect_Key);
 
-    static void Redis_PubOff_Callback(redisAsyncContext *c, void *r, void *privdata);
-
-    static void Redis_RecvSub_Callback(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_UnSub_Callback(redisAsyncContext *c, void *r, void *privdata);
-
-    static void Redis_Connect_Cb(const redisAsyncContext *c, int status);
-    static void Redis_Disconnect_Cb(const redisAsyncContext *c, int status);
-
-    int transfer_date_to_sub(redisReply *data, int reply_num);
+    int transfer_date_to_sub(const char *mount_point, const char *data, size_t length);
 
 private:
     int del_pub_server(std::string Mount_Point);

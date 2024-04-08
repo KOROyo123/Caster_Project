@@ -5,14 +5,10 @@
 
 #define __class__ "source_transfer"
 
-source_transfer::source_transfer(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+source_transfer::source_transfer(json req, event_base *base)
 {
     _setting = req;
     _base = base;
-    _queue = queue;
-
-    _pub_context = pub_context;
-    _sub_context = sub_context;
 
     _source_update_tv.tv_sec = req["Update_Interval"];
     _source_update_tv.tv_usec = 0;
@@ -129,62 +125,51 @@ void source_transfer::TimeoutCallback(evutil_socket_t fd, short events, void *ar
 //     //_queue->push_and_active(req, ALREADY_SEND_SOURCELIST_CLOSE_CONNCET);
 // }
 
-void source_transfer::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata)
-{
-    auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<source_transfer *>(privdata);
+// void source_transfer::Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata)
+// {
+//     auto reply = static_cast<redisReply *>(r);
+//     auto arg = static_cast<source_transfer *>(privdata);
 
-    if (!reply)
-    {
-        return;
-    }
+//     if (!reply)
+//     {
+//         return;
+//     }
 
-    arg->_online_common_mount.clear();
-    for (int i = 0; i < reply->elements; i += 2)
-    {
-        arg->_online_common_mount.insert(reply->element[i]->str);
-    }
-}
+//     arg->_online_common_mount.clear();
+//     for (int i = 0; i < reply->elements; i += 2)
+//     {
+//         arg->_online_common_mount.insert(reply->element[i]->str);
+//     }
+// }
 
-void source_transfer::Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata)
-{
-    auto reply = static_cast<redisReply *>(r);
-    auto arg = static_cast<source_transfer *>(privdata);
+// void source_transfer::Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata)
+// {
+//     auto reply = static_cast<redisReply *>(r);
+//     auto arg = static_cast<source_transfer *>(privdata);
 
-    if (reply->type != REDIS_REPLY_NIL)
-    {
-        return;
-    }
-    return;
-}
+//     if (reply->type != REDIS_REPLY_NIL)
+//     {
+//         return;
+//     }
+//     return;
+// }
 
-void source_transfer::Redis_Callback_Get_TRD_Relay_List(redisAsyncContext *c, void *r, void *privdata)
-{
-}
-
-void source_transfer::Redis_Callback_Get_All_List(redisAsyncContext *c, void *r, void *privdata)
-{
-}
-
-void source_transfer::Redis_Callback_Get_One_info(redisAsyncContext *c, void *r, void *privdata)
-{
-}
 
 int source_transfer::get_online_mount_point()
 {
 
-    if (_send_common)
-    {
-        redisAsyncCommand(_pub_context, Redis_Callback_Get_Common_List, this, "HGETALL mp_ol_common");
-    }
-    if (_send_sys_relay)
-    {
-        redisAsyncCommand(_pub_context, Redis_Callback_Get_SYS_Relay_List, this, "HGETALL mp_ol_sys");
-    }
-    if (_send_trd_relay)
-    {
-        redisAsyncCommand(_pub_context, Redis_Callback_Get_TRD_Relay_List, this, "HGETALL mp_ol_trd");
-    }
+    // if (_send_common)
+    // {
+    //     redisAsyncCommand(_pub_context, Redis_Callback_Get_Common_List, this, "HGETALL mp_ol_common");
+    // }
+    // if (_send_sys_relay)
+    // {
+    //     redisAsyncCommand(_pub_context, Redis_Callback_Get_SYS_Relay_List, this, "HGETALL mp_ol_sys");
+    // }
+    // if (_send_trd_relay)
+    // {
+    //     redisAsyncCommand(_pub_context, Redis_Callback_Get_TRD_Relay_List, this, "HGETALL mp_ol_trd");
+    // }
 
     return 0;
 }

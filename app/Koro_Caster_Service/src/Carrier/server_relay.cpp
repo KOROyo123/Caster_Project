@@ -2,11 +2,11 @@
 #include "knt/knt.h"
 #define __class__ "server_relay"
 
-server_relay::server_relay(json req, void *connect_obj, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+server_relay::server_relay(json req, bufferevent* bev)
 {
     _info = req;
 
-    _bev = static_cast<bufferevent *>(connect_obj);
+    _bev = bev;
 
     int fd = bufferevent_getfd(_bev);
     _ip = util_get_user_ip(fd);
@@ -20,12 +20,8 @@ server_relay::server_relay(json req, void *connect_obj, std::shared_ptr<process_
 
     _evbuf = evbuffer_new();
 
-    _pub_context = pub_context;
-    _sub_context = sub_context;
-    _queue = queue;
-
-    _Connect_Key = _info["connect_key"];
-    _publish_mount = _info["mount_point"];
+    _connect_key = _info["connect_key"];
+    _mount_point = _info["mount_point"];
     _mount_group = _info["mount_group"];
 
     _req_user_name = _info["origin_req"]["user_name"];
@@ -34,16 +30,16 @@ server_relay::server_relay(json req, void *connect_obj, std::shared_ptr<process_
 
 server_relay::~server_relay()
 {
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_offline %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_all %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_%s %s ", _mount_group.c_str(), _publish_mount.c_str());
+    // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_offline %s ", _publish_mount.c_str());
+    // redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_all %s ", _publish_mount.c_str());
+    // redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_%s %s ", _mount_group.c_str(), _publish_mount.c_str());
 
 
     bufferevent_free(_bev);
 
     evbuffer_free(_evbuf);
 
-    spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _publish_mount, _ip, _port);
+    spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _mount_point, _ip, _port);
 }
 
 int server_relay::start()
@@ -52,14 +48,11 @@ int server_relay::start()
     bufferevent_setcb(_bev, ReadCallback, NULL, EventCallback, this);
     bufferevent_enable(_bev, EV_READ | EV_WRITE);
 
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_online %s ", _publish_mount.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HSET mp_ol_all %s %s", _publish_mount.c_str(), _Connect_Key.c_str());
-    redisAsyncCommand(_pub_context, NULL, NULL, "HSET mp_ol_%s %s %s", _mount_group.c_str(), _publish_mount.c_str(), _Connect_Key.c_str());
-    // redisAsyncCommand(_pub_context, NULL, NULL, "EXPIRE MOUNT_STATE_%s 30 GT", _publish_mount.c_str());
+    CASTER::Send_Common_Base_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
 
-    redisAsyncCommand(_sub_context, Redis_Recv_Callback, static_cast<void *>(this), "SUBSCRIBE CSTR_%s", _req_user_name.c_str());
+    // redisAsyncCommand(_sub_context, Redis_Recv_Callback, static_cast<void *>(this), "SUBSCRIBE CSTR_%s", _req_user_name.c_str());
 
-    spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _publish_mount, _ip, _port);
+    spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _mount_point, _ip, _port);
 
     return 0;
 }
@@ -68,14 +61,15 @@ int server_relay::stop()
 {
     bufferevent_disable(_bev, EV_READ);
 
-    redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE CSTR_%s", _req_user_name.c_str());
+    // redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE CSTR_%s", _req_user_name.c_str());
 
-    // // 向xx发送销毁请求
-    // json close_req;
-    // close_req["origin_req"] = _info;
-    // _queue->push_and_active(close_req, CLOSE_RELAY_SERVER);
+    // 向xx发送销毁请求
+    json close_req;
+    close_req["origin_req"] = _info;
+    QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
 
-    // spdlog::info("Mount Info: mount [{}] is offline!", _publish_mount);
+    CASTER::Send_Common_Base_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+
     return 0;
 }
 
@@ -112,7 +106,7 @@ int server_relay::publish_data_from_chunck()
 
         if (!chunck_head_data)
         {
-            spdlog::warn("[{}:{}: chunked data error,close connect! mount:[{}], addr:[{}:{}]", __class__, __func__, _publish_mount, _ip, _port);
+            spdlog::warn("[{}:{}: chunked data error,close connect! mount:[{}], addr:[{}:{}]", __class__, __func__, _mount_point, _ip, _port);
             stop();
         }
 
@@ -135,7 +129,7 @@ int server_relay::publish_data_from_chunck()
 
         evbuffer_remove(_evbuf, data, _chuncked_size);
 
-        redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
+        // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
 
         _chuncked_size = 0;
         delete[] data;
@@ -164,7 +158,7 @@ int server_relay::publish_data_from_evbuf()
 
     evbuffer_remove(_evbuf, data, length);
 
-    redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
+    // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
 
     // redisFreeCommand
 
@@ -173,51 +167,51 @@ int server_relay::publish_data_from_evbuf()
     return 0;
 }
 
-void server_relay::Redis_Recv_Callback(redisAsyncContext *c, void *r, void *privdata)
-{
-    auto reply = static_cast<redisReply *>(r);
-    auto svr = static_cast<server_relay *>(privdata);
+// void server_relay::Redis_Recv_Callback(redisAsyncContext *c, void *r, void *privdata)
+// {
+//     auto reply = static_cast<redisReply *>(r);
+//     auto svr = static_cast<server_relay *>(privdata);
 
-    evbuffer *evbuf = bufferevent_get_output(svr->_bev);
+//     evbuffer *evbuf = bufferevent_get_output(svr->_bev);
 
-    if (reply->element[2]->type == REDIS_REPLY_INTEGER)
-    {
-        std::string msg;
-        msg = reply->element[0]->str;
-        if (msg == "unsubscribe")
-        {
-            svr->send_del_req();
-        }
-    }
-    else
-    {
-        evbuffer_add(evbuf, reply->element[2]->str, reply->element[2]->len);
-    }
+//     if (reply->element[2]->type == REDIS_REPLY_INTEGER)
+//     {
+//         std::string msg;
+//         msg = reply->element[0]->str;
+//         if (msg == "unsubscribe")
+//         {
+//             svr->send_del_req();
+//         }
+//     }
+//     else
+//     {
+//         evbuffer_add(evbuf, reply->element[2]->str, reply->element[2]->len);
+//     }
 
-    // for (int i = 0; i < reply->elements; i++)
-    // {
-    //     auto ele = reply->element[i];
+//     // for (int i = 0; i < reply->elements; i++)
+//     // {
+//     //     auto ele = reply->element[i];
 
-    //     switch (ele->type)
-    //     {
-    //     case REDIS_REPLY_STRING:
-    //         std::cout << ele->str << std::endl;
-    //         break;
+//     //     switch (ele->type)
+//     //     {
+//     //     case REDIS_REPLY_STRING:
+//     //         std::cout << ele->str << std::endl;
+//     //         break;
 
-    //     case REDIS_REPLY_DOUBLE:
-    //         break;
+//     //     case REDIS_REPLY_DOUBLE:
+//     //         break;
 
-    //     case REDIS_REPLY_INTEGER:
-    //         std::cout << ele->integer << std::endl;
-    //         break;
+//     //     case REDIS_REPLY_INTEGER:
+//     //         std::cout << ele->integer << std::endl;
+//     //         break;
 
-    //     default:
-    //         break;
-    //     }
-    // }
+//     //     default:
+//     //         break;
+//     //     }
+//     // }
 
-    // 将接收到的数据，转发给挂载点
-}
+//     // 将接收到的数据，转发给挂载点
+// }
 
 // void server_relay::Redis_Unsub_Callback(redisAsyncContext *c, void *r, void *privdata)
 // {
@@ -227,7 +221,7 @@ void server_relay::Redis_Recv_Callback(redisAsyncContext *c, void *r, void *priv
 //     // 向xx发送销毁请求
 //     json close_req;
 //     close_req["origin_req"] = svr->_info;
-//     svr->_queue->push_and_active(close_req, CLOSE_RELAY_SERVER);
+//     svr->QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
 
 //     spdlog::info("Mount Info: mount [{}] is offline!", svr->_publish_mount);
 // }
@@ -237,7 +231,7 @@ int server_relay::send_del_req()
     // 向xx发送销毁请求
     json close_req;
     close_req["origin_req"] = _info;
-    _queue->push_and_active(close_req, CLOSE_RELAY_SERVER);
+    QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
 
     return 0;
 }

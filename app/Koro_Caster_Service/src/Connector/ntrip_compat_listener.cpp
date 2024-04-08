@@ -8,10 +8,9 @@
 
 #define __class__ "ntrip_compat_listener"
 
-ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map)
+ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map)
 {
     _base = base;
-    _queue = queue;
     _connect_map = connect_map;
 }
 
@@ -158,15 +157,15 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     auto svr = arg->first;
     auto key = arg->second;
 
-    //已经接收到请求，解析请求即可，这个请求决定了连接是进入下一步还是关闭
+    // 已经接收到请求，解析请求即可，这个请求决定了连接是进入下一步还是关闭
     bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
     bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 清空bev绑定的回调？  如果这个时候bev event_cb已经激活怎么办?是否就不继续执行了
-    //已经接收到请求，也需要关闭定时器
-    bufferevent_set_timeouts(bev, NULL, NULL);//解绑定时器
+    // 已经接收到请求，也需要关闭定时器
+    bufferevent_set_timeouts(bev, NULL, NULL); // 解绑定时器
     auto timer = svr->_timer_map.find(key);
     if (timer != svr->_timer_map.end())
     {
-        delete timer->second;//删除定时器
+        delete timer->second; // 删除定时器
         svr->_timer_map.erase(key);
     }
 
@@ -227,9 +226,9 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         svr->Process_Unknow_Request(bev);
     }
 
-    //清理
-    delete arg; // 删除arg
-    free(header);//删除读取的文件头
+    // 清理
+    delete arg;   // 删除arg
+    free(header); // 删除读取的文件头
 }
 
 void ntrip_compat_listener::Bev_EventCallback(bufferevent *bev, short events, void *ctx)
@@ -329,13 +328,13 @@ int ntrip_compat_listener::Process_Unknow_Request(bufferevent *bev)
 void ntrip_compat_listener::Ntrip_Source_Request_cb(bufferevent *bev, json req)
 {
     req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_SOURCE_LOGIN);
+    QUEUE::Push(req, REQUEST_SOURCE_LOGIN);
 }
 
 void ntrip_compat_listener::Ntrip_Client_Request_cb(bufferevent *bev, json req)
 {
     req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_CLIENT_LOGIN);
+    QUEUE::Push(req, REQUEST_CLIENT_LOGIN);
 }
 
 void ntrip_compat_listener::Ntrip_Virtal_Request_cb(bufferevent *bev, json req)
@@ -346,7 +345,7 @@ void ntrip_compat_listener::Ntrip_Virtal_Request_cb(bufferevent *bev, json req)
         return;
     }
     req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_VIRTUAL_LOGIN);
+    QUEUE::Push(req, REQUEST_VIRTUAL_LOGIN);
 }
 
 void ntrip_compat_listener::Ntrip_Nearest_Request_cb(bufferevent *bev, json req)
@@ -357,13 +356,13 @@ void ntrip_compat_listener::Ntrip_Nearest_Request_cb(bufferevent *bev, json req)
         return;
     }
     req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_NEAREST_LOGIN);
+    QUEUE::Push(req, REQUEST_NEAREST_LOGIN);
 }
 
 void ntrip_compat_listener::Ntrip_Server_Request_cb(bufferevent *bev, json req)
 {
     req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_SERVER_LOGIN);
+    QUEUE::Push(req, REQUEST_SERVER_LOGIN);
 }
 
 std::string ntrip_compat_listener::get_conncet_key(bufferevent *bev)

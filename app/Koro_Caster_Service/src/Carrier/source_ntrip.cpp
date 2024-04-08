@@ -3,12 +3,10 @@
 
 #define __class__ "source_ntrip"
 
-source_ntrip::source_ntrip(json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context)
+source_ntrip::source_ntrip(json req, bufferevent *bev)
 {
     _info = req;
     _bev = bev;
-    _queue = queue;
-    _pub_context = pub_context;
 
     _user_name = req["user_name"];
     if (req["ntrip_version"] == "Ntrip/2.0")
@@ -44,8 +42,8 @@ int source_ntrip::stop()
     json close_req;
     close_req["origin_req"] = _info;
 
-    _queue->push_and_active(close_req, CLOSE_NTRIP_SOURCE);
-
+    QUEUE::Push(close_req, CLOSE_NTRIP_SOURCE);
+    
     spdlog::info("Source List: close connect , user [{}],  addr:[{}:{}]", _user_name, _ip, _port);
     return 0;
 }

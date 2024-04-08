@@ -12,9 +12,7 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
+#include "Compontent/caster_core.h"
 
 #include <spdlog/spdlog.h>
 
@@ -66,8 +64,6 @@ class source_transfer
 private:
     json _setting;
 
-    std::shared_ptr<process_queue> _queue;
-
     // 加一个定时器事件，定时获取所有在线挂载点
     event_base *_base;
     event *_source_update_ev;
@@ -80,9 +76,6 @@ private:
     bool _send_sys_relay; // 系统转发的挂载点
     bool _send_nearest;   // NEAREST是否可见//Nearest
     bool _send_virtual;   // Virtual是否可见//设置的挂载点
-
-    redisAsyncContext *_pub_context;
-    redisAsyncContext *_sub_context;
 
     std::unordered_map<std::string, mount_info> _mount_map; // Mount_Point // 挂载点名为XXXX-F1A6(虚拟挂载点名-本地连接第三方时采用的端口转为4位16进制)
 
@@ -109,7 +102,7 @@ private:
     // std::list<json> *_using_delay_close_list;
 
 public:
-    source_transfer(json req, event_base *base, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    source_transfer(json req, event_base *base);
     ~source_transfer();
 
     int start();
@@ -127,11 +120,11 @@ private:
     //static void DelayCloseCallback(evutil_socket_t fd, short events, void *arg);
 
 
-    static void Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_Callback_Get_TRD_Relay_List(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_Callback_Get_All_List(redisAsyncContext *c, void *r, void *privdata);
-    static void Redis_Callback_Get_One_info(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_Get_Common_List(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_Get_SYS_Relay_List(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_Get_TRD_Relay_List(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_Get_All_List(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Callback_Get_One_info(redisAsyncContext *c, void *r, void *privdata);
 
 private:
     int get_online_mount_point();
@@ -139,7 +132,7 @@ private:
     int build_source_list();
     int build_source_table();
 
-    int close_delay_close();
+    // int close_delay_close();
 
     std::string update_list_item(std::set<std::string> group);
 

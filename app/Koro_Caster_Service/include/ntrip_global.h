@@ -5,6 +5,7 @@
 
 // 工程配置
 #include "version.h"
+#include "Compontent/caster_core.h"
 // #define SOFTWARE_NAME "KORO_Caster"
 // #define SOFTWARE_VERSION "0.0.2"
 

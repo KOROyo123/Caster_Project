@@ -14,29 +14,16 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-class process_queue
+namespace QUEUE
 {
-private:
-    std::queue<json> _queue;
-    std::mutex _lock;
+    int Init(event * process_event);
+    int Free();
 
-    event *_processer;
+    int Push(json req, int req_type);
+    json Pop();
 
-public:
-    process_queue();
-    ~process_queue();
+    bool Active();
+    bool Not_Null();
 
-    int add_processer(event *processer);
+} // namespace QUEUE
 
-    int push(json req, int req_type);
-
-    int active_prrocesser();
-
-    int push_and_active(json req, int req_type);
-
-    json poll();
-
-    bool not_null();
-
-    // int del_processer(event *process_event);
-};
