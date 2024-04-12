@@ -40,7 +40,7 @@ int client_ntrip::start()
 
     bev_send_reply();
 
-    CASTER::Send_Rover_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Rover_Client_State_ONLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     spdlog::info("Client Info: user [{}] is login, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
 
@@ -58,7 +58,7 @@ int client_ntrip::stop()
 
     spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
 
-    CASTER::Send_Rover_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Rover_Client_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     return 0;
 }
@@ -144,7 +144,7 @@ int client_ntrip::publish_data_from_evbuf()
     data[length] = '\0';
     evbuffer_remove(_evbuf, data, length);
 
-    CASTER::Pub_Rover_Raw_Data(_mount_point.c_str(), data, length);
+    CASTER::Pub_Rover_Client_Raw_Data(_mount_point.c_str(), data, length);
     
     delete[] data;
     return 0;

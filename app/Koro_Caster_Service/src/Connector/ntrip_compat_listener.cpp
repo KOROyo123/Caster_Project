@@ -75,13 +75,13 @@ int ntrip_compat_listener::disable_Nearest_Support()
     return 0;
 }
 
-int ntrip_compat_listener::enable_Virtal_Support()
+int ntrip_compat_listener::enable_Virtual_Support()
 {
     _Virtal_Support = true;
     return 0;
 }
 
-int ntrip_compat_listener::disable_Virtal_Support()
+int ntrip_compat_listener::disable_Virtual_Support()
 {
     _Virtal_Support = false;
     return 0;

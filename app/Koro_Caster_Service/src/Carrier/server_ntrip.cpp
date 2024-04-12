@@ -55,7 +55,7 @@ int server_ntrip::start()
 
     bev_send_reply();
 
-    CASTER::Send_Common_Base_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Base_Station_State_ONLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _mount_point, _ip, _port);
 
@@ -81,7 +81,7 @@ int server_ntrip::stop()
 
     spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _mount_point, _ip, _port);
 
-    CASTER::Send_Common_Base_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Base_Station_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     return 0;
 }
@@ -190,7 +190,7 @@ int server_ntrip::publish_data_from_chunck()
 
         evbuffer_remove(_evbuf, data, _chuncked_size);
         // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, _chuncked_size);
-        CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, _chuncked_size);
+        // CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, _chuncked_size);
 
         _chuncked_size = 0;
         delete[] data;
@@ -220,7 +220,7 @@ int server_ntrip::publish_data_from_evbuf()
     evbuffer_remove(_evbuf, data, length);
 
     // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH STR_%s %b", _publish_mount.c_str(), data, length);
-    CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, length);
+    // CASTER::Pub_Base_Raw_Data(_mount_point.c_str(), data, length);
 
     delete[] data;
     return 0;

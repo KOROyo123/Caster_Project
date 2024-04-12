@@ -48,7 +48,7 @@ int server_relay::start()
     bufferevent_setcb(_bev, ReadCallback, NULL, EventCallback, this);
     bufferevent_enable(_bev, EV_READ | EV_WRITE);
 
-    CASTER::Send_Common_Base_Online_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Base_Station_State_ONLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     // redisAsyncCommand(_sub_context, Redis_Recv_Callback, static_cast<void *>(this), "SUBSCRIBE CSTR_%s", _req_user_name.c_str());
 
@@ -68,7 +68,7 @@ int server_relay::stop()
     close_req["origin_req"] = _info;
     QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
 
-    CASTER::Send_Common_Base_Offline_Msg(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::Set_Base_Station_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
     return 0;
 }

@@ -14,8 +14,6 @@
 #include "ntrip_global.h"
 #include "client_ntrip.h"
 
-#include "Compontent/caster_core.h"
-
 #include <spdlog/spdlog.h>
 
 class data_transfer

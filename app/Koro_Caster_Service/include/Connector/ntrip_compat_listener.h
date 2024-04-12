@@ -35,7 +35,6 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include "Compontent/caster_core.h"
 
 #include <string>
 #include <memory>
@@ -75,8 +74,8 @@ public:
     int disable_Nearest_Support();
 
     // 虚拟挂载点相关
-    int enable_Virtal_Support();
-    int disable_Virtal_Support();
+    int enable_Virtual_Support();
+    int disable_Virtual_Support();
     int add_Virtal_Mount(std::string mount_point);
     int del_Virtal_Mount(std::string mount_point);
 

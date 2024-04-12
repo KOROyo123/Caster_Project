@@ -7,8 +7,6 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 
-#include "Compontent/caster_core.h"
-
 #include <spdlog/spdlog.h>
 
 #include <nlohmann/json.hpp>

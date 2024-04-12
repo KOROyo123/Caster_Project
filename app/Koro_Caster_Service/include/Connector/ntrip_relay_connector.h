@@ -12,7 +12,6 @@
 #include <event2/event.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
-#include "Compontent/caster_core.h"
 #include <string>
 #include <memory>
 #include <unordered_map>

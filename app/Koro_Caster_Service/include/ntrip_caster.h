@@ -10,8 +10,6 @@
 #include "Carrier/source_ntrip.h"
 #include "Compontent/source_transfer.h"
 #include "Compontent/data_transfer.h"
-#include "Compontent/auth_verifier.h"
-#include "Compontent/caster_core.h"
 #include "DB/relay_account_tb.h"
 #include "Extra/heart_beat.h"
 
@@ -133,7 +131,6 @@ private:
     // 核心组件
     data_transfer *_data_transfer;     // 数据转发
     source_transfer *_source_transfer; // 挂载点列表维护
-    auth_verifier *_auth_verifier;     // 密码验证
 
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp

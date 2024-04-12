@@ -62,9 +62,9 @@ set(COMPONTENT_TYPE_SOURCE
     src/Compontent/source_transfer.cpp
     include/Compontent/file_loger.h
     src/Compontent/file_loger.cpp
-    include/Compontent/caster_core.h
-    src/Compontent/caster_core.cpp
-    include/Compontent/cors_core.h
+    # include/Compontent/caster_core.h
+    # src/Compontent/caster_core.cpp
+    # include/Compontent/cors_core.h
 )
 
 set(CARRIER_TYPE_SOURCE
@@ -121,6 +121,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Koro_Caster_Service_Conf.json ${CMAKE
 
 #Koro_NavTool
 target_link_libraries(${EXE_NAME} knt)
+
+#spdlog
+target_link_libraries(${EXE_NAME} castercore)
+
+
 
 #Json-develop
 include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json-3.11.2/include)

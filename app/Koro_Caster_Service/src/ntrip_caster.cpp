@@ -72,7 +72,7 @@ int ntrip_caster::compontent_init()
 
     // 初始化Caster数据分发核心：当前采用的是Redis，后续开发支持脱离redis运行
     json redis_req = _server_config["Reids_Connect_Setting"];
-    CASTER::Init(redis_req, _base);
+    CASTER::Init(redis_req.dump().c_str(), _base);
     // create_redis_conncet(redis_req);
 
     // 添加创建data_tansfer
@@ -357,12 +357,12 @@ int ntrip_caster::create_client_ntrip(json req)
     if (true)
     {
         // 如果要限制用户登录数量,查询一下当前存在的用户，再去查询挂载点是否在线
-        CASTER::Check_Client_User_is_Online(user_name.c_str(), Caster_Client_Check_User_Exist_Cb, arg);
+        // CASTER::Check_Client_User_is_Online(user_name.c_str(), Caster_Client_Check_User_Exist_Cb, arg);
     }
     else
     {
         // 如果不限制用户登录数量，直接取查询挂载点
-        CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
+        // CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
     }
 
     return 0;
@@ -953,7 +953,7 @@ void ntrip_caster::Caster_Client_Check_User_Exist_Cb(void *arg, const char *msg,
     // 根据结果来决定是否进行下一步
 
     // 取查询挂载点
-    CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
+    // CASTER::Check_Mount_Point_is_Online(moint_point.c_str(), Caster_Client_Check_Mount_Exist_Cb, arg);
 }
 
 void ntrip_caster::Caster_Server_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length)
