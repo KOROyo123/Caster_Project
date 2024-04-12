@@ -54,6 +54,8 @@ include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
     src/DB/relay_account_tb.cpp
 )
 set(COMPONTENT_TYPE_SOURCE
+    include/Compontent/process_queue.h
+    src/Compontent/process_queue.cpp
     include/Compontent/data_transfer.h
     src/Compontent/data_transfer.cpp
     include/Compontent/source_transfer.h
@@ -86,8 +88,6 @@ set(EXTRA_SOURCE
 set(MAIN_SOURCES
     include/ntrip_global.h
     include/ntrip_caster.h
-    include/process_queue.h
-    src/process_queue.cpp
     src/main.cpp
     src/ntrip_caster.cpp
 )
