@@ -81,8 +81,6 @@ set(CONNECTOR_TYPE_SOURCE
 set(EXTRA_SOURCE
     include/Extra/heart_beat.h
     src/Extra/heart_beat.cpp
-    include/Extra/smtp_ssl.h
-    src/Extra/smtp_ssl.cpp
 )
 
 set(MAIN_SOURCES
