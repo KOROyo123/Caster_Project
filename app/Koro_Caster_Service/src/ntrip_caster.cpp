@@ -49,18 +49,6 @@ ntrip_caster::~ntrip_caster()
 {
 }
 
-int ntrip_caster::auto_init()
-{
-    // 初始化event_base
-
-    return 0;
-}
-
-int ntrip_caster::auto_stop()
-{
-    return 0;
-}
-
 int ntrip_caster::compontent_init()
 {
     // 根据配置文件，解析并创建初始化任务
@@ -73,28 +61,30 @@ int ntrip_caster::compontent_init()
     // 初始化Caster数据分发核心：当前采用的是Redis，后续开发支持脱离redis运行
     json redis_req = _server_config["Reids_Connect_Setting"];
     CASTER::Init(redis_req.dump().c_str(), _base);
-    // create_redis_conncet(redis_req);
 
     // 添加创建data_tansfer
     json transfer_req = _server_config["Data_Transfer_Setting"];
-    create_data_transfer(transfer_req);
+    _data_transfer = new data_transfer(transfer_req);
+    _data_transfer->start();
 
     // 创建client_source
     json source_req = _server_config["Source_Setting"];
-    create_client_source(source_req);
+    _source_transfer = new source_transfer(source_req, _base);
+    _source_transfer->start();
 
-    // 添加listener请求
+    // 创建listener请求
     json listener_req = _server_config["Ntrip_Listener_Setting"];
-    create_ntrip_listener(listener_req);
+    _compat_listener = new ntrip_compat_listener(_base, &_connect_map);
+    _compat_listener->set_listen_conf(listener_req);
+    _compat_listener->start();
 
     // 可选任务-------------------------------------
 
-    if (_SYS_Relay_Support | _TRD_Relay_Support)
-    {
-        // 启动一个 connectorr
-        json connector_req;
-        create_relay_connector(connector_req);
-    }
+    // 创建一个relay_connectorr
+    _relay_connetcotr = new ntrip_relay_connector(_base, &_connect_map);
+    // relay表读取配置文件
+    _relay_accounts.load_account_file("Relay_Accounts.json");
+    // }
 
     if (_SYS_Relay_Support)
     {
@@ -109,23 +99,22 @@ int ntrip_caster::compontent_init()
         // 向listener添加准入请求
     }
 
-    if (_HTTP_Ctrl_Support)
-    {
-    }
-
     return 0;
 }
 
 int ntrip_caster::compontent_stop()
 {
     _compat_listener->stop();
+    delete _compat_listener;
 
     _relay_connetcotr->stop();
     delete _relay_connetcotr;
 
     _data_transfer->stop();
+    delete _data_transfer;
 
     _source_transfer->stop();
+    delete _source_transfer;
 
     CASTER::Free();
 
@@ -140,14 +129,6 @@ int ntrip_caster::extra_init()
         _redis_beat->set_base(_base);
         _redis_beat->start();
     }
-
-    // if(!_server_config["SMTP_Setting"].is_null())
-    // {
-    //     _redis_beat=new redis_heart_beat(_server_config["Redis_Heart_Beat"]);
-
-    //     _redis_beat->set_base(_base);
-    //     _redis_beat->start();
-    // }
     return 0;
 }
 
@@ -184,9 +165,6 @@ int ntrip_caster::periodic_task()
 
 int ntrip_caster::start()
 {
-
-    // 系统开关参数、变量的初始化
-    auto_init();
     // 核心模块初始化（核心业务）
     compontent_init();
     // 附加模块初始化（不影响核心业务）
@@ -212,137 +190,11 @@ int ntrip_caster::stop()
 
     compontent_stop();
 
-    auto_stop();
 
     // 关闭所有连接，关闭listener;
 
     event_base_loopexit(_base, NULL);
 
-    return 0;
-}
-
-json ntrip_caster::get_setting()
-{
-    return json();
-}
-
-int ntrip_caster::set_setting(json config)
-{
-    return 0;
-}
-
-int ntrip_caster::create_redis_conncet(json req)
-{
-
-    // _redis_IP = req["Redis_IP"];
-    // _redis_port = req["Redis_Port"];
-    // _redis_Requirepass = req["Redis_Requirepass"];
-
-    // // 初始化redis连接
-    // redisOptions options = {0};
-    // REDIS_OPTIONS_SET_TCP(&options, _redis_IP.c_str(), _redis_port);
-    // struct timeval tv = {0};
-    // tv.tv_sec = 10;
-    // options.connect_timeout = &tv;
-
-    // _pub_context = redisAsyncConnectWithOptions(&options);
-    // if (_pub_context->err)
-    // {
-    //     /* Let *c leak for now... */
-    //     spdlog::error("redis eror: {}", _pub_context->errstr);
-    //     return 1;
-    // }
-
-    // redisLibeventAttach(_pub_context, _base);
-    // redisAsyncSetConnectCallback(_pub_context, Redis_Connect_Cb);
-    // redisAsyncSetDisconnectCallback(_pub_context, Redis_Disconnect_Cb);
-    // redisAsyncCommand(_pub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
-
-    // _sub_context = redisAsyncConnectWithOptions(&options);
-    // if (_sub_context->err)
-    // {
-    //     /* Let *c leak for now... */
-    //     spdlog::error("redis eror: {}", _sub_context->errstr);
-    //     return 1;
-    // }
-
-    // redisLibeventAttach(_sub_context, _base);
-    // redisAsyncSetConnectCallback(_sub_context, Redis_Connect_Cb);
-    // redisAsyncSetDisconnectCallback(_sub_context, Redis_Disconnect_Cb);
-    // redisAsyncCommand(_sub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
-    return 0;
-}
-
-int ntrip_caster::destroy_redis_conncet(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::reconnect_redis_connect(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::create_ntrip_listener(json req)
-{
-    // 创建一个listen对象，传入要监听的端口
-    // 启动监听
-    std::string ntrip_version = req["Listener_Type"];
-    if (ntrip_version == "NTRIP1.0/2.0")
-    {
-        auto *listener = new ntrip_compat_listener(_base, &_connect_map);
-        listener->set_listen_conf(req);
-        listener->start();
-        _compat_listener = listener;
-    }
-    // else
-    // {
-    //     auto *listener = new ntrip_common_listener(_base, _queue, &_connect_map, _pub_context);
-    //     listener->set_listen_conf(req);
-    //     listener->start();
-    //     _ntrip_listener = listener;
-    // }
-    return 0;
-}
-
-int ntrip_caster::destroy_ntrip_listener(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::create_client_source(json req)
-{
-    _source_transfer = new source_transfer(req, _base);
-    _source_transfer->start();
-    return 0;
-}
-
-int ntrip_caster::destroy_client_source(json req)
-{
-    return 0;
-}
-
-int ntrip_caster::create_relay_connector(json req)
-{
-    auto connector = new ntrip_relay_connector(_base, &_connect_map);
-    _relay_connetcotr = connector;
-
-    // 创建的时候，relay表才会生效，才需要读取配置文件
-    _relay_accounts.load_account_file("Relay_Accounts.json");
-
-    return 0;
-}
-
-int ntrip_caster::create_data_transfer(json req)
-{
-    _data_transfer = new data_transfer(req);
-    _data_transfer->start();
-
-    return 0;
-}
-
-int ntrip_caster::destroy_data_transfer(json req)
-{
     return 0;
 }
 

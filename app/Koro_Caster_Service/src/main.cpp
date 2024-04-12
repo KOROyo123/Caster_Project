@@ -138,7 +138,6 @@ int main(int argc, char **argv)
     }
 #endif
 
-
     spdlog::info("Init Server...");
     ntrip_caster a(cfg); // 创建一个对象，传入config
 

@@ -54,9 +54,6 @@ public:
     int start();
     int stop();
 
-    json get_setting();
-    int set_setting(json config);
-
 private:
     // 状态数据
     json _state_info;
@@ -67,32 +64,15 @@ private:
 
 private:
     // 程序启动和停止
-    int auto_init();
     int compontent_init();
     int extra_init();
 
-    int auto_stop();
     int compontent_stop();
     int extra_stop();
 
 private:
     // 任务处理函数
     int request_process(json req);
-
-    // redis相关
-    int create_redis_conncet(json req);
-    int destroy_redis_conncet(json req);
-    int reconnect_redis_connect(json req);
-
-    // data_transfer 相关
-    int create_data_transfer(json req);
-    int destroy_data_transfer(json req);
-
-    // ntrip common 相关
-    int create_ntrip_listener(json req);
-    int destroy_ntrip_listener(json req);
-    int create_client_source(json req);
-    int destroy_client_source(json req);
 
     int create_client_ntrip(json req); // 用Ntrip协议登录的用户(一个挂载点一个)
     int close_client_ntrip(json req);
@@ -103,7 +83,6 @@ private:
     int close_source_ntrip(json req);  // 用Ntrip协议获取源列表
 
     // ntrip relay 相关
-    int create_relay_connector(json req);
     int create_relay_connect(json req);
     int close_realy_req_connection(json req);
     int create_server_relay(json req); // 主动连接其他caster的数据源
@@ -166,9 +145,6 @@ public:
     // libevent回调
     static void Request_Process_Cb(evutil_socket_t fd, short what, void *arg);
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
-
-    // static void Redis_Callback_for_Data_Transfer_add_sub(redisAsyncContext *c, void *r, void *privdata);
-    // static void Redis_Callback_for_Create_Ntrip_Server(redisAsyncContext *c, void *r, void *privdata);
 
     static void Caster_Client_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length);
     static void Caster_Client_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length);
