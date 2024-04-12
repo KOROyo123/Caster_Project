@@ -50,7 +50,7 @@ namespace CASTER
     int UnSub_Rover_Client_Raw_Data(const char *connect_key, Client_type type = Client_type::CLIENT_COMMON);
 
     int Get_Source_Table_List(CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);
-    int Add_Source_Table_Item(const char *mount_point, std::string info, double lon = 0.0, double lat = 0.0, Source_type type = Source_type::SOURCE_COMMON);
+    int Add_Source_Table_Item(const char *mount_point, const char * info, double lon = 0.0, double lat = 0.0, Source_type type = Source_type::SOURCE_COMMON);
     int Del_Source_Table_Item(const char *mount_point, Source_type type = Source_type::SOURCE_COMMON);
     int Get_Source_Table_Item(const char *mount_point, CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);
     int Get_Radius_Table_List(double lon, double lat, CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);

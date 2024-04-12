@@ -54,17 +54,10 @@ include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
     src/DB/relay_account_tb.cpp
 )
 set(COMPONTENT_TYPE_SOURCE
-    include/Compontent/auth_verifier.h
-    src/Compontent/auth_verifier.cpp
     include/Compontent/data_transfer.h
     src/Compontent/data_transfer.cpp
     include/Compontent/source_transfer.h
     src/Compontent/source_transfer.cpp
-    include/Compontent/file_loger.h
-    src/Compontent/file_loger.cpp
-    # include/Compontent/caster_core.h
-    # src/Compontent/caster_core.cpp
-    # include/Compontent/cors_core.h
 )
 
 set(CARRIER_TYPE_SOURCE

@@ -95,7 +95,7 @@ int CASTER::Get_Source_Table_List(CasterCallback cb, void *arg, Source_type type
     return 0;
 }
 
-int CASTER::Add_Source_Table_Item(const char *mount_point, std::string info, double lon, double lat, Source_type type)
+int CASTER::Add_Source_Table_Item(const char *mount_point, const char * info, double lon, double lat, Source_type type)
 {
     return 0;
 }
