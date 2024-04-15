@@ -94,8 +94,10 @@ int ntrip_caster::compontent_init()
     if (_TRD_Relay_Support)
     {
         json relay_req;
-        QUEUE::Push(relay_req, ADD_RELAY_MOUNT_TO_LISTENER);
-        QUEUE::Push(relay_req, ADD_RELAY_MOUNT_TO_SOURCELIST);
+        relay_req["req_type"] = ADD_RELAY_MOUNT_TO_LISTENER;
+        QUEUE::Push(relay_req);
+        relay_req["req_type"] = ADD_RELAY_MOUNT_TO_SOURCELIST;
+        QUEUE::Push(relay_req);
         // 向listener添加准入请求
     }
 
@@ -189,7 +191,6 @@ int ntrip_caster::stop()
     extra_stop();
 
     compontent_stop();
-
 
     // 关闭所有连接，关闭listener;
 
@@ -296,7 +297,8 @@ int ntrip_caster::create_relay_connect(json req)
     if (account.empty())
     {
         // 没有可用账号
-        QUEUE::Push(req, NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET);
+        req["req_type"] = NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET;
+        QUEUE::Push(req);
         return 0;
     }
 
@@ -311,7 +313,8 @@ int ntrip_caster::create_relay_connect(json req)
         // 归还账号
         _relay_accounts.give_back_usr_account(account);
         // 关闭连接
-        QUEUE::Push(req, CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET);
+        req["req_type"] = CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET;
+        QUEUE::Push(req);
         return 0;
     }
 

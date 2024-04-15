@@ -77,7 +77,8 @@ int server_ntrip::stop()
     // 向xx发送销毁请求
     json close_req;
     close_req["origin_req"] = _info;
-    QUEUE::Push(close_req, CLOSE_NTRIP_SERVER);
+    close_req["req_type"]=CLOSE_NTRIP_SERVER;
+    QUEUE::Push(close_req);
 
     spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _mount_point, _ip, _port);
 

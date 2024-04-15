@@ -54,7 +54,8 @@ int client_ntrip::stop()
     json close_req;
     close_req["origin_req"] = _info;
 
-    QUEUE::Push(close_req, CLOSE_NTRIP_CLIENT);
+    close_req["req_type"] = CLOSE_NTRIP_CLIENT;
+    QUEUE::Push(close_req);
 
     spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
 
@@ -145,7 +146,7 @@ int client_ntrip::publish_data_from_evbuf()
     evbuffer_remove(_evbuf, data, length);
 
     CASTER::Pub_Rover_Client_Raw_Data(_mount_point.c_str(), data, length);
-    
+
     delete[] data;
     return 0;
 }

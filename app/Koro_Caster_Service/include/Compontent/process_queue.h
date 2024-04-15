@@ -16,14 +16,13 @@ using json = nlohmann::json;
 
 namespace QUEUE
 {
-    int Init(event * process_event);
+    int Init(event *process_event);
     int Free();
 
-    int Push(json req, int req_type);
+    int Push(json req);
     json Pop();
 
     bool Active();
     bool Not_Null();
 
 } // namespace QUEUE
-

@@ -3,16 +3,16 @@
 
 #include "caster_core_internal.h"
 
-redis_msg_internal *svr = nullptr;
+redis_msg_internal *caster_svr = nullptr;
 
 int CASTER::Init(const char *json_conf, event_base *base)
 {
 
     json conf = json::parse(json_conf);
 
-    if (svr == nullptr)
+    if (caster_svr == nullptr)
     {
-        svr = new redis_msg_internal(conf, base);
+        caster_svr = new redis_msg_internal(conf, base);
     }
 
     return 0;
@@ -20,8 +20,8 @@ int CASTER::Init(const char *json_conf, event_base *base)
 
 int CASTER::Free()
 {
-    svr->stop();
-    delete svr;
+    caster_svr->stop();
+    delete caster_svr;
     return 0;
 }
 
@@ -45,17 +45,17 @@ int CASTER::Check_Base_Station_is_Online(const char *mount_point, CasterCallback
     return 0;
 }
 
-int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, Station_type type)
+int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, const char *connect_key, Station_type type)
 {
     return 0;
 }
 
-int CASTER::Sub_Base_Station_Raw_Data(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
+int CASTER::Sub_Base_Station_Raw_Data(const char *mount_point, CasterCallback cb, void *arg, const char *connect_key, Station_type type)
 {
     return 0;
 }
 
-int CASTER::UnSub_Base_Station_Raw_Data(const char *mount_point, Station_type type)
+int CASTER::UnSub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, Station_type type)
 {
     return 0;
 }
@@ -75,17 +75,17 @@ int CASTER::Check_Rover_Client_is_Online(const char *user_name, CasterCallback c
     return 0;
 }
 
-int CASTER::Pub_Rover_Client_Raw_Data(const char *connect_key, const unsigned char *data, size_t data_length, Client_type type)
+int CASTER::Pub_Rover_Client_Raw_Data(const char *client_key, const unsigned char *data, size_t data_length, const char *connect_key, Client_type type)
 {
     return 0;
 }
 
-int CASTER::Sub_Rover_Client_Raw_Data(const char *connect_key, CasterCallback cb, void *arg, Client_type type)
+int CASTER::Sub_Rover_Client_Raw_Data(const char *client_key, CasterCallback cb, void *arg, const char *connect_key, Client_type type)
 {
     return 0;
 }
 
-int CASTER::UnSub_Rover_Client_Raw_Data(const char *connect_key, Client_type type)
+int CASTER::UnSub_Rover_Client_Raw_Data(const char *client_key, const char *connect_key, Client_type type)
 {
     return 0;
 }

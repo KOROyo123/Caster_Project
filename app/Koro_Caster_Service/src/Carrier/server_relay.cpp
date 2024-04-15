@@ -2,7 +2,7 @@
 #include "knt/knt.h"
 #define __class__ "server_relay"
 
-server_relay::server_relay(json req, bufferevent* bev)
+server_relay::server_relay(json req, bufferevent *bev)
 {
     _info = req;
 
@@ -15,7 +15,7 @@ server_relay::server_relay(json req, bufferevent* bev)
     if (req["ntrip_version"] == "Ntrip/2.0")
     {
         _NtripVersion2 = true;
-        _transfer_with_chunked=true;
+        _transfer_with_chunked = true;
     }
 
     _evbuf = evbuffer_new();
@@ -33,7 +33,6 @@ server_relay::~server_relay()
     // redisAsyncCommand(_pub_context, NULL, NULL, "PUBLISH mp_offline %s ", _publish_mount.c_str());
     // redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_all %s ", _publish_mount.c_str());
     // redisAsyncCommand(_pub_context, NULL, NULL, "HDEL mp_ol_%s %s ", _mount_group.c_str(), _publish_mount.c_str());
-
 
     bufferevent_free(_bev);
 
@@ -66,7 +65,8 @@ int server_relay::stop()
     // 向xx发送销毁请求
     json close_req;
     close_req["origin_req"] = _info;
-    QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
+    close_req["req_type"] = CLOSE_RELAY_SERVER;
+    QUEUE::Push(close_req);
 
     CASTER::Set_Base_Station_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
@@ -231,7 +231,8 @@ int server_relay::send_del_req()
     // 向xx发送销毁请求
     json close_req;
     close_req["origin_req"] = _info;
-    QUEUE::Push(close_req, CLOSE_RELAY_SERVER);
+    close_req["req_type"] = CLOSE_RELAY_SERVER;
+    QUEUE::Push(close_req);
 
     return 0;
 }

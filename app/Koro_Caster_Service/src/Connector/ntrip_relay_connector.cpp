@@ -147,7 +147,7 @@ void ntrip_relay_connector::ReadCallback(bufferevent *bev, void *ctx)
     {
         spdlog::warn("[{}:{}]: verify login response fail", __class__, __func__);
         svr->request_give_back_account(key); // 归还账号
-        bufferevent_free(bev);//释放bev
+        bufferevent_free(bev);               // 释放bev
     }
     else
     {
@@ -243,7 +243,7 @@ int ntrip_relay_connector::request_new_relay_server(std::string Conncet_Key)
     auto item = _req_map.find(Conncet_Key);
     auto req = item->second;
 
-    QUEUE::Push(req, req["req_type"]);
+    QUEUE::Push(req);
 
     _req_map.erase(Conncet_Key);
     return 0;
@@ -256,11 +256,12 @@ int ntrip_relay_connector::request_give_back_account(std::string Conncet_Key)
 
     json back_account_req;
     back_account_req["origin_req"] = req;
-    QUEUE::Push(back_account_req, CLOSE_RELAY_REQ_CONNECT);
+    back_account_req["req_type"] = CLOSE_RELAY_REQ_CONNECT;
+    QUEUE::Push(back_account_req);
 
     _req_map.erase(Conncet_Key);
 
-    _connect_map->erase(Conncet_Key); 
+    _connect_map->erase(Conncet_Key);
 
     return 0;
 }

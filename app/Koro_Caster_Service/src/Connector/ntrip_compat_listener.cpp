@@ -275,20 +275,24 @@ int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, const char *url
     std::string mount = req["mount_point"];
     if (mount.empty()) // 相当于"/"
     {
-        Ntrip_Source_Request_cb(bev, req);
+        req["req_type"] = REQUEST_SOURCE_LOGIN;
     }
     else if (mount == "NEAREST")
     {
-        Ntrip_Nearest_Request_cb(bev, req);
+        req["req_type"] = REQUEST_NEAREST_LOGIN;
     }
     else if (_support_virtual_mount.find(mount) != _support_virtual_mount.end())
     {
-        Ntrip_Virtal_Request_cb(bev, req);
+        req["req_type"] = REQUEST_VIRTUAL_LOGIN;
     }
     else
     {
-        Ntrip_Client_Request_cb(bev, req);
+        req["req_type"] = REQUEST_CLIENT_LOGIN;
     }
+
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -297,8 +301,11 @@ int ntrip_compat_listener::Process_POST_Request(bufferevent *bev, const char *ur
     json req = decode_bufferevent_req(bev);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
+    req["req_type"] = REQUEST_SERVER_LOGIN;
 
-    Ntrip_Server_Request_cb(bev, req);
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -307,6 +314,7 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
     json req = decode_bufferevent_req(bev);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
+    req["req_type"] = REQUEST_SERVER_LOGIN;
 
     std::string pwd = secret;
     if (pwd != "")
@@ -314,8 +322,9 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
         req["user"] = pwd;
         req["pwd"] = pwd;
     }
-
-    Ntrip_Server_Request_cb(bev, req);
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -325,44 +334,20 @@ int ntrip_compat_listener::Process_Unknow_Request(bufferevent *bev)
     return 0;
 }
 
-void ntrip_compat_listener::Ntrip_Source_Request_cb(bufferevent *bev, json req)
+void ntrip_compat_listener::Auth_Verify_Cb(void *arg, AuthReply *reply)
 {
-    req["connect_key"] = get_conncet_key(bev);
-    QUEUE::Push(req, REQUEST_SOURCE_LOGIN);
-}
+    auto ctx = static_cast<std::pair<ntrip_compat_listener *, json> *>(arg);
 
-void ntrip_compat_listener::Ntrip_Client_Request_cb(bufferevent *bev, json req)
-{
-    req["connect_key"] = get_conncet_key(bev);
-    QUEUE::Push(req, REQUEST_CLIENT_LOGIN);
-}
+    auto svr = ctx->first;
+    auto req = ctx->second;
 
-void ntrip_compat_listener::Ntrip_Virtal_Request_cb(bufferevent *bev, json req)
-{
-    if (!_Virtal_Support)
+    if (reply->type == AUTH_REPLY_OK)
     {
-        erase_and_free_bev(bev);
-        return;
+        QUEUE::Push(req);
     }
-    req["connect_key"] = get_conncet_key(bev);
-    QUEUE::Push(req, REQUEST_VIRTUAL_LOGIN);
-}
-
-void ntrip_compat_listener::Ntrip_Nearest_Request_cb(bufferevent *bev, json req)
-{
-    if (!_Nearest_Support)
+    else
     {
-        erase_and_free_bev(bev);
-        return;
     }
-    req["connect_key"] = get_conncet_key(bev);
-    QUEUE::Push(req, REQUEST_NEAREST_LOGIN);
-}
-
-void ntrip_compat_listener::Ntrip_Server_Request_cb(bufferevent *bev, json req)
-{
-    req["connect_key"] = get_conncet_key(bev);
-    QUEUE::Push(req, REQUEST_SERVER_LOGIN);
 }
 
 std::string ntrip_compat_listener::get_conncet_key(bufferevent *bev)

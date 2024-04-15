@@ -6,6 +6,7 @@
 // 工程配置
 #include "version.h"
 #include "Caster_Core.h"
+#include "Auth_Verify.h"
 // #define SOFTWARE_NAME "KORO_Caster"
 // #define SOFTWARE_VERSION "0.0.2"
 

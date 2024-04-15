@@ -41,9 +41,9 @@ int source_ntrip::stop()
 
     json close_req;
     close_req["origin_req"] = _info;
+    close_req["req_type"] = CLOSE_NTRIP_SOURCE;
+    QUEUE::Push(close_req);
 
-    QUEUE::Push(close_req, CLOSE_NTRIP_SOURCE);
-    
     spdlog::info("Source List: close connect , user [{}],  addr:[{}:{}]", _user_name, _ip, _port);
     return 0;
 }

@@ -113,8 +113,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Koro_Caster_Service_Conf.json ${CMAKE
 #Koro_NavTool
 target_link_libraries(${EXE_NAME} knt)
 
-#spdlog
+#caster_core
 target_link_libraries(${EXE_NAME} castercore)
+
+#auth_verify
+target_link_libraries(${EXE_NAME} authverify)
 
 
 
