@@ -47,7 +47,7 @@ public:
 
     std::string get_connect_key();
 
-    int start();
+    int start();//绑定回调，然后去AUTH添加登录记录（是否允许多用户登录由auth判断并处理），如果添加成功，那就发送reply给用户，然后通知CASTER上线，如果不成功，就进入关闭流程
     int stop();
 
     int bev_send_reply();

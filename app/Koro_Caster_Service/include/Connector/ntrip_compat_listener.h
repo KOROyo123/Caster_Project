@@ -86,7 +86,7 @@ public:
     static void Ntrip_Decode_Request_cb(bufferevent *bev, void *arg);
     static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
-    // 解析请求相关
+    // 解析请求相关（在解析完请求后，向AUTH验证用户名密码是否合法，只要合法就允许进入下一步（不判断是否已经登录，是否是重复登录，由后续步骤进行检查））
     int Process_GET_Request(bufferevent *bev, const char *path);
     int Process_POST_Request(bufferevent *bev, const char *path);
     int Process_SOURCE_Request(bufferevent *bev, const char *path, const char *secret);

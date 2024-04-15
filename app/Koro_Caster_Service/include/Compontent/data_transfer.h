@@ -13,6 +13,7 @@
 
 #include "ntrip_global.h"
 #include "client_ntrip.h"
+#include "tcp_"
 
 #include <spdlog/spdlog.h>
 
@@ -25,7 +26,8 @@ private:
 
     evbuffer *_evbuf;
 
-    std::unordered_map<std::string, std::unordered_map<std::string, client_ntrip *>> _sub_map; // mount /connect_key/client_ntrip
+    std::unordered_map<std::string, std::unordered_map<std::string, client_ntrip *>> _client_sub_map; // mount /connect_key/client_ntrip
+    std::unordered_map<std::string, std::set<std::string>> _common_sub_map; // connect_key /connect_key/client_ntrip
 
 public:
     data_transfer(json req);
@@ -46,4 +48,12 @@ public:
 private:
     int del_pub_server(std::string Mount_Point);
     // redisAsyncCommand(_pub_context, Redis_MountVerify_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", "KOROYO2");
+
+public:
+
+    int add_client_sub(std::string Mount_Point,std::string client_key, client_ntrip *client_obj);
+    int del_client_sub(std::string Mount_Point,std::string client_key);
+    int add_common_sub(std::string channel,std::string connect_key);
+    int del_common_sub(std::string channel,std::string connect_key);
+
 };

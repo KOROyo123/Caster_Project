@@ -37,20 +37,20 @@ namespace CASTER
     int Set_Base_Station_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type = Station_type::STATION_COMMON);
     int Check_Base_Station_is_Online(const char *mount_point, CasterCallback cb, void *arg, Station_type type = Station_type::STATION_COMMON);
 
-    int Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, Station_type type = Station_type::STATION_COMMON); // 同时延长BaseStation State的有效期
-    int Sub_Base_Station_Raw_Data(const char *mount_point, CasterCallback cb, void *arg, Station_type type = Station_type::STATION_COMMON);
-    int UnSub_Base_Station_Raw_Data(const char *mount_point, Station_type type = Station_type::STATION_COMMON);
+    int Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, const char *connect_key = "", Station_type type = Station_type::STATION_COMMON); // 同时延长BaseStation State的有效期
+    int Sub_Base_Station_Raw_Data(const char *mount_point, CasterCallback cb, void *arg, const char *connect_key = "", Station_type type = Station_type::STATION_COMMON);
+    int UnSub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key = "", Station_type type = Station_type::STATION_COMMON);
 
     int Set_Rover_Client_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Client_type type = Client_type::CLIENT_COMMON);
     int Set_Rover_Client_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Client_type type = Client_type::CLIENT_COMMON);
     int Check_Rover_Client_is_Online(const char *user_name, CasterCallback cb, void *arg, Client_type type = Client_type::CLIENT_COMMON);
 
-    int Pub_Rover_Client_Raw_Data(const char *connect_key, const unsigned char *data, size_t data_length, Client_type type = Client_type::CLIENT_COMMON);
-    int Sub_Rover_Client_Raw_Data(const char *connect_key, CasterCallback cb, void *arg, Client_type type = Client_type::CLIENT_COMMON);
-    int UnSub_Rover_Client_Raw_Data(const char *connect_key, Client_type type = Client_type::CLIENT_COMMON);
+    int Pub_Rover_Client_Raw_Data(const char *client_key, const unsigned char *data, size_t data_length, const char *connect_key = "", Client_type type = Client_type::CLIENT_COMMON);
+    int Sub_Rover_Client_Raw_Data(const char *client_key, CasterCallback cb, void *arg, const char *connect_key = "", Client_type type = Client_type::CLIENT_COMMON);
+    int UnSub_Rover_Client_Raw_Data(const char *client_key, const char *connect_key = "", Client_type type = Client_type::CLIENT_COMMON);
 
     int Get_Source_Table_List(CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);
-    int Add_Source_Table_Item(const char *mount_point, const char * info, double lon = 0.0, double lat = 0.0, Source_type type = Source_type::SOURCE_COMMON);
+    int Add_Source_Table_Item(const char *mount_point, const char *info, double lon = 0.0, double lat = 0.0, Source_type type = Source_type::SOURCE_COMMON);
     int Del_Source_Table_Item(const char *mount_point, Source_type type = Source_type::SOURCE_COMMON);
     int Get_Source_Table_Item(const char *mount_point, CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);
     int Get_Radius_Table_List(double lon, double lat, CasterCallback cb, void *arg, Source_type type = Source_type::SOURCE_COMMON);

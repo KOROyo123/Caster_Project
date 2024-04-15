@@ -27,7 +27,7 @@ int data_transfer::stop()
     // redisAsyncDisconnect(_sub_context);
     // redisAsyncFree(_sub_context);
 
-    for (auto iter : _sub_map)
+    for (auto iter : _client_sub_map)
     {
         std::string mountpoint = iter.first;
         // redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", mountpoint.c_str());
@@ -50,7 +50,7 @@ int data_transfer::stop()
 int data_transfer::add_pub_server(std::string Mount_Point)
 {
     std::unordered_map<std::string, client_ntrip *> item;
-    _sub_map.insert(std::make_pair(Mount_Point, item));
+    _client_sub_map.insert(std::make_pair(Mount_Point, item));
 
     // redisAsyncCommand(_sub_context, Redis_RecvSub_Callback, static_cast<void *>(this), "SUBSCRIBE STR_%s", Mount_Point.c_str());
 
@@ -59,8 +59,8 @@ int data_transfer::add_pub_server(std::string Mount_Point)
 
 int data_transfer::stop_all_sub_client(std::string Mount_Point)
 {
-    auto sub = _sub_map.find(Mount_Point);
-    if (sub == _sub_map.end())
+    auto sub = _client_sub_map.find(Mount_Point);
+    if (sub == _client_sub_map.end())
     {
         spdlog::error("can't find [{}] in data_transfer ", Mount_Point);
         return 1;
@@ -78,9 +78,9 @@ int data_transfer::stop_all_sub_client(std::string Mount_Point)
 
 int data_transfer::del_pub_server(std::string Mount_Point)
 {
-    auto sub_cli = _sub_map.find(Mount_Point);
+    auto sub_cli = _client_sub_map.find(Mount_Point);
 
-    if (sub_cli == _sub_map.end())
+    if (sub_cli == _client_sub_map.end())
     {
         spdlog::error("data_transfer: {}: Mount Point [{}] is not sub in this data_transfer, del_pub_server fail", __func__, Mount_Point);
         return 1;
@@ -88,16 +88,16 @@ int data_transfer::del_pub_server(std::string Mount_Point)
 
     // redisAsyncCommand(_sub_context, Redis_UnSub_Callback, static_cast<void *>(this), "UNSUBSCRIBE STR_%s", Mount_Point.c_str());
 
-    _sub_map.erase(Mount_Point);
+    _client_sub_map.erase(Mount_Point);
 
     return 0;
 }
 
 bool data_transfer::mount_point_exist(std::string Mount_Point)
 {
-    auto mp = _sub_map.find(Mount_Point);
+    auto mp = _client_sub_map.find(Mount_Point);
 
-    if (mp == _sub_map.end())
+    if (mp == _client_sub_map.end())
     {
         return false;
     }
@@ -106,9 +106,9 @@ bool data_transfer::mount_point_exist(std::string Mount_Point)
 
 int data_transfer::add_sub_client(std::string Mount_Point, std::string Connect_Key, client_ntrip *client)
 {
-    auto sub_cli = _sub_map.find(Mount_Point);
+    auto sub_cli = _client_sub_map.find(Mount_Point);
 
-    if (sub_cli == _sub_map.end())
+    if (sub_cli == _client_sub_map.end())
     {
         // std::unordered_map<std::string, client_ntrip *> item;
         // item.insert(std::make_pair(Connect_Key, client));
@@ -129,9 +129,9 @@ int data_transfer::add_sub_client(std::string Mount_Point, std::string Connect_K
 
 int data_transfer::del_sub_client(std::string Mount_Point, std::string Connect_Key)
 {
-    auto sub_clis = _sub_map.find(Mount_Point);
+    auto sub_clis = _client_sub_map.find(Mount_Point);
 
-    if (sub_clis == _sub_map.end())
+    if (sub_clis == _client_sub_map.end())
     {
         spdlog::error("[{}:{}]: Mount Point [{}] is not in this data_transfer", __class__, __func__, Mount_Point);
         return 1;
@@ -159,10 +159,10 @@ int data_transfer::del_sub_client(std::string Mount_Point, std::string Connect_K
 
 int data_transfer::transfer_date_to_sub(const char *mount_point, const char *data, size_t length)
 {
-    auto item = _sub_map.find(mount_point);
+    auto item = _client_sub_map.find(mount_point);
     evbuffer_add(_evbuf, data, length);
 
-    if (item == _sub_map.end())
+    if (item == _client_sub_map.end())
     {
         spdlog::debug("[{}:{}]: Receive {} data , but not in _sub_map", __class__, __func__, mount_point);
         return 1;
