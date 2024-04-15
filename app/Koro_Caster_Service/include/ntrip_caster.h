@@ -75,10 +75,12 @@ private:
     int request_process(json req);
 
     int create_client_ntrip(json req); // 用Ntrip协议登录的用户(一个挂载点一个)
+    int create_client_nearest(json req);
+    int create_client_virtual(json req);
     int close_client_ntrip(json req);
     int create_server_ntrip(json req); // 基站主动接入产生的数据源
     int close_server_ntrip(json req);
-    int create_client_nearest(json req);
+
     int create_source_ntrip(json req); // 用Ntrip协议获取源列表
     int close_source_ntrip(json req);  // 用Ntrip协议获取源列表
 
@@ -87,7 +89,7 @@ private:
     int close_realy_req_connection(json req);
     int create_server_relay(json req); // 主动连接其他caster的数据源
     int close_server_relay(json req);
-    int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
+    // int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
 
     // 异常连接管理
     int mount_not_online_close_connect(json req);
@@ -108,7 +110,7 @@ private:
     ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
 
     // 核心组件
-    data_transfer *_data_transfer;     // 数据转发
+    // data_transfer *_data_transfer;     // 数据转发
     source_transfer *_source_transfer; // 挂载点列表维护
 
     // 连接-对象索引
@@ -146,9 +148,6 @@ public:
     static void Request_Process_Cb(evutil_socket_t fd, short what, void *arg);
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
 
-    static void Caster_Client_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length);
-    static void Caster_Client_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length);
-
-    static void Caster_Server_Check_Mount_Exist_Cb(void *arg, const char *msg, size_t data_length);
-    static void Caster_Server_Check_User_Exist_Cb(void *arg, const char *msg, size_t data_length);
+    static void Client_Check_Mount_Point_Callback(const char *request, void *arg, CatserReply *reply);
+    static void Server_Check_Mount_Point_Callback(const char *request, void *arg, CatserReply *reply);
 };

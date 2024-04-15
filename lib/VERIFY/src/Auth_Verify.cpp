@@ -26,17 +26,17 @@ int AUTH::Verify(const char *userID, VerifyCallback cb, void *arg, Auth_type typ
 
     reply.type = AUTH_REPLY_OK;
 
-    cb(arg, &reply);
+    cb(nullptr, arg, &reply);
 
     return 0;
 }
 
-int AUTH::Add_Login_Record(const char *userID, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type)
+int AUTH::Add_Login_Record(const char *user_name, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type)
 {
     return 0;
 }
 
-int AUTH::Add_Logout_Record(const char *userID, const char *connect_key, Auth_type type)
+int AUTH::Add_Logout_Record(const char *user_name, const char *connect_key, Auth_type type)
 {
     return 0;
 }

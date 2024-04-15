@@ -283,7 +283,7 @@ int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, const char *url
     }
     else if (_support_virtual_mount.find(mount) != _support_virtual_mount.end())
     {
-        req["req_type"] = REQUEST_VIRTUAL_LOGIN;
+        req["req_type"] = REQUEST_RELAY_LOGIN;
     }
     else
     {
@@ -334,7 +334,7 @@ int ntrip_compat_listener::Process_Unknow_Request(bufferevent *bev)
     return 0;
 }
 
-void ntrip_compat_listener::Auth_Verify_Cb(void *arg, AuthReply *reply)
+void ntrip_compat_listener::Auth_Verify_Cb(const char *request, void *arg, AuthReply *reply)
 {
     auto ctx = static_cast<std::pair<ntrip_compat_listener *, json> *>(arg);
 
@@ -390,8 +390,8 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     json item;
 
     size_t headerlen = 0;
-    char *header;
-    while (header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF))
+    char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
+    while (header)
     {
         if (headerlen > 1024)
         {

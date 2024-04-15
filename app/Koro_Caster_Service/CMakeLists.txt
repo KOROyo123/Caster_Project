@@ -56,10 +56,10 @@ include_directories(${EXE_NAME} ${CMAKE_CURRENT_LIST_DIR}/src)
 set(COMPONTENT_TYPE_SOURCE
     include/Compontent/process_queue.h
     src/Compontent/process_queue.cpp
-    include/Compontent/data_transfer.h
-    src/Compontent/data_transfer.cpp
-    include/Compontent/source_transfer.h
-    src/Compontent/source_transfer.cpp
+    # include/Compontent/data_transfer.h
+    # src/Compontent/data_transfer.cpp
+    # include/Compontent/source_transfer.h
+    # src/Compontent/source_transfer.cpp
 )
 
 set(CARRIER_TYPE_SOURCE

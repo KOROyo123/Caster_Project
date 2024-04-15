@@ -17,7 +17,7 @@ struct AuthReply
     int integer;
 };
 
-typedef void (*VerifyCallback)(void *arg, AuthReply *reply);
+typedef void (*VerifyCallback)(const char *request, void *arg, AuthReply *reply);
 
 namespace AUTH
 {
@@ -37,10 +37,10 @@ namespace AUTH
     int Verify(const char *userID, VerifyCallback cb, void *arg, Auth_type type = AUTH_COMMON);
 
     // 添加登录记录（无论是否成功都会添加一条登录记录），登录成功，添加到在线表，登录失败，返回登录失败
-    int Add_Login_Record(const char *userID, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type = AUTH_COMMON);
+    int Add_Login_Record(const char *user_name, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type = AUTH_COMMON);
 
     // 添加登出记录，删除在线表记录
-    int Add_Logout_Record(const char *userID, const char *connect_key, Auth_type type = AUTH_COMMON);
+    int Add_Logout_Record(const char *user_name, const char *connect_key, Auth_type type = AUTH_COMMON);
 
     // 添加账号
     int Add_Account_Item();

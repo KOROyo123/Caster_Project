@@ -17,8 +17,8 @@ class source_ntrip
 private:
     json _info;
 
-    std::string _user_name;
     std::string _connect_key;
+    std::string _user_name;
     std::string _ip;
     int _port;
 
@@ -27,7 +27,7 @@ private:
     bufferevent *_bev;
     evbuffer *_evbuf;
 
-    std::string _list;
+    std::string _source_list;
 
 public:
     source_ntrip(json req, bufferevent *bev);
@@ -36,9 +36,6 @@ public:
     int start();
     int stop();
 
-    int set_source_list(std::string list);
-
-    static void ReadCallback(struct bufferevent *bev, void *arg);
     static void WriteCallback(struct bufferevent *bev, void *arg);
     static void EventCallback(struct bufferevent *bev, short events, void *arg);
 

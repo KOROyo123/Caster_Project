@@ -14,7 +14,7 @@
 
 #include <spdlog/spdlog.h>
 
-struct mount_info
+struct mount_point_info
 {
     std::string STR;
     std::string mountpoint;

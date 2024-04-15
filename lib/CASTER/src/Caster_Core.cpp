@@ -45,12 +45,7 @@ int CASTER::Check_Base_Station_is_Online(const char *mount_point, CasterCallback
     return 0;
 }
 
-int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, const char *connect_key, Station_type type)
-{
-    return 0;
-}
-
-int CASTER::Sub_Base_Station_Raw_Data(const char *mount_point, CasterCallback cb, void *arg, const char *connect_key, Station_type type)
+int CASTER::Sub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, CasterCallback cb, void *arg, Station_type type)
 {
     return 0;
 }
@@ -95,7 +90,7 @@ int CASTER::Get_Source_Table_List(CasterCallback cb, void *arg, Source_type type
     return 0;
 }
 
-int CASTER::Add_Source_Table_Item(const char *mount_point, const char * info, double lon, double lat, Source_type type)
+int CASTER::Add_Source_Table_Item(const char *mount_point, const char *info, double lon, double lat, Source_type type)
 {
     return 0;
 }
@@ -113,4 +108,9 @@ int CASTER::Get_Source_Table_Item(const char *mount_point, CasterCallback cb, vo
 int CASTER::Get_Radius_Table_List(double lon, double lat, CasterCallback cb, void *arg, Source_type type)
 {
     return 0;
+}
+
+std::string CASTER::Get_Source_Table_Text()
+{
+    return std::string();
 }

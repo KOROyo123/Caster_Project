@@ -91,15 +91,8 @@ public:
     int Process_SOURCE_Request(bufferevent *bev, const char *path, const char *secret);
     int Process_Unknow_Request(bufferevent *bev);
 
-    // // 处理请求相关
-    // void Ntrip_Source_Request_cb(bufferevent *bev, json req); // 获取源列表       GET /
-    // void Ntrip_Client_Request_cb(bufferevent *bev, json req); // 对已有挂载点的访问回调  GET /XXXX
-    // void Ntrip_Virtal_Request_cb(bufferevent *bev, json req);
-    // void Ntrip_Nearest_Request_cb(bufferevent *bev, json req);
-    // void Ntrip_Server_Request_cb(bufferevent *bev, json req);
-
     // Auth验证回调
-    static void Auth_Verify_Cb(void *arg, AuthReply *reply);
+    static void Auth_Verify_Cb(const char* request,void *arg, AuthReply *reply);
 
 private:
     // 内部函数
