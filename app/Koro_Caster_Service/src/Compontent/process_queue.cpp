@@ -83,6 +83,7 @@ process_queue_intenal *queue_svr = nullptr;
 int QUEUE::Init(event *process_event)
 {
     queue_svr = new process_queue_intenal();
+    queue_svr->add_processer(process_event);
     return 0;
 }
 

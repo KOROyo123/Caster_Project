@@ -47,6 +47,7 @@ public:
     static void Redis_Disconnect_Cb(const redisAsyncContext *c, int status);
 
     static void Redis_SUB_Callback(redisAsyncContext *c, void *r, void *privdata);
+    static void Redis_ONCE_Callback(redisAsyncContext *c, void *r, void *privdata);
 
     static long long get_time_stamp();
 };

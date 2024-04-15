@@ -8,6 +8,8 @@ redis_msg_internal::redis_msg_internal(json conf, event_base *base)
     _redis_IP = conf["Redis_IP"];
     _redis_port = conf["Redis_Port"];
     _redis_Requirepass = conf["Redis_Requirepass"];
+
+    _base = base;
 }
 
 redis_msg_internal::~redis_msg_internal()
@@ -71,12 +73,9 @@ int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect
     {
         std::unordered_map<std::string, sub_cb_item *> channel_subs;
         _sub_cb_map.insert(std::pair(channel, channel_subs));
-        channel_subs.insert(std::pair(connect_key, cb_item));
+        find = _sub_cb_map.find(channel);
     }
-    else
-    {
-        find->second.insert(std::pair(connect_key, cb_item));
-    }
+    find->second.insert(std::pair(connect_key, cb_item));
 
     redisAsyncCommand(_sub_context, Redis_SUB_Callback, this, "SUBSCRIBE %s", channel);
 
@@ -148,6 +147,7 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
             return;
         }
         auto subs = channel_subs->second;
+        auto size = subs.size();
         for (auto iter : subs)
         {
             auto cb_item = iter.second;
@@ -156,6 +156,24 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
             Func(re2->str, arg, &Reply);
         }
     }
+}
+
+void redis_msg_internal::Redis_ONCE_Callback(redisAsyncContext *c, void *r, void *privdata)
+{
+    auto reply = static_cast<redisReply *>(r);
+    auto ctx = static_cast<sub_cb_item *>(privdata);
+
+    auto Func = ctx->cb;
+    auto arg = ctx->arg;
+
+    CatserReply Reply;
+    if (reply->type == REDIS_REPLY_INTEGER)
+    {
+        Reply.type = CASTER_REPLY_INTEGER;
+        Reply.integer = reply->integer;
+    }
+
+    Func("", arg, &Reply);
 }
 
 long long redis_msg_internal::get_time_stamp()

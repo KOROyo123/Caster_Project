@@ -150,7 +150,7 @@ int client_ntrip::transfer_sub_raw_data(const char *data, size_t length)
 int client_ntrip::publish_recv_raw_data()
 {
     size_t length = evbuffer_get_length(_recv_evbuf);
-    unsigned char *data = new unsigned char[length + 1];
+    char *data = new char[length + 1];
     data[length] = '\0';
     evbuffer_remove(_recv_evbuf, data, length);
 
@@ -180,6 +180,6 @@ void client_ntrip::Caster_Sub_Callback(const char *request, void *arg, CatserRep
 
     if (reply->type == CASTER_REPLY_STRING)
     {
-        svr->transfer_sub_raw_data(reply->str, reply->str_len);
+        svr->transfer_sub_raw_data(reply->str, reply->len);
     }
 }

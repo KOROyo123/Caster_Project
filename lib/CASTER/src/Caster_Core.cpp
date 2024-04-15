@@ -12,6 +12,7 @@ int CASTER::Init(const char *json_conf, event_base *base)
     if (caster_svr == nullptr)
     {
         caster_svr = new redis_msg_internal(conf, base);
+        caster_svr->start();
     }
 
     return 0;
@@ -46,14 +47,20 @@ int CASTER::Set_Base_Station_State_OFFLINE(const char *mount_point, const char *
 int CASTER::Check_Base_Station_is_Online(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
 {
     auto context = caster_svr->_pub_context;
-    redisAsyncCommand(context, NULL, NULL, "HEXISTS MOUNT:ONLINE:COMMON %s", mount_point);
+    auto ctx = new sub_cb_item();
+    ctx->cb = cb;
+    ctx->arg = arg;
+    redisAsyncCommand(context, redis_msg_internal::Redis_ONCE_Callback, ctx, "HEXISTS MOUNT:ONLINE:COMMON %s", mount_point);
     return 0;
 }
 
 int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const char *data, size_t data_length, const char *connect_key, Station_type type)
 {
     auto context = caster_svr->_pub_context;
-    redisAsyncCommand(context, NULL, NULL, "PUBLISH MOUNT:%s %b", mount_point, data, data_length);
+    std::string channel;
+    channel += "MOUNT:";
+    channel += mount_point;
+    redisAsyncCommand(context, NULL, NULL, "PUBLISH %s %b", channel.c_str(), data, data_length);
     return 0;
 }
 

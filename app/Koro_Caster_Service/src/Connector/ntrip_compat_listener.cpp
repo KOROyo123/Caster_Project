@@ -322,6 +322,7 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
         req["user"] = pwd;
         req["pwd"] = pwd;
     }
+
     std::string userID = req["user_baseID"];
     auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
     AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
@@ -358,6 +359,7 @@ std::string ntrip_compat_listener::get_conncet_key(bufferevent *bev)
 json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
 {
     /*
+        connect_key
         mount_point
         mount_para
         mount_group
@@ -373,6 +375,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
 
     */
     json info;
+    info["connect_key"] = "none";
     info["mount_point"] = "none";
     info["mount_para"] = "none";
     info["mount_group"] = "common";
@@ -382,9 +385,12 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     info["user_agent"] = "unknown";
     info["ntrip_version"] = "none";
     info["ntrip_gga"] = "none";
-    info["user_baseID "] = "none";
+    info["user_baseID"] = "none";
     info["user_name"] = "none";
     info["user_pwd"] = "none";
+
+    std::string Connect_Key = util_cal_connect_key(bufferevent_getfd(bev));
+    info["connect_key"] = Connect_Key;
 
     evbuffer *evbuf = bufferevent_get_input(bev);
     json item;
@@ -447,7 +453,6 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     if (item["Authorization"].is_string())
     {
         std::string decodeID = decode_basic_authentication(item["Authorization"]);
-        info["user_baseID "] = decodeID;
         int x = decodeID.find(":");
         if (x == decodeID.npos)
         {
@@ -455,6 +460,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
         }
         else
         {
+            info["user_baseID "] = decodeID;
             info["user_name"] = decodeID.substr(0, x);
             info["user_pwd"] = decodeID.substr(x + 1);
         }

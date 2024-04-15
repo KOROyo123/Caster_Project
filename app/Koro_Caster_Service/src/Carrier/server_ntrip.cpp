@@ -192,7 +192,7 @@ int server_ntrip::publish_data_from_chunck()
 
     if (_chuncked_size + 2 <= length) // 还有回车换行
     {
-        unsigned char *data = new unsigned char[_chuncked_size + 3];
+        char *data = new char[_chuncked_size + 3];
         data[_chuncked_size + 2] = '\0';
 
         evbuffer_remove(_recv_evbuf, data, _chuncked_size);
@@ -220,11 +220,11 @@ int server_ntrip::publish_data_from_evbuf()
 {
     size_t length = evbuffer_get_length(_recv_evbuf);
 
-    unsigned char *data = new unsigned char[length + 1];
+    char *data = new char[length + 1];
     data[length] = '\0';
 
     evbuffer_remove(_recv_evbuf, data, length);
-    CASTER::Pub_Base_Station_Raw_Data(_mount_point.c_str(), data, _chuncked_size);
+    CASTER::Pub_Base_Station_Raw_Data(_mount_point.c_str(), data, length);
 
     delete[] data;
     return 0;
