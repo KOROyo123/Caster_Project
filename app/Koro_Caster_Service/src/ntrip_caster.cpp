@@ -136,7 +136,6 @@ int ntrip_caster::extra_init()
 
 int ntrip_caster::extra_stop()
 {
-
     if (!_server_config["Redis_Heart_Beat"].is_null())
     {
         _redis_beat->stop();
@@ -291,6 +290,10 @@ int ntrip_caster::create_relay_connect(json req)
         req["req_type"] = CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET;
         QUEUE::Push(req);
         return 0;
+    }
+    else
+    {
+        //先直接建立一个client
     }
 
     return 0;
@@ -480,48 +483,6 @@ int ntrip_caster::close_client_ntrip(json req)
     return 0;
 }
 
-int ntrip_caster::mount_not_online_close_connect(json req)
-{
-    std::string Connect_Key = req["connect_key"];
-    int reqtype = req["req_type"];
-    std::string mount = req["mount_point"];
-
-    auto item = _connect_map.find(Connect_Key);
-    if (item == _connect_map.end())
-    {
-        spdlog::warn("[{}]:can't find need close connect. mount: [{}] ,connect key: [{}], req type: [{}]", __class__, mount, Connect_Key, reqtype);
-        return 1;
-    }
-    bufferevent *bev = item->second;
-
-    int fd = bufferevent_getfd(bev);
-    std::string ip = util_get_user_ip(fd);
-    int port = util_get_user_port(fd);
-
-    switch (reqtype)
-    {
-    case MOUNT_NOT_ONLINE_CLOSE_CONNCET:
-        spdlog::info("[{}]:mount point not online close connect. mount:[{}], addr:[{}:{}]", __class__, mount, ip, port);
-        break;
-    case MOUNT_ALREADY_ONLINE_CLOSE_CONNCET:
-        spdlog::info("[{}]:mount point already online close connect. mount:[{}], addr:[{}:{}]", __class__, mount, ip, port);
-        break;
-    case NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET:
-        spdlog::info("[{}]:no idel relay account close connect. mount:[{}], addr:[{}:{}]", __class__, mount, ip, port);
-        break;
-    case CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET:
-        spdlog::info("[{}]:create relay connect fail close connect. mount:[{}], addr:[{}:{}]", __class__, mount, ip, port);
-        break;
-    default:
-        break;
-    }
-
-    bufferevent_free(bev);
-    _connect_map.erase(item);
-
-    return 0;
-}
-
 int ntrip_caster::request_process(json req)
 {
     // 根据请求的类型，执行对应的操作
@@ -531,20 +492,6 @@ int ntrip_caster::request_process(json req)
 
     switch (REQ_TYPE)
     {
-    // 开关------------------------------------------
-    case ENABLE_SYS_NTRIP_RELAY:
-        break;
-    case DISABLE_SYS_NTRIP_RELAY:
-        break;
-    case ENABLE_TRD_NTRIP_RELAY:
-        break;
-    case DISABLE_TRD_NTRIP_RELAY:
-        break;
-    case ENABLE_HTTP_SERVER:
-        break;
-    case DISABLE_HTTP_SERVER:
-        break;
-
     // 一般ntrip请求-------------------------------------
     case REQUEST_SOURCE_LOGIN:
         create_source_ntrip(req);
@@ -589,21 +536,6 @@ int ntrip_caster::request_process(json req)
     // case ADD_RELAY_MOUNT_TO_SOURCELIST:
     //     add_relay_mount_to_sourcelist(req);
     //     break;
-
-    // 关闭现有连接------------------------------------------
-    case MOUNT_NOT_ONLINE_CLOSE_CONNCET:
-        mount_not_online_close_connect(req);
-        break;
-    case MOUNT_ALREADY_ONLINE_CLOSE_CONNCET:
-        mount_not_online_close_connect(req);
-        break;
-    case NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET:
-        mount_not_online_close_connect(req);
-        break;
-    case CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET:
-        mount_not_online_close_connect(req);
-        break;
-
     // 其他操作-------------------------------------------
     default:
         spdlog::warn("undefined req_type: {}", REQ_TYPE);
@@ -614,6 +546,26 @@ int ntrip_caster::request_process(json req)
 
 int ntrip_caster::close_unsuccess_req_connect(json req)
 {
+
+    std::string Connect_Key = req["connect_key"];
+    int reqtype = req["req_type"];
+    std::string mount = req["mount_point"];
+
+    auto item = _connect_map.find(Connect_Key);
+    if (item == _connect_map.end())
+    {
+        spdlog::warn("[{}]:can't find need close connect. mount: [{}] ,connect key: [{}], req type: [{}]", __class__, mount, Connect_Key, reqtype);
+        return 1;
+    }
+    bufferevent *bev = item->second;
+
+    int fd = bufferevent_getfd(bev);
+    std::string ip = util_get_user_ip(fd);
+    int port = util_get_user_port(fd);
+
+    bufferevent_free(bev);
+    _connect_map.erase(item);
+
     return 0;
 }
 

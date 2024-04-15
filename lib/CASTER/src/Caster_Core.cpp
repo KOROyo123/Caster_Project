@@ -7,7 +7,6 @@ redis_msg_internal *caster_svr = nullptr;
 
 int CASTER::Init(const char *json_conf, event_base *base)
 {
-
     json conf = json::parse(json_conf);
 
     if (caster_svr == nullptr)
@@ -32,31 +31,54 @@ int CASTER::Clear()
 
 int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "HSET MOUNT:ONLINE:COMMON %s %s", mount_point, connect_key);
     return 0;
 }
 
 int CASTER::Set_Base_Station_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "HDEL MOUNT:ONLINE:COMMON %s", mount_point);
     return 0;
 }
 
 int CASTER::Check_Base_Station_is_Online(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
 {
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "HEXISTS MOUNT:ONLINE:COMMON %s", mount_point);
+    return 0;
+}
+
+int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const char *data, size_t data_length, const char *connect_key, Station_type type)
+{
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "PUBLISH MOUNT:%s %b", mount_point, data, data_length);
     return 0;
 }
 
 int CASTER::Sub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, CasterCallback cb, void *arg, Station_type type)
 {
+    std::string channel;
+    channel += "MOUNT:";
+    channel += mount_point;
+    caster_svr->add_sub_cb_item(channel.c_str(), connect_key, cb, arg);
     return 0;
 }
 
 int CASTER::UnSub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, Station_type type)
 {
+    std::string channel;
+    channel += "MOUNT:";
+    channel += mount_point;
+    caster_svr->del_sub_cb_item(channel.c_str(), connect_key);
     return 0;
 }
 
 int CASTER::Set_Rover_Client_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Client_type type)
 {
+    // auto context = caster_svr->_pub_context;
+    // redisAsyncCommand(context, NULL, NULL, "HSET CLIENT:ONLINE:COMMON %s %s", mount_point, connect_key);
     return 0;
 }
 
@@ -70,18 +92,28 @@ int CASTER::Check_Rover_Client_is_Online(const char *user_name, CasterCallback c
     return 0;
 }
 
-int CASTER::Pub_Rover_Client_Raw_Data(const char *client_key, const unsigned char *data, size_t data_length, const char *connect_key, Client_type type)
+int CASTER::Pub_Rover_Client_Raw_Data(const char *client_key, const char *data, size_t data_length, const char *connect_key, Client_type type)
 {
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "PUBLISH CLIENT:%s %b", client_key, data, data_length);
     return 0;
 }
 
 int CASTER::Sub_Rover_Client_Raw_Data(const char *client_key, CasterCallback cb, void *arg, const char *connect_key, Client_type type)
 {
+    std::string channel;
+    channel += "CLIENT:";
+    channel += client_key;
+    caster_svr->add_sub_cb_item(channel.c_str(), connect_key, cb, arg);
     return 0;
 }
 
 int CASTER::UnSub_Rover_Client_Raw_Data(const char *client_key, const char *connect_key, Client_type type)
 {
+    std::string channel;
+    channel += "CLIENT:";
+    channel += client_key;
+    caster_svr->del_sub_cb_item(channel.c_str(), connect_key);
     return 0;
 }
 

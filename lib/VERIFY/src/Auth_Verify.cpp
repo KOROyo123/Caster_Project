@@ -23,16 +23,16 @@ int AUTH::Clear()
 int AUTH::Verify(const char *userID, VerifyCallback cb, void *arg, Auth_type type)
 {
     AuthReply reply;
-
     reply.type = AUTH_REPLY_OK;
-
     cb(nullptr, arg, &reply);
-
     return 0;
 }
 
 int AUTH::Add_Login_Record(const char *user_name, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type)
 {
+    AuthReply reply;
+    reply.type = AUTH_REPLY_OK;
+    cb(nullptr, arg, &reply);
     return 0;
 }
 

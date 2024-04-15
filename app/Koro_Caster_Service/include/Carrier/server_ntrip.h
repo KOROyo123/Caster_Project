@@ -62,7 +62,5 @@ private:
     static void EventCallback(struct bufferevent *bev, short events, void *arg);
     static void TimeoutCallback(evutil_socket_t fd, short events, void *arg);
 
-
-
     static void Auth_Login_Callback(const char *request, void *arg, AuthReply *reply);
 };

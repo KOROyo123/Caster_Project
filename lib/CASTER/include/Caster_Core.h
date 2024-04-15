@@ -14,7 +14,7 @@ struct CatserReply
 {
     int type;
     char *str;
-    size_t str_len;
+    size_t len;
     int integer;
 };
 
@@ -77,7 +77,7 @@ namespace CASTER
     int Set_Base_Station_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type = STATION_COMMON);
     int Check_Base_Station_is_Online(const char *mount_point, CasterCallback cb, void *arg, Station_type type = STATION_COMMON);
 
-    int Pub_Base_Station_Raw_Data(const char *mount_point, const unsigned char *data, size_t data_length, const char *connect_key = "", Station_type type = STATION_COMMON); // 同时延长BaseStation State的有效期
+    int Pub_Base_Station_Raw_Data(const char *mount_point, const char *data, size_t data_length, const char *connect_key = "", Station_type type = STATION_COMMON); // 同时延长BaseStation State的有效期
     int Sub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, CasterCallback cb, void *arg, Station_type type = STATION_COMMON);
     int UnSub_Base_Station_Raw_Data(const char *mount_point, const char *connect_key, Station_type type = STATION_COMMON);
 
@@ -85,7 +85,7 @@ namespace CASTER
     int Set_Rover_Client_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Client_type type = CLIENT_COMMON);
     int Check_Rover_Client_is_Online(const char *user_name, CasterCallback cb, void *arg, Client_type type = CLIENT_COMMON);
 
-    int Pub_Rover_Client_Raw_Data(const char *client_key, const unsigned char *data, size_t data_length, const char *connect_key = "", Client_type type = CLIENT_COMMON);
+    int Pub_Rover_Client_Raw_Data(const char *client_key, const char *data, size_t data_length, const char *connect_key = "", Client_type type = CLIENT_COMMON);
     int Sub_Rover_Client_Raw_Data(const char *client_key, CasterCallback cb, void *arg, const char *connect_key = "", Client_type type = CLIENT_COMMON);
     int UnSub_Rover_Client_Raw_Data(const char *client_key, const char *connect_key = "", Client_type type = CLIENT_COMMON);
 

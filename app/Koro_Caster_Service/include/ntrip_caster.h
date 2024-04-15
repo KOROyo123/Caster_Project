@@ -91,13 +91,11 @@ private:
     int close_server_relay(json req);
     // int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
 
-    // 异常连接管理
-    int mount_not_online_close_connect(json req);
+    // 请求处理失败，关闭连接
     int close_unsuccess_req_connect(json req);
 
     // 添加支持的虚拟挂载点
     int add_relay_mount_to_listener(json req);
-    int add_relay_mount_to_sourcelist(json req);
 
 private:
     // Extra功能
@@ -111,7 +109,7 @@ private:
 
     // 核心组件
     // data_transfer *_data_transfer;     // 数据转发
-    source_transfer *_source_transfer; // 挂载点列表维护
+    // source_transfer *_source_transfer; // 挂载点列表维护
 
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp
