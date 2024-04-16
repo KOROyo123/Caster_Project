@@ -70,19 +70,19 @@ int redis_msg_internal::stop()
 
 int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect_key, CasterCallback cb, void *arg)
 {
-    auto cb_item = new sub_cb_item();
-    cb_item->cb = cb;
-    cb_item->arg = arg;
-
     auto find = _sub_cb_map.find(channel);
     if (find == _sub_cb_map.end())
     {
         // 还没有订阅频道，添加订阅
         redisAsyncCommand(_sub_context, Redis_SUB_Callback, this, "SUBSCRIBE %s", channel);
-        std::unordered_map<std::string, sub_cb_item *> channel_subs;
+        std::unordered_map<std::string, sub_cb_item> channel_subs;
         _sub_cb_map.insert(std::pair(channel, channel_subs));
-        find = _sub_cb_map.find(channel);
     }
+    find = _sub_cb_map.find(channel);
+
+    sub_cb_item cb_item;
+    cb_item.cb = cb;
+    cb_item.arg = arg;
     find->second.insert(std::pair(connect_key, cb_item));
 
     return 0;
@@ -90,48 +90,44 @@ int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect
 
 int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect_key)
 {
-    auto find = _sub_cb_map.find(channel);
-    if (find == _sub_cb_map.end())
+    auto channel_subs = _sub_cb_map.find(channel);
+    if (channel_subs == _sub_cb_map.end())
     {
         return 1;
     }
 
-    auto subs = find->second;
-    auto item = subs.find(connect_key);
-    if (item == subs.end())
+    auto item = channel_subs->second.find(connect_key);
+    if (item == channel_subs->second.end())
     {
         return 1;
     }
-    subs.erase(connect_key);
-
-    if (subs.size() == 0) // 没有订阅的连接
-    {
-        redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE %s", channel);
-        _sub_cb_map.erase(channel);
-    }
+    channel_subs->second.erase(item);
 
     return 0;
 }
 
 int redis_msg_internal::check_active_channel()
 {
-    if (_sub_cb_map.size() == 0)
+    auto cb_map = _sub_cb_map; // 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
+    for (auto channel_subs = cb_map.begin(); channel_subs !=cb_map.end(); channel_subs++)
+    // for (auto channel_subs : _sub_cb_map)
     {
-        return 0;
-    }
-
-    for (auto iter : _sub_cb_map)
-    {
-        if (_active_channel.find(iter.first) == _active_channel.end())
+        if (_active_channel.find(channel_subs->first) == _active_channel.end()) // 该订阅频道不在活跃频道中
         {
-            for (auto item : iter.second)
+            if (channel_subs->second.size() == 0) // 订阅频道的实际用户为0
             {
-                CatserReply Reply;
-                Reply.type = CASTER_REPLY_ERR;
-                auto cb_arg = item.second;
-                cb_arg->cb(iter.first.c_str(), cb_arg->arg, &Reply);
+                _sub_cb_map.erase(channel_subs->first);//实际执行的操作是删除了原始记录
             }
-            _sub_cb_map.erase(iter.first);
+            else
+            {
+                for (auto item = channel_subs->second.begin(); item != channel_subs->second.end(); item++)
+                {
+                    CatserReply Reply;
+                    Reply.type = CASTER_REPLY_ERR;
+                    auto cb_arg = item->second;
+                    cb_arg.cb(channel_subs->first.c_str(), cb_arg.arg, &Reply);
+                }
+            }
         }
     }
 
@@ -183,13 +179,11 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
         {
             return;
         }
-        auto subs = channel_subs->second;
-        auto size = subs.size();
-        for (auto iter : subs)
+        for (auto iter : channel_subs->second)
         {
             auto cb_item = iter.second;
-            auto Func = cb_item->cb;
-            auto arg = cb_item->arg;
+            auto Func = cb_item.cb;
+            auto arg = cb_item.arg;
             Func(re2->str, arg, &Reply);
         }
     }

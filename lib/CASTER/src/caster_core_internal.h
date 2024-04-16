@@ -27,7 +27,7 @@ private:
 
     event_base *_base;
 
-    std::unordered_map<std::string, std::unordered_map<std::string, sub_cb_item *>> _sub_cb_map; // channel/connect_key/cb_arg
+    std::unordered_map<std::string, std::unordered_map<std::string, sub_cb_item>> _sub_cb_map; // channel/connect_key/cb_arg
 
     std::set<std::string> _active_channel;
 
