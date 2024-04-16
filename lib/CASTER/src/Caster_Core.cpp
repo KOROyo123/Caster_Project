@@ -14,7 +14,6 @@ int CASTER::Init(const char *json_conf, event_base *base)
         caster_svr = new redis_msg_internal(conf, base);
         caster_svr->start();
     }
-
     return 0;
 }
 
@@ -25,11 +24,19 @@ int CASTER::Free()
     return 0;
 }
 
-int CASTER::Clear(const char *server_key)
+int CASTER::Clear()
 {
+    // 清除与指定在线表（单实例部署）
+    auto context = caster_svr->_pub_context;
+    redisAsyncCommand(context, NULL, NULL, "DEL MOUNT:ONLINE:COMMON");
     return 0;
 }
 
+int CASTER::Clear(const char *server_key)
+{
+    // 清除与指定server_key(服务端口）相关的所有连接（暂未实现（用于集群部署）
+    return 0;
+}
 
 int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {

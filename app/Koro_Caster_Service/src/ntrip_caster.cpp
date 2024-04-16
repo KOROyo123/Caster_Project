@@ -61,6 +61,7 @@ int ntrip_caster::compontent_init()
     // 初始化Caster数据分发核心：当前采用的是Redis，后续开发支持脱离redis运行
     json redis_req = _server_config["Reids_Connect_Setting"];
     CASTER::Init(redis_req.dump().c_str(), _base);
+    CASTER::Clear();
 
     // // 添加创建data_tansfer
     // json transfer_req = _server_config["Data_Transfer_Setting"];
@@ -643,7 +644,7 @@ void ntrip_caster::Client_Check_Mount_Point_Callback(const char *request, void *
         }
         req["Settings"] = svr->_server_config["Client_Setting"];
         client_ntrip *ntripc = new client_ntrip(req, con->second);
- 
+
         svr->_client_map.insert(std::make_pair(connect_key, ntripc));
 
         // 一切准备就绪，启动server
