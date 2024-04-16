@@ -93,14 +93,14 @@ int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect
     auto find = _sub_cb_map.find(channel);
     if (find == _sub_cb_map.end())
     {
-        // error
+        return 1;
     }
 
     auto subs = find->second;
     auto item = subs.find(connect_key);
     if (item == subs.end())
     {
-        // error
+        return 1;
     }
     subs.erase(connect_key);
 
@@ -108,6 +108,31 @@ int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect
     {
         redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE %s", channel);
         _sub_cb_map.erase(channel);
+    }
+
+    return 0;
+}
+
+int redis_msg_internal::check_active_channel()
+{
+    if (_sub_cb_map.size() == 0)
+    {
+        return 0;
+    }
+
+    for (auto iter : _sub_cb_map)
+    {
+        if (_active_channel.find(iter.first) == _active_channel.end())
+        {
+            for (auto item : iter.second)
+            {
+                CatserReply Reply;
+                Reply.type = CASTER_REPLY_ERR;
+                auto cb_arg = item.second;
+                cb_arg->cb(iter.first.c_str(), cb_arg->arg, &Reply);
+            }
+            _sub_cb_map.erase(iter.first);
+        }
     }
 
     return 0;
@@ -188,7 +213,7 @@ void redis_msg_internal::Redis_ONCE_Callback(redisAsyncContext *c, void *r, void
     Func("", arg, &Reply);
 }
 
-void redis_msg_internal::Redis_Get_Source_Callback(redisAsyncContext *c, void *r, void *privdata)
+void redis_msg_internal::Redis_Get_Hash_Field_Callback(redisAsyncContext *c, void *r, void *privdata)
 {
     auto reply = static_cast<redisReply *>(r);
     // auto arg = static_cast<std::pair<redis_msg_internal *, std::set<std::string> *> *>(privdata);
@@ -233,15 +258,18 @@ void redis_msg_internal::TimeoutCallback(evutil_socket_t fd, short events, void 
 
     svr->update_source_list();
 
+    svr->check_active_channel();
     svr->build_source_list();
 }
 
 int redis_msg_internal::update_source_list()
 {
-    //auto ctx0 = new std::pair<redis_msg_internal *, std::set<std::string> *>(this, &_online_common_mount);
-    redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_common_mount, "HGETALL MOUNT:ONLINE:COMMON");
+    // auto ctx0 = new std::pair<redis_msg_internal *, std::set<std::string> *>(this, &_online_common_mount);
+    redisAsyncCommand(_pub_context, Redis_Get_Hash_Field_Callback, &_online_common_mount, "HGETALL MOUNT:ONLINE:COMMON");
     // redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_sys_relay_mount, "HGETALL MOUNT:ONLINE:SYS_RELAY");
     // redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_trd_relay_mount, "HGETALL MOUNT:ONLINE:TRD_RELAY");
+
+    redisAsyncCommand(_pub_context, Redis_Get_Hash_Field_Callback, &_active_channel, "HGETALL CHANNEL:ACTIVE");
 
     return 0;
 }

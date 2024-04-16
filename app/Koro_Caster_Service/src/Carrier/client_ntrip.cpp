@@ -182,4 +182,8 @@ void client_ntrip::Caster_Sub_Callback(const char *request, void *arg, CatserRep
     {
         svr->transfer_sub_raw_data(reply->str, reply->len);
     }
+    else if (reply->type == CASTER_REPLY_ERR)
+    {
+        svr->stop();
+    }
 }

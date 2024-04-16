@@ -42,6 +42,7 @@ int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *u
 {
     auto context = caster_svr->_pub_context;
     redisAsyncCommand(context, NULL, NULL, "HSET MOUNT:ONLINE:COMMON %s %s", mount_point, connect_key);
+    redisAsyncCommand(context, NULL, NULL, "HSET CHANNEL:ACTIVE MOUNT:%s %s", mount_point, connect_key);
     return 0;
 }
 
@@ -49,6 +50,7 @@ int CASTER::Set_Base_Station_State_OFFLINE(const char *mount_point, const char *
 {
     auto context = caster_svr->_pub_context;
     redisAsyncCommand(context, NULL, NULL, "HDEL MOUNT:ONLINE:COMMON %s", mount_point);
+    redisAsyncCommand(context, NULL, NULL, "HDEL CHANNEL:ACTIVE MOUNT:%s", mount_point);
     return 0;
 }
 

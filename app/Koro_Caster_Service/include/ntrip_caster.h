@@ -78,6 +78,7 @@ private:
     int create_client_nearest(json req);
     int create_client_virtual(json req);
     int close_client_ntrip(json req);
+
     int create_server_ntrip(json req); // 基站主动接入产生的数据源
     int close_server_ntrip(json req);
 
@@ -107,10 +108,6 @@ private:
     ntrip_compat_listener *_compat_listener;  // 被动接收Ntrip连接
     ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
 
-    // 核心组件
-    // data_transfer *_data_transfer;     // 数据转发
-    // source_transfer *_source_transfer; // 挂载点列表维护
-
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp
     std::unordered_map<std::string, server_ntrip *> _server_map; // Connect_Key,client_ntrip
@@ -126,9 +123,6 @@ private:
     relay_account_tb _relay_accounts;
 
 private:
-    // 任务队列
-    // QUEUE::
-    // base
     event_base *_base;
     // process处理事件
     event *_process_event;
@@ -137,7 +131,6 @@ private:
     timeval _timeout_tv;
 
     timeval _delay_exit_tv = {1, 0}; // 延迟关闭定时器
-
 public:
     int start_server_thread();
     static void *event_base_thread(void *arg);

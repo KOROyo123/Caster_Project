@@ -29,6 +29,8 @@ private:
 
     std::unordered_map<std::string, std::unordered_map<std::string, sub_cb_item *>> _sub_cb_map; // channel/connect_key/cb_arg
 
+    std::set<std::string> _active_channel;
+
 public:
     redisAsyncContext *_pub_context;
     redisAsyncContext *_sub_context;
@@ -43,6 +45,8 @@ public:
     int add_sub_cb_item(const char *channel, const char *connect_key, CasterCallback cb, void *arg);
     int del_sub_cb_item(const char *channel, const char *connect_key);
 
+    int check_active_channel();
+
     // Redis回调
     static void Redis_Connect_Cb(const redisAsyncContext *c, int status);
     static void Redis_Disconnect_Cb(const redisAsyncContext *c, int status);
@@ -50,7 +54,7 @@ public:
     static void Redis_SUB_Callback(redisAsyncContext *c, void *r, void *privdata);
     static void Redis_ONCE_Callback(redisAsyncContext *c, void *r, void *privdata);
 
-    static void Redis_Get_Source_Callback(redisAsyncContext *c, void *r, void *privdata);
+    static void Redis_Get_Hash_Field_Callback(redisAsyncContext *c, void *r, void *privdata);
 
     static long long get_time_stamp();
 
