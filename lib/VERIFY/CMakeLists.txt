@@ -32,7 +32,7 @@ target_link_libraries(${PROJECT_NAME} event_extra)
 target_link_libraries(${PROJECT_NAME} hiredis)
 
 #json
-include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json-3.11.2/include)
+include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json)
 
 #spdlog
 add_definitions(-DUSE_SPD_LOG)
