@@ -7,10 +7,6 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
-
 #include <spdlog/spdlog.h>
 
 #include <nlohmann/json.hpp>
@@ -25,8 +21,8 @@ private:
     json _info;
 
     int _Carrier_Type;
-    std::string _Connect_Key;
-    std::string _publish_mount;
+    std::string _connect_key;
+    std::string _mount_point;
     std::string _mount_group;
     std::string _req_user_name;
     std::string _req_connect_key;
@@ -41,16 +37,12 @@ private:
     evhttp_request *_hev;
     bufferevent *_bev;
     evbuffer *_evbuf;
-    redisAsyncContext *_pub_context;
-    redisAsyncContext *_sub_context;
-
-    std::shared_ptr<process_queue> _queue;
 
 public:
-    server_relay(json req, void *connect_obj, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    server_relay(json req, bufferevent *bev);
     ~server_relay();
 
-    int start();
+    int start();//绑定回调，然后去AUTH添加登录记录（是否允许多用户登录由auth判断并处理），如果添加成功，那就发送reply给用户，然后通知CASTER上线，如果不成功，就进入关闭流程
     int stop();
 
     static void ReadCallback(struct bufferevent *bev, void *arg);
@@ -59,7 +51,7 @@ public:
     int publish_data_from_chunck();
     int publish_data_from_evbuf();
 
-    static void Redis_Recv_Callback(redisAsyncContext *c, void *r, void *privdata);
+    // static void Redis_Recv_Callback(redisAsyncContext *c, void *r, void *privdata);
 
     //static void Redis_Unsub_Callback(redisAsyncContext *c, void *r, void *privdata);
 

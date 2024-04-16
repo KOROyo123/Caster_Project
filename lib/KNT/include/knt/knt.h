@@ -6,6 +6,9 @@ std::string util_random_string(int string_len);
 
 std::string util_cal_connect_key(const char *ServerIP, int serverPort, const char *ClientIP, int clientPort);
 
+std::string util_cal_half_key(const char *IP, int Port);
+
+
 std::string util_cal_connect_key(int fd);
 
 std::string util_port_to_key(int port);

@@ -35,10 +35,6 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
-
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -58,14 +54,13 @@ private:
     event_base *_base;
     evconnlistener *_listener;
 
-    std::shared_ptr<process_queue> _queue;
     std::unordered_map<std::string, bufferevent *> *_connect_map;
     std::unordered_map<std::string, timeval *> _timer_map;
 
     std::set<std::string> _support_virtual_mount;
 
 public:
-    ntrip_compat_listener(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map);
+    ntrip_compat_listener(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map);
     ~ntrip_compat_listener();
 
     int set_listen_conf(json conf);
@@ -78,8 +73,8 @@ public:
     int disable_Nearest_Support();
 
     // 虚拟挂载点相关
-    int enable_Virtal_Support();
-    int disable_Virtal_Support();
+    int enable_Virtual_Support();
+    int disable_Virtual_Support();
     int add_Virtal_Mount(std::string mount_point);
     int del_Virtal_Mount(std::string mount_point);
 
@@ -90,18 +85,14 @@ public:
     static void Ntrip_Decode_Request_cb(bufferevent *bev, void *arg);
     static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
-    // 解析请求相关
+    // 解析请求相关（在解析完请求后，向AUTH验证用户名密码是否合法，只要合法就允许进入下一步（不判断是否已经登录，是否是重复登录，由后续步骤进行检查））
     int Process_GET_Request(bufferevent *bev, const char *path);
     int Process_POST_Request(bufferevent *bev, const char *path);
     int Process_SOURCE_Request(bufferevent *bev, const char *path, const char *secret);
     int Process_Unknow_Request(bufferevent *bev);
 
-    // 处理请求相关
-    void Ntrip_Source_Request_cb(bufferevent *bev, json req); // 获取源列表       GET /
-    void Ntrip_Client_Request_cb(bufferevent *bev, json req); // 对已有挂载点的访问回调  GET /XXXX
-    void Ntrip_Virtal_Request_cb(bufferevent *bev, json req);
-    void Ntrip_Nearest_Request_cb(bufferevent *bev, json req);
-    void Ntrip_Server_Request_cb(bufferevent *bev, json req);
+    // Auth验证回调
+    static void Auth_Verify_Cb(const char* request,void *arg, AuthReply *reply);
 
 private:
     // 内部函数

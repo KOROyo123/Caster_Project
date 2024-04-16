@@ -10,10 +10,6 @@
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
 
-#include <hiredis.h>
-#include <async.h>
-#include <adapters/libevent.h>
-
 #include <spdlog/spdlog.h>
 
 #include <nlohmann/json.hpp>
@@ -23,34 +19,38 @@ class client_ntrip
 {
 private:
     json _info;
-
+    std::string _connect_key;
     std::string _mount_point;
     std::string _user_name;
-    std::string _connect_key;
     std::string _ip;
     int _port;
 
     bool _NtripVersion2 = false;
     bool _transfer_with_chunked = false;
 
+    json _conf;
+
     bufferevent *_bev;
-    evbuffer *_evbuf;
-    redisAsyncContext *_pub_context;
-    std::shared_ptr<process_queue> _queue;
+    evbuffer *_send_evbuf;
+    evbuffer *_recv_evbuf;
 
 public:
-    client_ntrip(json req, bufferevent *bev, std::shared_ptr<process_queue> queue, redisAsyncContext *sub_context, redisAsyncContext *pub_context);
+    client_ntrip(json req, bufferevent *bev);
     ~client_ntrip();
 
-    int start();
+    int start(); // 绑定回调，然后去AUTH添加登录记录（是否允许多用户登录由auth判断并处理），如果添加成功，那就发送reply给用户，然后通知CASTER上线，如果不成功，就进入关闭流程
     int stop();
 
+private:
+    int runing();
+
     int bev_send_reply();
+    int transfer_sub_raw_data(const char *data, size_t length);
+    int publish_recv_raw_data();
 
     static void ReadCallback(struct bufferevent *bev, void *arg);
     static void EventCallback(struct bufferevent *bev, short events, void *arg);
 
-    int data_transfer(evbuffer *evbuf);
-
-    int publish_data_from_evbuf();
+    static void Auth_Login_Callback(const char *request, void *arg, AuthReply *reply);
+    static void Caster_Sub_Callback(const char *request, void *arg, CatserReply *reply);
 };

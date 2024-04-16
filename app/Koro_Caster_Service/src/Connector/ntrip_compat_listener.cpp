@@ -8,10 +8,9 @@
 
 #define __class__ "ntrip_compat_listener"
 
-ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::shared_ptr<process_queue> queue, std::unordered_map<std::string, bufferevent *> *connect_map)
+ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map)
 {
     _base = base;
-    _queue = queue;
     _connect_map = connect_map;
 }
 
@@ -76,13 +75,13 @@ int ntrip_compat_listener::disable_Nearest_Support()
     return 0;
 }
 
-int ntrip_compat_listener::enable_Virtal_Support()
+int ntrip_compat_listener::enable_Virtual_Support()
 {
     _Virtal_Support = true;
     return 0;
 }
 
-int ntrip_compat_listener::disable_Virtal_Support()
+int ntrip_compat_listener::disable_Virtual_Support()
 {
     _Virtal_Support = false;
     return 0;
@@ -107,8 +106,8 @@ int ntrip_compat_listener::del_Virtal_Mount(std::string mount_point)
 void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg)
 {
     auto svr = static_cast<ntrip_compat_listener *>(arg);
+    event_base *base = svr->_base;
 
-    event_base *base = evconnlistener_get_base(listener);
     bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
 
     std::string ip = util_get_user_ip(fd);
@@ -158,6 +157,18 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     auto svr = arg->first;
     auto key = arg->second;
 
+    // 已经接收到请求，解析请求即可，这个请求决定了连接是进入下一步还是关闭
+    bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
+    bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 清空bev绑定的回调？  如果这个时候bev event_cb已经激活怎么办?是否就不继续执行了
+    // 已经接收到请求，也需要关闭定时器
+    bufferevent_set_timeouts(bev, NULL, NULL); // 解绑定时器
+    auto timer = svr->_timer_map.find(key);
+    if (timer != svr->_timer_map.end())
+    {
+        delete timer->second; // 删除定时器
+        svr->_timer_map.erase(key);
+    }
+
     int fd = bufferevent_getfd(bev);
     std::string ip = util_get_user_ip(fd);
     int port = util_get_user_port(fd);
@@ -172,7 +183,6 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         if (header == NULL | header_len > 255)
         {
             spdlog::warn("[{}:{}]: error respone, from: [ip: {} port: {}]", __class__, __func__, ip, port);
-            svr->Process_Unknow_Request(bev);
             throw 1;
         }
         spdlog::info("[{}]: receive request header: [{}], from: [ip: {} port: {}]", __class__, header, ip, port);
@@ -208,27 +218,17 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         {
             // 不支持的方法
             spdlog::info("[{}:{}]: receive unsuppose request", __class__, __func__);
-            svr->Process_Unknow_Request(bev);
+            throw 1;
         }
     }
     catch (int i)
     {
-    }
-
-    // 删除定时器
-    bufferevent_set_timeouts(bev, NULL, NULL);
-    auto timer = svr->_timer_map.find(key);
-    if (timer != svr->_timer_map.end())
-    {
-        delete timer->second;
-        svr->_timer_map.erase(key);
+        svr->Process_Unknow_Request(bev);
     }
 
     // 清理
-    bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
-    delete arg;                                     // 这个时候把arg删除了，后续再触发新的错误连接的时候，会导致event无法正常的被触发
-    bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 暂时不给这个连接绑定回调?
-    free(header);
+    delete arg;   // 删除arg
+    free(header); // 删除读取的文件头
 }
 
 void ntrip_compat_listener::Bev_EventCallback(bufferevent *bev, short events, void *ctx)
@@ -275,20 +275,24 @@ int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, const char *url
     std::string mount = req["mount_point"];
     if (mount.empty()) // 相当于"/"
     {
-        Ntrip_Source_Request_cb(bev, req);
+        req["req_type"] = REQUEST_SOURCE_LOGIN;
     }
     else if (mount == "NEAREST")
     {
-        Ntrip_Nearest_Request_cb(bev, req);
+        req["req_type"] = REQUEST_NEAREST_LOGIN;
     }
     else if (_support_virtual_mount.find(mount) != _support_virtual_mount.end())
     {
-        Ntrip_Virtal_Request_cb(bev, req);
+        req["req_type"] = REQUEST_RELAY_LOGIN;
     }
     else
     {
-        Ntrip_Client_Request_cb(bev, req);
+        req["req_type"] = REQUEST_CLIENT_LOGIN;
     }
+
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -297,8 +301,11 @@ int ntrip_compat_listener::Process_POST_Request(bufferevent *bev, const char *ur
     json req = decode_bufferevent_req(bev);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
+    req["req_type"] = REQUEST_SERVER_LOGIN;
 
-    Ntrip_Server_Request_cb(bev, req);
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -307,6 +314,7 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
     json req = decode_bufferevent_req(bev);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
+    req["req_type"] = REQUEST_SERVER_LOGIN;
 
     std::string pwd = secret;
     if (pwd != "")
@@ -315,7 +323,9 @@ int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, const char *
         req["pwd"] = pwd;
     }
 
-    Ntrip_Server_Request_cb(bev, req);
+    std::string userID = req["user_baseID"];
+    auto ctx = new std::pair<ntrip_compat_listener *, json>(this, req);
+    AUTH::Verify(userID.c_str(), Auth_Verify_Cb, ctx);
     return 0;
 }
 
@@ -325,44 +335,20 @@ int ntrip_compat_listener::Process_Unknow_Request(bufferevent *bev)
     return 0;
 }
 
-void ntrip_compat_listener::Ntrip_Source_Request_cb(bufferevent *bev, json req)
+void ntrip_compat_listener::Auth_Verify_Cb(const char *request, void *arg, AuthReply *reply)
 {
-    req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_SOURCE_LOGIN);
-}
+    auto ctx = static_cast<std::pair<ntrip_compat_listener *, json> *>(arg);
 
-void ntrip_compat_listener::Ntrip_Client_Request_cb(bufferevent *bev, json req)
-{
-    req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_CLIENT_LOGIN);
-}
+    auto svr = ctx->first;
+    auto req = ctx->second;
 
-void ntrip_compat_listener::Ntrip_Virtal_Request_cb(bufferevent *bev, json req)
-{
-    if (!_Virtal_Support)
+    if (reply->type == AUTH_REPLY_OK)
     {
-        erase_and_free_bev(bev);
-        return;
+        QUEUE::Push(req);
     }
-    req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_VIRTUAL_LOGIN);
-}
-
-void ntrip_compat_listener::Ntrip_Nearest_Request_cb(bufferevent *bev, json req)
-{
-    if (!_Nearest_Support)
+    else
     {
-        erase_and_free_bev(bev);
-        return;
     }
-    req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_NEAREST_LOGIN);
-}
-
-void ntrip_compat_listener::Ntrip_Server_Request_cb(bufferevent *bev, json req)
-{
-    req["connect_key"] = get_conncet_key(bev);
-    _queue->push_and_active(req, REQUEST_SERVER_LOGIN);
 }
 
 std::string ntrip_compat_listener::get_conncet_key(bufferevent *bev)
@@ -373,6 +359,7 @@ std::string ntrip_compat_listener::get_conncet_key(bufferevent *bev)
 json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
 {
     /*
+        connect_key
         mount_point
         mount_para
         mount_group
@@ -388,6 +375,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
 
     */
     json info;
+    info["connect_key"] = "none";
     info["mount_point"] = "none";
     info["mount_para"] = "none";
     info["mount_group"] = "common";
@@ -397,16 +385,19 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     info["user_agent"] = "unknown";
     info["ntrip_version"] = "none";
     info["ntrip_gga"] = "none";
-    info["user_baseID "] = "none";
+    info["user_baseID"] = "none";
     info["user_name"] = "none";
     info["user_pwd"] = "none";
+
+    std::string Connect_Key = util_cal_connect_key(bufferevent_getfd(bev));
+    info["connect_key"] = Connect_Key;
 
     evbuffer *evbuf = bufferevent_get_input(bev);
     json item;
 
     size_t headerlen = 0;
-    char *header;
-    while (header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF))
+    char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
+    while (header)
     {
         if (headerlen > 1024)
         {
@@ -462,7 +453,6 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     if (item["Authorization"].is_string())
     {
         std::string decodeID = decode_basic_authentication(item["Authorization"]);
-        info["user_baseID "] = decodeID;
         int x = decodeID.find(":");
         if (x == decodeID.npos)
         {
@@ -470,6 +460,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
         }
         else
         {
+            info["user_baseID "] = decodeID;
             info["user_name"] = decodeID.substr(0, x);
             info["user_pwd"] = decodeID.substr(x + 1);
         }

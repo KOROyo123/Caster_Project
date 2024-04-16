@@ -1,0 +1,111 @@
+//基站存储HashKey
+//key： CDC:BASE_INFO
+//field: A31C02024（挂载点名）
+//value：json字符串
+//数据字段
+{
+    "mount_point": "KORO990", //挂载点名
+    "data_type": "RTCM", //数据类型
+    "coord_b": 22.260058838767854, //纬度 °
+    "coord_l": 110.5295088212158, //经度 °
+    "coord_h": 134.4194262251258, //高程 m
+    "rover_num": 1, //用户数量
+    "online_time": "2024-04-10 10:39:08", //上线时刻
+    "online_seconds": 3721, //在线时长（秒）
+    "ip": "127.0.0.1", //基站ip
+    "port": 32287, //基站ip端口
+    "receive_speed": 621, //接收数据速度 byte/s
+    "receice_total": 3655651, //接收数据量 byte
+    "update_time": 1712718579 //数据更新时间
+}
+
+//用户存储HashKey
+//key： CDC:ROVER_INFO
+//field: A31C02024:user_name （挂载点名：用户名）
+//value：json字符串
+//数据字段
+{
+    "user_name": "test0401", //用户名
+    "mount_point": "KORO990", //挂载点
+    "use_station": "KORO990", //实际使用的基站
+    "coord_b": 32.36913545866666, //纬度 °
+    "coord_l": 119.4345931865, //经度 °
+    "coord_h": 11.9705, //高程 m
+    "speed": 1.2, //速度  km/h
+    "gpsStatus": 1, //定位状态 【详细含义见说明】
+    "usedSatNum": 37,//使用卫星数
+    "diffTime": 1.0,//差分延迟
+    "distance": 1286250.0555367079,//与基站距离 m
+    "base_b": 22.260058838767854,//基站纬度 °
+    "base_l": 110.5295088212158,//基站经度 °
+    "base_h": 134.4194262251258,//基站高程 m
+    "gpstime": "2024-4-10 2:52:21.710000", //GPS时间
+    "online_time": "2024-04-10 10:39:08", //上线时刻
+    "online_seconds": 46, //在线时长  s
+    "send_speed": 621,//发送数据速度 byte/s
+    "send_total": 135441,//发送数据量 byte
+    "update_time": 1712718579,//数据更新时间 当前时间秒数
+}
+
+//定位状态说明
+// enum GPS_STATUS
+// {
+//     GPS_STATUS_UNKNOW = -1, //未知状态					-->未知状态
+//     GPS_STATUS_NOT_POS = 0, //无效或未定位			-->无效状态
+//     GPS_STATUS_NOT_DIFF_POS=1, //非差分定位				-->单点解
+//     GPS_STATUS_DIFF_POS=2, //差分定位					-->浮动解
+//     GPS_STATUS_INVALID_PPS=3, //无效PPS					-->未知状态
+//     GPS_STATUS_FIXED_SOL=4, //固定解						-->固定解
+//     GPS_STATUS_FLOAT_SOL=5, //浮动解						-->浮动解
+//     GPS_STATUS_ESTIMATING=6, //正在估算					-->未知状态
+//     GPS_STATUS_MANUAL_INPUT=7, //人工输入固定值		-->未知状态
+//     GPS_STATUS_WIDE_LANE=8, //模拟模式					-->未知状态
+//     GPS_STATUS_SBAS=9 //SBAS						-->未知状态
+// };
+
+
+//其他说明
+//请根据数据更新时间来筛选数据,如果更新时间与当前时间相差太长,表示站点/用户已经下线,该field信息已失效
+
+//基站数据示例数据
+{
+    "coord_b": 22.260058838767854,
+    "coord_h": 134.4194262251258,
+    "coord_l": 110.5295088212158,
+    "data_type": "RTCM",
+    "ip": "127.0.0.1",
+    "mount_point": "KORO990",
+    "online_seconds": 3721,
+    "online_time": "2024-04-10 10:39:08",
+    "port": 32287,
+    "receice_total": 3655651,
+    "receive_speed": 621,
+    "rover_num": 1,
+    "update_time": 1712718579
+}
+
+//用户数据示例数据
+{
+    "base_b": 22.260058838767854,
+    "base_h": 134.4194262251258,
+    "base_l": 110.5295088212158,
+    "coord_b": 32.36913545866666,
+    "coord_h": 11.9705,
+    "coord_l": 119.4345931865,
+    "diffTime": 1.0,
+    "distance": 1286250.0555367079,
+    "gpsStatus": 1,
+    "gpstime": "2024-4-10 2:52:21.710000",
+    "ip": "127.0.0.1",
+    "mount_point": "KORO990",
+    "online_seconds": 46,
+    "online_time": "2024-04-10 10:39:08",
+    "port": 32287,
+    "send_speed": 621,
+    "send_total": 135441,
+    "speed": 0.0,
+    "update_time": 1712718579,
+    "use_station": "KORO990",
+    "usedSatNum": 37,
+    "user_name": "test0401"
+}
