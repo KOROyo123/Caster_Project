@@ -8,8 +8,6 @@
 #include "Carrier/server_ntrip.h"
 #include "Carrier/server_relay.h"
 #include "Carrier/source_ntrip.h"
-#include "Compontent/source_transfer.h"
-#include "Compontent/data_transfer.h"
 #include "DB/relay_account_tb.h"
 #include "Extra/heart_beat.h"
 

@@ -117,8 +117,8 @@ target_link_libraries(${EXE_NAME} authverify)
 
 
 
-#Json-develop
-include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json-3.11.2/include)
+#nlohmann/json
+include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json)
 
 #如果是windows环境，则rtklib还需要加两个库
 IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")

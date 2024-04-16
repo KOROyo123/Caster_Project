@@ -308,6 +308,7 @@ int ntrip_caster::create_server_relay(json req)
 int ntrip_caster::close_server_relay(json req)
 {
     json origin_req = req["origin_req"];
+    std::string mount_point=origin_req["mount_point"];
     std::string connect_key = origin_req["connect_key"];
     std::string usr_pwd = origin_req["usr_pwd"];
 
@@ -330,12 +331,12 @@ int ntrip_caster::close_server_relay(json req)
         _relays_map.erase(obj);
     }
 
-    auto relay_key = _relay_key.find(mount_point);
-    if (relay_key != _relay_key.end())
+    auto relay_key = _relays_key.find(mount_point);
+    if (relay_key != _relays_key.end())
     {
         if (connect_key == relay_key->second)
         {
-            _relay_key.erase(mount_point);
+            _relays_key.erase(mount_point);
         }
     }
 
