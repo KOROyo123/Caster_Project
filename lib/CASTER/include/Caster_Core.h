@@ -71,7 +71,7 @@ namespace CASTER
     int Init(const char *json_conf, event_base *base);
     int Free();
 
-    int Clear();
+    int Clear(const char *server_key);
 
     int Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type = STATION_COMMON);
     int Set_Base_Station_State_OFFLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type = STATION_COMMON);

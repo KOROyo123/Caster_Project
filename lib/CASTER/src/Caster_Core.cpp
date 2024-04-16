@@ -25,10 +25,11 @@ int CASTER::Free()
     return 0;
 }
 
-int CASTER::Clear()
+int CASTER::Clear(const char *server_key)
 {
     return 0;
 }
+
 
 int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {
@@ -151,5 +152,5 @@ int CASTER::Get_Radius_Table_List(double lon, double lat, CasterCallback cb, voi
 
 std::string CASTER::Get_Source_Table_Text()
 {
-    return std::string();
+    return caster_svr->get_source_list_text();
 }

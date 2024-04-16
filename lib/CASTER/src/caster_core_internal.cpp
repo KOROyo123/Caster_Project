@@ -50,6 +50,12 @@ int redis_msg_internal::start()
     redisAsyncSetConnectCallback(_sub_context, Redis_Connect_Cb);
     redisAsyncSetDisconnectCallback(_sub_context, Redis_Disconnect_Cb);
     redisAsyncCommand(_sub_context, NULL, NULL, "AUTH %s", _redis_Requirepass.c_str());
+
+    _timeout_tv.tv_sec = 1;
+    _timeout_tv.tv_usec = 0;
+    _timeout_ev = event_new(_base, -1, EV_PERSIST, TimeoutCallback, this);
+    event_add(_timeout_ev, &_timeout_tv);
+
     return 0;
 }
 
@@ -71,13 +77,13 @@ int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect
     auto find = _sub_cb_map.find(channel);
     if (find == _sub_cb_map.end())
     {
+        // 还没有订阅频道，添加订阅
+        redisAsyncCommand(_sub_context, Redis_SUB_Callback, this, "SUBSCRIBE %s", channel);
         std::unordered_map<std::string, sub_cb_item *> channel_subs;
         _sub_cb_map.insert(std::pair(channel, channel_subs));
         find = _sub_cb_map.find(channel);
     }
     find->second.insert(std::pair(connect_key, cb_item));
-
-    redisAsyncCommand(_sub_context, Redis_SUB_Callback, this, "SUBSCRIBE %s", channel);
 
     return 0;
 }
@@ -97,7 +103,13 @@ int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect
         // error
     }
     subs.erase(connect_key);
-    redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE %s", channel);
+
+    if (subs.size() == 0) // 没有订阅的连接
+    {
+        redisAsyncCommand(_sub_context, NULL, NULL, "UNSUBSCRIBE %s", channel);
+        _sub_cb_map.erase(channel);
+    }
+
     return 0;
 }
 
@@ -176,6 +188,27 @@ void redis_msg_internal::Redis_ONCE_Callback(redisAsyncContext *c, void *r, void
     Func("", arg, &Reply);
 }
 
+void redis_msg_internal::Redis_Get_Source_Callback(redisAsyncContext *c, void *r, void *privdata)
+{
+    auto reply = static_cast<redisReply *>(r);
+    // auto arg = static_cast<std::pair<redis_msg_internal *, std::set<std::string> *> *>(privdata);
+    // auto svr = arg->first;
+    // auto set = arg->second;
+    auto set = static_cast<std::set<std::string> *>(privdata);
+
+    if (!reply)
+    {
+        return;
+    }
+
+    set->clear();
+    for (int i = 0; i < reply->elements; i += 2)
+    {
+        auto rep = reply->element[i];
+        set->insert(reply->element[i]->str);
+    }
+}
+
 long long redis_msg_internal::get_time_stamp()
 {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
@@ -187,4 +220,157 @@ long long redis_msg_internal::get_time_stamp()
     std::chrono::seconds seconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
     long long seconds_count = seconds.count();
     return seconds_count;
+}
+
+std::string redis_msg_internal::get_source_list_text()
+{
+    return _source_list_text;
+}
+
+void redis_msg_internal::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
+{
+    auto svr = static_cast<redis_msg_internal *>(arg);
+
+    svr->update_source_list();
+
+    svr->build_source_list();
+}
+
+int redis_msg_internal::update_source_list()
+{
+    //auto ctx0 = new std::pair<redis_msg_internal *, std::set<std::string> *>(this, &_online_common_mount);
+    redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_common_mount, "HGETALL MOUNT:ONLINE:COMMON");
+    // redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_sys_relay_mount, "HGETALL MOUNT:ONLINE:SYS_RELAY");
+    // redisAsyncCommand(_pub_context, Redis_Get_Source_Callback, &_online_trd_relay_mount, "HGETALL MOUNT:ONLINE:TRD_RELAY");
+
+    return 0;
+}
+
+int redis_msg_internal::build_source_list()
+{
+    _source_list_text.clear();
+
+    int size = 0;
+
+    if (_send_nearest)
+    {
+        _nearest_items = convert_group_mount_to_string(_support_nearest_mount);
+    }
+    if (_send_virtual)
+    {
+        _virtual_items = convert_group_mount_to_string(_support_virtual_mount);
+    }
+    if (_send_sys_relay)
+    {
+        _sys_relay_items = convert_group_mount_to_string(_online_sys_relay_mount);
+    }
+    if (_send_common)
+    {
+        size = _online_common_mount.size();
+        _common_items = convert_group_mount_to_string(_online_common_mount);
+    }
+    if (_send_trd_relay)
+    {
+        _trd_relay_items = convert_group_mount_to_string(_online_trd_relay_mount);
+    }
+
+    _source_list_text = _nearest_items +
+                        _virtual_items +
+                        _sys_relay_items +
+                        _common_items +
+                        _trd_relay_items;
+    return 0;
+}
+
+std::string redis_msg_internal::convert_group_mount_to_string(std::set<std::string> group)
+{
+    std::string items;
+    for (auto iter : group)
+    {
+        mount_info item;
+        auto info = _mount_map.find(iter);
+        if (info == _mount_map.end())
+        {
+            item = build_default_mount_info(iter);
+        }
+        else
+        {
+            item = info->second;
+        }
+        items += convert_mount_info_to_string(item);
+    }
+    return items;
+}
+
+std::string redis_msg_internal::convert_mount_info_to_string(mount_info i)
+{
+    std::string item;
+
+    item = i.STR + ";" +
+           i.mountpoint + ";" +
+           i.identufier + ";" +
+           i.format + ";" +
+           i.format_details + ";" +
+           i.carrier + ";" +
+           i.nav_system + ";" +
+           i.network + ";" +
+           i.country + ";" +
+           i.latitude + ";" +
+           i.longitude + ";" +
+           i.nmea + ";" +
+           i.solution + ";" +
+           i.generator + ";" +
+           i.compr_encrryp + ";" +
+           i.authentication + ";" +
+           i.fee + ";" +
+           i.bitrate + ";" +
+           i.misc + ";" + "\r\n";
+
+    return item;
+}
+
+mount_info redis_msg_internal::build_default_mount_info(std::string mount_point)
+{
+    // STR;              STR;
+    // mountpoint;       KORO996;
+    // identufier;       ShangHai;
+    // format;           RTCM 3.3;
+    // format-details;   1004(5),1074(1),1084(1),1094(1),1124(1)
+    // carrier;          2
+    // nav-system;       GPS+GLO+GAL+BDS
+    // network;          KNT
+    // country;          CHN
+    // latitude;         36.11
+    // longitude;        120.11
+    // nmea;             0
+    // solution;         0
+    // generator;        SN
+    // compr-encrryp;    none
+    // authentication;   B
+    // fee;              N
+    // bitrate;          9600
+    // misc;             caster.koroyo.xyz:2101/KORO996
+
+    mount_info item = {
+        "STR",
+        mount_point,
+        "unknown",
+        "unknown",
+        "unknown",
+        "0",
+        "unknown",
+        "unknown",
+        "unknown",
+        "00.00",
+        "000.00",
+        "0",
+        "0",
+        "unknown",
+        "unknown",
+        "B",
+        "N",
+        "0000",
+        "Not parsed or provided"};
+
+    return item;
 }

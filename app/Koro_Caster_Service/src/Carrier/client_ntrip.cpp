@@ -44,23 +44,6 @@ int client_ntrip::start()
     return 0;
 }
 
-int client_ntrip::stop()
-{
-    bufferevent_disable(_bev, EV_READ);
-
-    json close_req;
-    close_req["origin_req"] = _info;
-
-    close_req["req_type"] = CLOSE_NTRIP_CLIENT;
-    QUEUE::Push(close_req);
-
-    spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
-
-    CASTER::Set_Rover_Client_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
-
-    return 0;
-}
-
 int client_ntrip::runing()
 {
     bufferevent_enable(_bev, EV_READ);
@@ -71,9 +54,26 @@ int client_ntrip::runing()
     CASTER::Sub_Base_Station_Raw_Data(_mount_point.c_str(), _connect_key.c_str(), Caster_Sub_Callback, this);
 
     spdlog::info("Client Info: user [{}] is login, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
+
     return 0;
 }
 
+int client_ntrip::stop()
+{
+    bufferevent_disable(_bev, EV_READ);
+
+    json close_req;
+    close_req["origin_req"] = _info;
+    close_req["req_type"] = CLOSE_NTRIP_CLIENT;
+    QUEUE::Push(close_req);
+
+    CASTER::Set_Rover_Client_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
+    CASTER::UnSub_Base_Station_Raw_Data(_mount_point.c_str(), _connect_key.c_str());
+
+    spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
+
+    return 0;
+}
 int client_ntrip::bev_send_reply()
 {
     if (_NtripVersion2)

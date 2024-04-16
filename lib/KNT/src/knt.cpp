@@ -81,26 +81,27 @@ std::string util_cal_connect_key(const char *ServerIP, int serverPort, const cha
 
     sprintf(key, "%s%s%s%s", hexIp1, hexPort1, hexIp2, hexPort2);
 
-    // if (serverPort == 0)
-    //     return nullptr; // 处理特殊情况，当输入为0时直接返回"0"
+    return std::string() = key;
+}
 
-    // while (serverPort > 0)
-    // {
-    //     int remainder = serverPort % 16;                    // 取余数
-    //     hexPort1.insert(hexPort1.begin(), base[remainder]); // 在结果前面添加对应的十六进制符号
-    //     serverPort /= 16;                                   // 更新被除数
-    // }
+std::string util_cal_half_key(const char *IP, int Port)
+{
+    std::string base = "0123456789ABCDEF"; // 定义16进制表示的基本符号集合
 
-    // if (clientPort == 0)
-    //     return nullptr; // 处理特殊情况，当输入为0时直接返回"0"
+    char hexIp[9] = "";
+    char hexPort[5] = "";
 
-    // while (clientPort > 0)
-    // {
-    //     int remainder = clientPort % 16;                    // 取余数
-    //     hexPort2.insert(hexPort2.begin(), base[remainder]); // 在结果前面添加对应的十六进制符号
-    //     clientPort /= 16;                                   // 更新被除数
-    // }
+    int octets1[4]; // IPv4地址由四个八位组成
+    sscanf(IP, "%d.%d.%d.%d", &octets1[0], &octets1[1], &octets1[2], &octets1[3]);
 
+    for (int i = 0; i < 4; ++i)
+    {
+        snprintf(hexIp + i * 2, sizeof(hexIp), "%02X", static_cast<unsigned>(octets1[i]));
+    }
+    snprintf(hexPort, sizeof(hexPort), "%04X", Port);
+    char key[25] = "";
+
+    sprintf(key, "%s%s", hexIp, hexPort);
     return std::string() = key;
 }
 
@@ -240,7 +241,7 @@ int util_get_use_memory()
         physicalMemUsedByMe = 0; // 当前进程使用的物理内存大小
         // std::cerr << "GetProcessMemoryInfo failed\n";
     }
-    return virtualMemUsedByMe; // 
+    return virtualMemUsedByMe; //
 
 #else
     struct rusage usage;

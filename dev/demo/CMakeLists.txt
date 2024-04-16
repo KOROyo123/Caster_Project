@@ -5,4 +5,4 @@
 # add_subdirectory(smtp_email_demo/)
 # add_subdirectory(sqlite_demo/)
 # add_subdirectory(map_memory_demo/)
-add_subdirectory(redis_hset_demo)
+# add_subdirectory(redis_hset_demo)
