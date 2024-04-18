@@ -27,8 +27,6 @@ int ntrip_compat_listener::set_listen_conf(json conf)
 
     // _Server_Login_With_Password = conf["Server_Login_With_Password"];
     // _Client_Login_With_Password = conf["Client_Login_With_Password"];
-    _Nearest_Support = conf["Nearest_Support"];
-    _Virtal_Support = conf["Virtal_Support"];
 
     return 0;
 }
@@ -63,45 +61,8 @@ int ntrip_compat_listener::stop()
     return 0;
 }
 
-int ntrip_compat_listener::enable_Nearest_Support()
-{
-    _Nearest_Support = true;
-    return 0;
-}
 
-int ntrip_compat_listener::disable_Nearest_Support()
-{
-    _Nearest_Support = false;
-    return 0;
-}
 
-int ntrip_compat_listener::enable_Virtual_Support()
-{
-    _Virtal_Support = true;
-    return 0;
-}
-
-int ntrip_compat_listener::disable_Virtual_Support()
-{
-    _Virtal_Support = false;
-    return 0;
-}
-
-int ntrip_compat_listener::add_Virtal_Mount(std::string mount_point)
-{
-    if (_Virtal_Support)
-    {
-        _support_virtual_mount.insert(mount_point);
-        return 0;
-    }
-    return 1;
-}
-
-int ntrip_compat_listener::del_Virtal_Mount(std::string mount_point)
-{
-    _support_virtual_mount.erase(mount_point);
-    return 0;
-}
 
 void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg)
 {
@@ -277,17 +238,29 @@ int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, const char *url
     {
         req["req_type"] = REQUEST_SOURCE_LOGIN;
     }
-    else if (mount == "NEAREST")
-    {
-        req["req_type"] = REQUEST_NEAREST_LOGIN;
-    }
-    else if (_support_virtual_mount.find(mount) != _support_virtual_mount.end())
-    {
-        req["req_type"] = REQUEST_RELAY_LOGIN;
-    }
     else
     {
-        req["req_type"] = REQUEST_CLIENT_LOGIN;
+        switch (CASTER::Check_Mount_Type(mount.c_str()))
+        {
+        case CASTER::STATION_COMMON:
+            req["req_type"] = REQUEST_CLIENT_LOGIN;
+            break;
+        case CASTER::STATION_NEAREST:
+            req["req_type"] = REQUEST_VIRTUAL_LOGIN;
+            req["mount_group"] = MOUNT_TYPE_NEAREST;
+            break;
+        case CASTER::STATION_RELAY:
+            req["req_type"] = REQUEST_VIRTUAL_LOGIN;
+            req["mount_group"] = MOUNT_TYPE_RELAY;
+            break;
+        case CASTER::STATION_VIRTUAL:
+            req["req_type"] = REQUEST_VIRTUAL_LOGIN;
+            req["mount_group"] = MOUNT_TYPE_VIRTUAL;
+            break;
+        default: // CASTER::STATION_COMMON
+
+            break;
+        }
     }
 
     std::string userID = req["user_baseID"];
@@ -378,7 +351,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     info["connect_key"] = "none";
     info["mount_point"] = "none";
     info["mount_para"] = "none";
-    info["mount_group"] = "common";
+    info["mount_group"] = MOUNT_TYPE_COMMON;
     info["mount_info"] = "none";
     info["http_host"] = "none";
     info["http_chunked"] = "unchunked";

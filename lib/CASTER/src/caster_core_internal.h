@@ -27,9 +27,29 @@ private:
 
     event_base *_base;
 
+private:
+    //----------本地-------------------
+    // 订阅表
     std::unordered_map<std::string, std::unordered_map<std::string, sub_cb_item>> _sub_cb_map; // channel/connect_key/cb_arg
 
+    //----------公共-------------------
+    // 活跃频道 HASH(CHANNEL:ACTIVE)
     std::set<std::string> _active_channel;
+
+    // 普通挂载点
+    // 挂载点在线 HASH(MOUNT:COMMON:ONLINE)
+
+    // 挂载点信息 HASH(MOUNT:COMMON:INFO) //人工设置
+
+    // 挂载点坐标 HASH(MOUNT:COMMON:GEO)
+
+    // 虚拟参考站挂载点 HASH(MOUNT:VIRTUAL:LIST)
+
+
+
+
+
+
 
 public:
     redisAsyncContext *_pub_context;

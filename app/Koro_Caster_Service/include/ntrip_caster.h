@@ -73,7 +73,6 @@ private:
     int request_process(json req);
 
     int create_client_ntrip(json req); // 用Ntrip协议登录的用户(一个挂载点一个)
-    int create_client_nearest(json req);
     int create_client_virtual(json req);
     int close_client_ntrip(json req);
 
@@ -92,9 +91,6 @@ private:
 
     // 请求处理失败，关闭连接
     int close_unsuccess_req_connect(json req);
-
-    // 添加支持的虚拟挂载点
-    int add_relay_mount_to_listener(json req);
 
 private:
     // Extra功能

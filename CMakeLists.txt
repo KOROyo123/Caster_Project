@@ -12,7 +12,7 @@ add_definitions(-DWIN32)
 ENDIF()
 
 
-
+set(JSON_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/third/json-3.11.3/include")
 
 
 add_subdirectory(rely/)

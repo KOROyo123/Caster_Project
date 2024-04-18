@@ -16,7 +16,7 @@
 
 int ntrip_caster::update_state_info()
 {
-    
+
     _state_info["connect_num"] = _connect_map.size();
     _state_info["client_num"] = _client_map.size();
     _state_info["server_num"] = _server_map.size();
@@ -224,13 +224,7 @@ int ntrip_caster::create_client_ntrip(json req)
 {
     std::string mount_point = req["mount_point"];
     auto arg = new std::pair<ntrip_caster *, json>(this, req); //
-    CASTER::Check_Base_Station_is_Online(mount_point.c_str(), Client_Check_Mount_Point_Callback, arg);
-    return 0;
-}
-
-int ntrip_caster::create_client_nearest(json req)
-{
-    // 要结合GEO功能开发
+    CASTER::Check_Base_Station_is_ONLINE(mount_point.c_str(), Client_Check_Mount_Point_Callback, arg);
     return 0;
 }
 
@@ -280,7 +274,7 @@ int ntrip_caster::create_server_ntrip(json req)
 {
     std::string mount_point = req["mount_point"];
     auto arg = new std::pair<ntrip_caster *, json>(this, req);
-    CASTER::Check_Base_Station_is_Online(mount_point.c_str(), Server_Check_Mount_Point_Callback, arg);
+    CASTER::Check_Base_Station_is_ONLINE(mount_point.c_str(), Server_Check_Mount_Point_Callback, arg);
     return 0;
 }
 
@@ -308,7 +302,7 @@ int ntrip_caster::create_server_relay(json req)
 int ntrip_caster::close_server_relay(json req)
 {
     json origin_req = req["origin_req"];
-    std::string mount_point=origin_req["mount_point"];
+    std::string mount_point = origin_req["mount_point"];
     std::string connect_key = origin_req["connect_key"];
     std::string usr_pwd = origin_req["usr_pwd"];
 
@@ -469,43 +463,44 @@ int ntrip_caster::request_process(json req)
     case REQUEST_SOURCE_LOGIN:
         create_source_ntrip(req);
         break;
+    case CLOSE_NTRIP_SOURCE:
+        close_source_ntrip(req);
+        break;
     case REQUEST_CLIENT_LOGIN:
         create_client_ntrip(req);
-        break;
-    case REQUEST_NEAREST_LOGIN:
-        create_client_nearest(req);
-        break;
-    case REQUEST_SERVER_LOGIN:
-        create_server_ntrip(req);
         break;
     case CLOSE_NTRIP_CLIENT:
         close_client_ntrip(req);
         break;
+    case REQUEST_SERVER_LOGIN:
+        create_server_ntrip(req);
+        break;
     case CLOSE_NTRIP_SERVER:
         close_server_ntrip(req);
         break;
-    case CLOSE_NTRIP_SOURCE:
-        close_source_ntrip(req);
+    // 虚拟挂载点  //Nearest/Relay/Cors
+    case REQUEST_VIRTUAL_LOGIN:
+        create_client_virtual(req);
         break;
 
-    // relay服务相关--------------------------------------
-    case REQUEST_RELAY_LOGIN:
-        create_relay_connect(req);
-        break;
-    case CLOSE_RELAY_REQ_CONNECT:
-        // 由connector发出的请求，状态为，在连接第三方的过程中，连接失败了
-        close_realy_req_connection(req);
-        break;
-    case CREATE_RELAY_SERVER:
-        // 由connector发出的请求，第三方连接成功，创建对应的server和client（如果是client请求的）
-        create_server_relay(req);
-        break;
-    case CLOSE_RELAY_SERVER:
-        close_server_relay(req);
-        break;
-    case ADD_RELAY_MOUNT_TO_LISTENER:
-        add_relay_mount_to_listener(req);
-        break;
+    // // relay服务相关--------------------------------------
+    // case REQUEST_RELAY_LOGIN:
+    //     create_relay_connect(req);
+    //     break;
+    // case CLOSE_RELAY_REQ_CONNECT:
+    //     // 由connector发出的请求，状态为，在连接第三方的过程中，连接失败了
+    //     close_realy_req_connection(req);
+    //     break;
+    // case CREATE_RELAY_SERVER:
+    //     // 由connector发出的请求，第三方连接成功，创建对应的server和client（如果是client请求的）
+    //     create_server_relay(req);
+    //     break;
+    // case CLOSE_RELAY_SERVER:
+    //     close_server_relay(req);
+    //     break;
+    // case ADD_RELAY_MOUNT_TO_LISTENER:
+    //     add_relay_mount_to_listener(req);
+    //     break;
     // case ADD_RELAY_MOUNT_TO_SOURCELIST:
     //     add_relay_mount_to_sourcelist(req);
     //     break;
@@ -541,15 +536,6 @@ int ntrip_caster::close_unsuccess_req_connect(json req)
     return 0;
 }
 
-int ntrip_caster::add_relay_mount_to_listener(json req)
-{
-    auto mpt = _relay_accounts.get_usr_mpt();
-    for (auto iter : mpt)
-    {
-        _compat_listener->add_Virtal_Mount(iter);
-    }
-    return 0;
-}
 
 void ntrip_caster::Request_Process_Cb(evutil_socket_t fd, short what, void *arg)
 {

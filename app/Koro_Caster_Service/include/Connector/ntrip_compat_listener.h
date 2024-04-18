@@ -48,9 +48,6 @@ private:
     int _listen_port;
     int _connect_timeout = 0;
 
-    bool _Nearest_Support = false;
-    bool _Virtal_Support = false;
-
     event_base *_base;
     evconnlistener *_listener;
 

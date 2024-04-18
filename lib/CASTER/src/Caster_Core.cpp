@@ -38,6 +38,11 @@ int CASTER::Clear(const char *server_key)
     return 0;
 }
 
+int CASTER::Check_Mount_Type(const char *mount_point)
+{
+    return CASTER::STATION_COMMON;
+}
+
 int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {
     auto context = caster_svr->_pub_context;
@@ -54,7 +59,7 @@ int CASTER::Set_Base_Station_State_OFFLINE(const char *mount_point, const char *
     return 0;
 }
 
-int CASTER::Check_Base_Station_is_Online(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
+int CASTER::Check_Base_Station_is_ONLINE(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
 {
     auto context = caster_svr->_pub_context;
     auto ctx = new sub_cb_item();
@@ -71,6 +76,19 @@ int CASTER::Pub_Base_Station_Raw_Data(const char *mount_point, const char *data,
     channel += "MOUNT:";
     channel += mount_point;
     redisAsyncCommand(context, NULL, NULL, "PUBLISH %s %b", channel.c_str(), data, data_length);
+    return 0;
+}
+
+int CASTER::Get_Base_Station_Sub_Num(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
+{
+    auto context = caster_svr->_pub_context;
+    std::string channel;
+    channel += "MOUNT:";
+    channel += mount_point;
+    auto ctx = new sub_cb_item();
+    ctx->cb = cb;
+    ctx->arg = arg;
+    redisAsyncCommand(context, redis_msg_internal::Redis_ONCE_Callback, ctx, "SCARD CHANNEL:%s:SUBS", channel.c_str());
     return 0;
 }
 
@@ -104,7 +122,7 @@ int CASTER::Set_Rover_Client_State_OFFLINE(const char *mount_point, const char *
     return 0;
 }
 
-int CASTER::Check_Rover_Client_is_Online(const char *user_name, CasterCallback cb, void *arg, Client_type type)
+int CASTER::Check_Rover_Client_is_ONLINE(const char *user_name, CasterCallback cb, void *arg, Client_type type)
 {
     return 0;
 }
@@ -122,6 +140,19 @@ int CASTER::Sub_Rover_Client_Raw_Data(const char *client_key, CasterCallback cb,
     channel += "CLIENT:";
     channel += client_key;
     caster_svr->add_sub_cb_item(channel.c_str(), connect_key, cb, arg);
+    return 0;
+}
+
+int CASTER::Get_Rover_Client_Sub_Num(const char *mount_point, CasterCallback cb, void *arg, Station_type type)
+{
+    auto context = caster_svr->_pub_context;
+    std::string channel;
+    channel += "CLIENT:";
+    channel += mount_point;
+    auto ctx = new sub_cb_item();
+    ctx->cb = cb;
+    ctx->arg = arg;
+    redisAsyncCommand(context, redis_msg_internal::Redis_ONCE_Callback, ctx, "SCARD CHANNEL:%s:SUBS", channel.c_str());
     return 0;
 }
 

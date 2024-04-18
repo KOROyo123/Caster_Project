@@ -31,8 +31,8 @@ target_link_libraries(${PROJECT_NAME} event_extra)
 #hiredis 
 target_link_libraries(${PROJECT_NAME} hiredis)
 
-#json
-include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/third/json)
+#nlohmann/json
+include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 
 #spdlog
 add_definitions(-DUSE_SPD_LOG)

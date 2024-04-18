@@ -80,6 +80,9 @@ int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect
     }
     find = _sub_cb_map.find(channel);
 
+    // 更新订阅者列表
+    redisAsyncCommand(_pub_context, NULL, NULL, "SADD CHANNEL:%s:SUBS %s", channel, connect_key);
+
     sub_cb_item cb_item;
     cb_item.cb = cb;
     cb_item.arg = arg;
@@ -101,6 +104,8 @@ int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect
     {
         return 1;
     }
+    // 更新订阅者列表
+    redisAsyncCommand(_pub_context, NULL, NULL, "SREM CHANNEL:%s:SUBS %s", channel, connect_key);
     channel_subs->second.erase(item);
 
     return 0;
@@ -109,14 +114,14 @@ int redis_msg_internal::del_sub_cb_item(const char *channel, const char *connect
 int redis_msg_internal::check_active_channel()
 {
     auto cb_map = _sub_cb_map; // 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
-    for (auto channel_subs = cb_map.begin(); channel_subs !=cb_map.end(); channel_subs++)
+    for (auto channel_subs = cb_map.begin(); channel_subs != cb_map.end(); channel_subs++)
     // for (auto channel_subs : _sub_cb_map)
     {
         if (_active_channel.find(channel_subs->first) == _active_channel.end()) // 该订阅频道不在活跃频道中
         {
             if (channel_subs->second.size() == 0) // 订阅频道的实际用户为0
             {
-                _sub_cb_map.erase(channel_subs->first);//实际执行的操作是删除了原始记录
+                _sub_cb_map.erase(channel_subs->first); // 实际执行的操作是删除了原始记录
             }
             else
             {
@@ -205,6 +210,8 @@ void redis_msg_internal::Redis_ONCE_Callback(redisAsyncContext *c, void *r, void
     }
 
     Func("", arg, &Reply);
+
+    delete ctx;
 }
 
 void redis_msg_internal::Redis_Get_Hash_Field_Callback(redisAsyncContext *c, void *r, void *privdata)
