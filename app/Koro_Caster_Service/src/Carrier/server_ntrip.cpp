@@ -60,7 +60,7 @@ int server_ntrip::stop()
     close_req["req_type"] = CLOSE_NTRIP_SERVER;
     QUEUE::Push(close_req);
 
-    spdlog::info("Mount Info: mount [{}] is offline, addr:[{}:{}]", _mount_point, _ip, _port);
+    spdlog::info("[{}]: mount [{}] is offline, addr:[{}:{}]", __class__, _mount_point, _ip, _port);
 
     CASTER::Set_Base_Station_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
 
@@ -82,7 +82,7 @@ int server_ntrip::runing()
 
     CASTER::Set_Base_Station_State_ONLINE(_mount_point.c_str(), _user_name.c_str(), _connect_key.c_str());
 
-    spdlog::info("Mount Info: mount [{}] is online, addr:[{}:{}]", _mount_point, _ip, _port);
+    spdlog::info("[{}]: mount [{}] is online, addr:[{}:{}]", __class__, _mount_point, _ip, _port);
 
     _timeout_tv.tv_sec = _heart_beat_interval;
     _timeout_tv.tv_usec = 0;

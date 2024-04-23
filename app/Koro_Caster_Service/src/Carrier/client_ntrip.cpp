@@ -53,7 +53,7 @@ int client_ntrip::runing()
     CASTER::Set_Rover_Client_State_ONLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
     CASTER::Sub_Base_Station_Raw_Data(_mount_point.c_str(), _connect_key.c_str(), Caster_Sub_Callback, this);
 
-    spdlog::info("Client Info: user [{}] is login, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
+    spdlog::info("[{}]: user [{}] is login, using mount [{}], addr:[{}:{}]", __class__, _user_name, _mount_point, _ip, _port);
 
     return 0;
 }
@@ -70,7 +70,7 @@ int client_ntrip::stop()
     CASTER::Set_Rover_Client_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
     CASTER::UnSub_Base_Station_Raw_Data(_mount_point.c_str(), _connect_key.c_str());
 
-    spdlog::info("Client Info: user [{}] is logout, using mount [{}], addr:[{}:{}]", _user_name, _mount_point, _ip, _port);
+    spdlog::info("[{}]: user [{}] is logout, using mount [{}], addr:[{}:{}]", __class__, _user_name, _mount_point, _ip, _port);
 
     return 0;
 }
