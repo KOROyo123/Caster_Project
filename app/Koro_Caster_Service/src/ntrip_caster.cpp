@@ -536,7 +536,6 @@ int ntrip_caster::close_unsuccess_req_connect(json req)
     return 0;
 }
 
-
 void ntrip_caster::Request_Process_Cb(evutil_socket_t fd, short what, void *arg)
 {
     ntrip_caster *svr = static_cast<ntrip_caster *>(arg);
@@ -564,6 +563,10 @@ void ntrip_caster::Client_Check_Mount_Point_Callback(const char *request, void *
     auto svr = ctx->first;
     auto req = ctx->second;
 
+    // 在线才允许上线
+    std::string mount_point = req["mount_point"];
+    std::string connect_key = req["connect_key"];
+
     try
     {
         if (reply->type != CASTER_REPLY_INTEGER)
@@ -574,10 +577,6 @@ void ntrip_caster::Client_Check_Mount_Point_Callback(const char *request, void *
         {
             throw 2; // 挂载点不在线
         }
-
-        // 在线才允许上线
-        std::string mount_point = req["mount_point"];
-        std::string connect_key = req["connect_key"];
 
         auto con = svr->_connect_map.find(connect_key);
         if (con == svr->_connect_map.end())
@@ -595,6 +594,7 @@ void ntrip_caster::Client_Check_Mount_Point_Callback(const char *request, void *
     }
     catch (int i)
     {
+        spdlog::info("[{}]:Mount [{}] is not online, close client login connect.", __class__, mount_point);
         svr->close_unsuccess_req_connect(req);
     }
 
@@ -607,6 +607,9 @@ void ntrip_caster::Server_Check_Mount_Point_Callback(const char *request, void *
     auto svr = ctx->first;
     auto req = ctx->second;
 
+    std::string mount_point = req["mount_point"];
+    std::string connect_key = req["connect_key"];
+
     try
     {
         if (reply->type != CASTER_REPLY_INTEGER)
@@ -618,8 +621,6 @@ void ntrip_caster::Server_Check_Mount_Point_Callback(const char *request, void *
             throw 2; // 已经上线
         }
         // 不在线才允许上线
-        std::string mount_point = req["mount_point"];
-        std::string connect_key = req["connect_key"];
 
         auto con = svr->_connect_map.find(connect_key);
         if (con == svr->_connect_map.end())
@@ -638,6 +639,7 @@ void ntrip_caster::Server_Check_Mount_Point_Callback(const char *request, void *
     }
     catch (int i)
     {
+        spdlog::info("[{}]:Mount [{}] is already online, close server login connect.", __class__, mount_point);
         svr->close_unsuccess_req_connect(req);
     }
 
