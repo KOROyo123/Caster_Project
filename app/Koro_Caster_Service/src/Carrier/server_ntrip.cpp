@@ -177,6 +177,7 @@ int server_ntrip::publish_data_from_chunck()
         {
             spdlog::warn("[{}:{}: chunked data error,close connect! {},{},{}", __class__, __func__, _mount_point, _ip, _port);
             stop();
+            return 1;
         }
         sscanf(chunck_head_data, "%lx", &chunck_head_size);
 
