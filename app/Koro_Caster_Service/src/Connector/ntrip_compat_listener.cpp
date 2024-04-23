@@ -61,9 +61,6 @@ int ntrip_compat_listener::stop()
     return 0;
 }
 
-
-
-
 void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_socket_t fd, sockaddr *address, int socklen, void *arg)
 {
     auto svr = static_cast<ntrip_compat_listener *>(arg);
@@ -369,11 +366,19 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
     json item;
 
     size_t headerlen = 0;
-    char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
-    while (header)
+
+
+    while (1)
     {
+        char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
+        if(header ==NULL)
+        {
+            break;
+        }
+
         if (headerlen > 1024)
         {
+            free(header);
             break;
         }
         std::string key_value = header;
