@@ -37,12 +37,14 @@ private:
     json _caster_core_setting;
     json _auth_verify_setting;
 
+    json _common_setting;
+
     json _listener_setting;
     json _client_setting;
     json _server_setting;
 
     bool _output_state;
-    bool _timeout_intv;
+    int _timeout_intv;
 
 public:
     // 公开的接口
@@ -63,10 +65,7 @@ private:
 private:
     // 程序启动和停止
     int compontent_init();
-    int extra_init();
-
     int compontent_stop();
-    int extra_stop();
 
 private:
     // 任务处理函数
@@ -82,39 +81,22 @@ private:
     int create_source_ntrip(json req); // 用Ntrip协议获取源列表
     int close_source_ntrip(json req);  // 用Ntrip协议获取源列表
 
-    // ntrip relay 相关
-    int create_relay_connect(json req);
-    int close_realy_req_connection(json req);
-    int create_server_relay(json req); // 主动连接其他caster的数据源
-    int close_server_relay(json req);
-    // int transfer_add_create_client(json req); // 用户请求第三方挂载点上线后，添加到trransfer并创建client
-
     // 请求处理失败，关闭连接
     int close_unsuccess_req_connect(json req);
 
 private:
-    // Extra功能
-    // Redis心跳
-    redis_heart_beat *_redis_beat;
-    //
-private:
     // 连接器
     ntrip_compat_listener *_compat_listener;  // 被动接收Ntrip连接
-    ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
+    // ntrip_relay_connector *_relay_connetcotr; // 主动创建Ntrip连接
 
     // 连接-对象索引
     std::unordered_map<std::string, bufferevent *> _connect_map; // Connect_Key,bev或evhttp
     std::unordered_map<std::string, server_ntrip *> _server_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, client_ntrip *> _client_map; // Connect_Key,client_ntrip
     std::unordered_map<std::string, source_ntrip *> _source_map; // Connect_Key,client_ntrip
-    std::unordered_map<std::string, server_relay *> _relays_map; // Connect_Key,server_relay // 挂载点名为XXXX-F1A6(虚拟挂载点名-本地连接第三方时采用的端口转为4位16进制)
 
     // 挂载点-对象索引
     std::unordered_map<std::string, std::string> _server_key; // Mount_Point,Connect_Key
-    std::unordered_map<std::string, std::string> _relays_key; // Mount_Point,Connect_Key
-
-    // relay账号表
-    relay_account_tb _relay_accounts;
 
 private:
     event_base *_base;
@@ -124,7 +106,6 @@ private:
     event *_timeout_ev;
     timeval _timeout_tv;
 
-    timeval _delay_exit_tv = {1, 0}; // 延迟关闭定时器
 public:
     int start_server_thread();
     static void *event_base_thread(void *arg);

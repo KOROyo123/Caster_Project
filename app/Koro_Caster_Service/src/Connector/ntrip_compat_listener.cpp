@@ -38,7 +38,7 @@ int ntrip_compat_listener::start()
         return 1;
     }
 
-    spdlog::info("ntrip listener: bind to port {} success, start listen...", _listen_port);
+    spdlog::info("[{}]: bind to port {} success",__class__,_listen_port);
 
     return 0;
 }
@@ -65,14 +65,17 @@ void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_sock
     std::string Connect_Key = util_cal_connect_key(fd);
     svr->_connect_map->insert(std::make_pair(Connect_Key, bev));
 
-    auto timer = new timeval;
-    timer->tv_sec = 30;
-    timer->tv_usec = 0;
-    svr->_timer_map.insert(std::make_pair(Connect_Key, timer));
+    if (svr->_connect_timeout > 0)
+    {
+        auto timer = new timeval;
+        timer->tv_sec = svr->_connect_timeout;
+        timer->tv_usec = 0;
+        svr->_timer_map.insert(std::make_pair(Connect_Key, timer));
+        bufferevent_set_timeouts(bev, timer, NULL);
+    }
 
     auto ctx = new std::pair<ntrip_compat_listener *, std::string>(svr, Connect_Key);
     bufferevent_setcb(bev, Ntrip_Decode_Request_cb, NULL, Bev_EventCallback, ctx);
-    bufferevent_set_timeouts(bev, timer, NULL);
     bufferevent_enable(bev, EV_READ);
 }
 
@@ -108,12 +111,13 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     // 已经接收到请求，解析请求即可，这个请求决定了连接是进入下一步还是关闭
     bufferevent_disable(bev, EV_READ);              // 暂停/停止接收数据
     bufferevent_setcb(bev, NULL, NULL, NULL, NULL); // 清空bev绑定的回调？  如果这个时候bev event_cb已经激活怎么办?是否就不继续执行了
-    // 已经接收到请求，也需要关闭定时器
-    bufferevent_set_timeouts(bev, NULL, NULL); // 解绑定时器
+
     auto timer = svr->_timer_map.find(key);
     if (timer != svr->_timer_map.end())
     {
-        delete timer->second; // 删除定时器
+        // 已经接收到请求，也需要关闭定时器
+        bufferevent_set_timeouts(bev, NULL, NULL); // 解绑定时器
+        delete timer->second;                      // 删除定时器
         svr->_timer_map.erase(key);
     }
 

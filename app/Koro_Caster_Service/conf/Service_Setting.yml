@@ -23,12 +23,11 @@ Client_Setting:
 
 # #源列表设置
 # Source_Setting:
-#   Data_Record: true          #(未实现）记录接收信息（正式连接建立后启用，不包括header信息）
-#   Save_Path: /SourceRecord   #(未实现）保存路径 （格式：/YYYYMMDD_SourceRequest.log）
+#   Connect_Timeout: 30         #超时时间（源列表请求超过指定事件还没有发送完毕，也直接关闭请求）（/秒）（≤0 ：关闭）
 
 #通用设置
 Common_Setting:
-  Refresh_State_Interval: 10 #程序运行状态更新间隔（内部超时函数）（/秒）
+  Refresh_State_Interval: 10  #程序运行状态更新间隔（内部超时函数）（/秒）
   Output_State: true          #输出状态统计信息
   Working_Directory:          #(未实现）工作路径（所有的输出文件都以此路径为相对路径进行输出，不设置则默认在可执行程序启动时的路径下）
 
@@ -41,6 +40,7 @@ Log_Setting:
 #开发者模式
 Debug_Mode:
   Core_Dump: true      #生成Core_Dump文件
-  Output_Debug: true   #输出Debug信息到日志（会向控制台/日志输出Debug级别的信息）
+  Output_Debug: false   #输出Debug信息到日志（会向控制台/日志输出Debug级别的信息）
+
 
 

@@ -57,10 +57,16 @@ void source_ntrip::WriteCallback(bufferevent *bev, void *arg)
     auto length = evbuffer_get_length(svr->_evbuf);
     if (length == 0)
     {
-        svr->stop();
+        auto UnsendBufferSize = evbuffer_get_length(bufferevent_get_output(bev));
+        if (UnsendBufferSize == 0)
+        {
+            svr->stop();
+        }
     }
-    bufferevent_write_buffer(bev, svr->_evbuf);
-    length = evbuffer_get_length(svr->_evbuf);
+    else
+    {
+        bufferevent_write_buffer(bev, svr->_evbuf);
+    }
 }
 
 void source_ntrip::EventCallback(bufferevent *bev, short events, void *arg)

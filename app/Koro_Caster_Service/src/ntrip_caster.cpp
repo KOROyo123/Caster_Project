@@ -14,17 +14,6 @@
 
 #define __class__ "ntrip_caster"
 
-int ntrip_caster::update_state_info()
-{
-
-    _state_info["connect_num"] = _connect_map.size();
-    _state_info["client_num"] = _client_map.size();
-    _state_info["server_num"] = _server_map.size();
-    _state_info["relay_num"] = _relays_map.size();
-
-    return 0;
-}
-
 ntrip_caster::ntrip_caster(json cfg)
 {
     std::string dump_conf = cfg.dump(4);
@@ -34,16 +23,77 @@ ntrip_caster::ntrip_caster(json cfg)
     _caster_core_setting = cfg["Core_Setting"];
     _auth_verify_setting = cfg["Auth_Setting"];
 
+    _common_setting = _service_setting["Common_Setting"];
+
     _listener_setting = _service_setting["Ntrip_Listener"];
     _client_setting = _service_setting["Client_Setting"];
     _server_setting = _service_setting["Server_Setting"];
 
+    _timeout_intv = _common_setting["Timeout_Intv"];
+    _output_state = _common_setting["Output_State"];
+
     _base = event_base_new();
+
+    _timeout_tv.tv_sec = _timeout_intv;
+    _timeout_tv.tv_usec = 0;
+    _timeout_ev = event_new(_base, -1, EV_PERSIST, TimeoutCallback, this);
 }
 
 ntrip_caster::~ntrip_caster()
 {
     event_base_free(_base);
+}
+
+int ntrip_caster::start()
+{
+    // 核心模块初始化（核心业务）
+    compontent_init();
+    // 添加超时事件
+    event_add(_timeout_ev, &_timeout_tv);
+    // 启动event_base处理线程
+    start_server_thread();
+
+    return 0;
+}
+
+int ntrip_caster::stop()
+{
+    // 删除定超时事件
+    event_del(_timeout_ev);
+    // 核心模块停止
+    compontent_stop();
+    // 关闭所有连接，关闭listener;
+    event_base_loopexit(_base, NULL);
+
+    return 0;
+}
+
+int ntrip_caster::update_state_info()
+{
+    _state_info["connect_num"] = _connect_map.size();
+    _state_info["client_num"] = _client_map.size();
+    _state_info["server_num"] = _server_map.size();
+
+    return 0;
+}
+
+int ntrip_caster::periodic_task()
+{
+    if (_output_state) // 输出状态信息
+    {
+        spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} KB.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
+    }
+
+    // 更新记录的状态信息
+    update_state_info();
+
+#ifdef WIN32
+
+#else
+    malloc_trim(0); // 尝试归还、释放内存
+#endif
+
+    return 0;
 }
 
 int ntrip_caster::compontent_init()
@@ -63,12 +113,6 @@ int ntrip_caster::compontent_init()
     _compat_listener = new ntrip_compat_listener(_listener_setting, _base, &_connect_map);
     _compat_listener->start();
 
-    // 创建一个relay_connectorr
-    // _relay_connetcotr = new ntrip_relay_connector(_base, &_connect_map);
-    // relay表读取配置文件
-    // _relay_accounts.load_account_file("Relay_Accounts.json");
-    // }
-
     return 0;
 }
 
@@ -77,84 +121,46 @@ int ntrip_caster::compontent_stop()
     _compat_listener->stop();
     delete _compat_listener;
 
-    _relay_connetcotr->stop();
-    delete _relay_connetcotr;
-
     CASTER::Free();
-
     return 0;
 }
 
-int ntrip_caster::extra_init()
+int ntrip_caster::request_process(json req)
 {
-    if (!_service_setting["Redis_Heart_Beat"].is_null())
+    // 根据请求的类型，执行对应的操作
+    int REQ_TYPE = req["req_type"];
+
+    spdlog::debug("[{}:{}]: \n\r {}", __class__, __func__, req.dump(2));
+
+    switch (REQ_TYPE)
     {
-        _redis_beat = new redis_heart_beat(_service_setting["Redis_Heart_Beat"]);
-        _redis_beat->set_base(_base);
-        _redis_beat->start();
+    // 一般ntrip请求-------------------------------------
+    case REQUEST_SOURCE_LOGIN:
+        create_source_ntrip(req);
+        break;
+    case CLOSE_NTRIP_SOURCE:
+        close_source_ntrip(req);
+        break;
+    case REQUEST_CLIENT_LOGIN:
+        create_client_ntrip(req);
+        break;
+    case CLOSE_NTRIP_CLIENT:
+        close_client_ntrip(req);
+        break;
+    case REQUEST_SERVER_LOGIN:
+        create_server_ntrip(req);
+        break;
+    case CLOSE_NTRIP_SERVER:
+        close_server_ntrip(req);
+        break;
+    // 虚拟挂载点  //Nearest/Relay/Cors
+    case REQUEST_VIRTUAL_LOGIN:
+        create_client_virtual(req);
+        break;
+    default:
+        spdlog::warn("undefined req_type: {}", REQ_TYPE);
+        break;
     }
-    return 0;
-}
-
-int ntrip_caster::extra_stop()
-{
-    if (!_service_setting["Redis_Heart_Beat"].is_null())
-    {
-        _redis_beat->stop();
-        delete _redis_beat;
-    }
-
-    return 0;
-}
-
-int ntrip_caster::periodic_task()
-{
-    // 定时任务
-    spdlog::info("[Service Statistic]: Connection: {}, Online Server: {}, Online Client: {} , Use Memory: {} KB.", _connect_map.size(), _server_map.size(), _client_map.size(), util_get_use_memory());
-
-    malloc_trim(0); // 尝试归还、释放内存
-
-    // 更新记录的状态信息
-    update_state_info();
-
-    // 如果配置了redis心跳
-    if (_redis_beat)
-    {
-        _redis_beat->update_msg(_state_info);
-    }
-
-    return 0;
-}
-
-int ntrip_caster::start()
-{
-    // 核心模块初始化（核心业务）
-    compontent_init();
-    // 附加模块初始化（不影响核心业务）
-    extra_init();
-
-    // 添加定时事件
-    _timeout_tv.tv_sec = 10;
-    _timeout_tv.tv_usec = 1;
-    _timeout_ev = event_new(_base, -1, EV_PERSIST, TimeoutCallback, this);
-    event_add(_timeout_ev, &_timeout_tv);
-
-    // 启动event_base处理线程
-    start_server_thread();
-
-    return 0;
-}
-
-int ntrip_caster::stop()
-{
-    event_del(_timeout_ev);
-
-    extra_stop();
-    compontent_stop();
-
-    // 关闭所有连接，关闭listener;
-    event_base_loopexit(_base, NULL);
-
     return 0;
 }
 
@@ -181,7 +187,6 @@ int ntrip_caster::close_source_ntrip(json req)
     std::string connect_key = origin_req["connect_key"];
 
     auto con = _connect_map.find(connect_key);
-
     if (con == _connect_map.end())
     {
     }
@@ -216,39 +221,31 @@ int ntrip_caster::create_client_virtual(json req)
     return 0;
 }
 
-int ntrip_caster::create_relay_connect(json req)
+int ntrip_caster::close_client_ntrip(json req)
 {
-    std::string req_mount = req["mount_point"];
-    std::string account = _relay_accounts.find_trd_idel_account(req_mount);
+    json origin_req = req["origin_req"];
+    std::string connect_key = origin_req["connect_key"];
+    std::string mount_point = origin_req["mount_point"];
+    int req_type = origin_req["req_type"];
+    auto con = _connect_map.find(connect_key);
 
-    if (account.empty())
+    if (con == _connect_map.end())
     {
-        // 没有可用账号
-        req["req_type"] = NO_IDEL_RELAY_ACCOUNT_CLOSE_CONNCET;
-        QUEUE::Push(req);
-        return 0;
-    }
-
-    json info = _relay_accounts.get_trd_account_info(account, req_mount);
-    info["usr_pwd"] = account;
-    info["origin_req"] = req;
-
-    std::string intel_mount = _relay_connetcotr->create_new_connection(info);
-    if (intel_mount.empty())
-    {
-        // 连接建立失败
-        // 归还账号
-        _relay_accounts.give_back_usr_account(account);
-        // 关闭连接
-        req["req_type"] = CREATE_RELAY_CONNECT_FAIL_CLOSE_CONNCET;
-        QUEUE::Push(req);
-        return 0;
     }
     else
     {
-        // 先直接建立一个client
+        _connect_map.erase(con);
     }
 
+    auto obj = _client_map.find(connect_key);
+    if (obj == _client_map.end())
+    {
+    }
+    else
+    {
+        delete obj->second;
+        _client_map.erase(obj);
+    }
     return 0;
 }
 
@@ -257,93 +254,6 @@ int ntrip_caster::create_server_ntrip(json req)
     std::string mount_point = req["mount_point"];
     auto arg = new std::pair<ntrip_caster *, json>(this, req);
     CASTER::Check_Base_Station_is_ONLINE(mount_point.c_str(), Server_Check_Mount_Point_Callback, arg);
-    return 0;
-}
-
-int ntrip_caster::create_server_relay(json req)
-{
-    std::string connect_key = req["connect_key"];
-    std::string mount_point = req["mount_point"];
-
-    auto con = _connect_map.find(connect_key);
-    if (con == _connect_map.end())
-    {
-        spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
-        return 1;
-    }
-    auto relay = new server_relay(req, con->second);
-    // 加入挂载点表中
-    _relays_key.insert(std::make_pair(mount_point, connect_key));
-    _relays_map.insert(std::make_pair(connect_key, relay));
-
-    relay->start();
-
-    return 0;
-}
-
-int ntrip_caster::close_server_relay(json req)
-{
-    json origin_req = req["origin_req"];
-    std::string mount_point = origin_req["mount_point"];
-    std::string connect_key = origin_req["connect_key"];
-    std::string usr_pwd = origin_req["usr_pwd"];
-
-    auto con = _connect_map.find(connect_key);
-    if (con == _connect_map.end())
-    {
-    }
-    else
-    {
-        _connect_map.erase(con);
-    }
-
-    auto obj = _relays_map.find(connect_key);
-    if (obj == _relays_map.end())
-    {
-    }
-    else
-    {
-        delete obj->second;
-        _relays_map.erase(obj);
-    }
-
-    auto relay_key = _relays_key.find(mount_point);
-    if (relay_key != _relays_key.end())
-    {
-        if (connect_key == relay_key->second)
-        {
-            _relays_key.erase(mount_point);
-        }
-    }
-
-    // 返还账号
-    _relay_accounts.give_back_usr_account(usr_pwd);
-
-    return 0;
-}
-
-int ntrip_caster::close_realy_req_connection(json req)
-{
-    // 关闭连接，找到请求者
-    auto relay_req = req["origin_req"];
-    std::string usr_pwd = relay_req["usr_pwd"];
-
-    _relay_accounts.give_back_usr_account(usr_pwd);
-    if (relay_req["origin_req"].is_null())
-    {
-        // 没有请求者，是系统创建的请求
-        return 0;
-    }
-    auto cli_req = relay_req["origin_req"];
-    std::string connectkey = cli_req["connect_key"];
-
-    auto con = _connect_map.find(connectkey);
-    if (con != _connect_map.end())
-    {
-        bufferevent_free(static_cast<bufferevent *>(con->second));
-        _connect_map.erase(con);
-    }
-
     return 0;
 }
 
@@ -383,117 +293,6 @@ int ntrip_caster::close_server_ntrip(json req)
     return 0;
 }
 
-int ntrip_caster::close_client_ntrip(json req)
-{
-    json origin_req = req["origin_req"];
-    std::string connect_key = origin_req["connect_key"];
-    std::string mount_point = origin_req["mount_point"];
-    int req_type = origin_req["req_type"];
-    auto con = _connect_map.find(connect_key);
-
-    if (con == _connect_map.end())
-    {
-    }
-    else
-    {
-        _connect_map.erase(con);
-    }
-
-    auto obj = _client_map.find(connect_key);
-    if (obj == _client_map.end())
-    {
-    }
-    else
-    {
-        delete obj->second;
-        _client_map.erase(obj);
-    }
-
-    // if (req_type == REQUEST_RELAY_LOGIN)
-    // {
-    //     // 要把基站也下线
-    //     auto relay_key = _relays_key.find(mount_point);
-    //     if (relay_key != _relays_key.end())
-    //     {
-    //         if (connect_key == relay_key->second)
-    //         {
-    //             _relays_key.erase(mount_point);
-    //         }
-    //     }
-
-    //     auto relay = _relays_map.find(connect_key);
-    //     if (relay != _relays_map.end())
-    //     {
-    //         relay->second->stop();
-    //     }
-    // } //后续改为非活跃频道回调的形式来通知relay基站下线
-
-    return 0;
-}
-
-int ntrip_caster::request_process(json req)
-{
-    // 根据请求的类型，执行对应的操作
-    int REQ_TYPE = req["req_type"];
-
-    spdlog::debug("[{}:{}]: \n\r {}", __class__, __func__, req.dump(2));
-    // spdlog::info("[{}:{}]: \n\r {}", __class__, __func__, req.dump(2));
-
-    switch (REQ_TYPE)
-    {
-    // 一般ntrip请求-------------------------------------
-    case REQUEST_SOURCE_LOGIN:
-        create_source_ntrip(req);
-        break;
-    case CLOSE_NTRIP_SOURCE:
-        close_source_ntrip(req);
-        break;
-    case REQUEST_CLIENT_LOGIN:
-        create_client_ntrip(req);
-        break;
-    case CLOSE_NTRIP_CLIENT:
-        close_client_ntrip(req);
-        break;
-    case REQUEST_SERVER_LOGIN:
-        create_server_ntrip(req);
-        break;
-    case CLOSE_NTRIP_SERVER:
-        close_server_ntrip(req);
-        break;
-    // 虚拟挂载点  //Nearest/Relay/Cors
-    case REQUEST_VIRTUAL_LOGIN:
-        create_client_virtual(req);
-        break;
-
-    // // relay服务相关--------------------------------------
-    // case REQUEST_RELAY_LOGIN:
-    //     create_relay_connect(req);
-    //     break;
-    // case CLOSE_RELAY_REQ_CONNECT:
-    //     // 由connector发出的请求，状态为，在连接第三方的过程中，连接失败了
-    //     close_realy_req_connection(req);
-    //     break;
-    // case CREATE_RELAY_SERVER:
-    //     // 由connector发出的请求，第三方连接成功，创建对应的server和client（如果是client请求的）
-    //     create_server_relay(req);
-    //     break;
-    // case CLOSE_RELAY_SERVER:
-    //     close_server_relay(req);
-    //     break;
-    // case ADD_RELAY_MOUNT_TO_LISTENER:
-    //     add_relay_mount_to_listener(req);
-    //     break;
-    // case ADD_RELAY_MOUNT_TO_SOURCELIST:
-    //     add_relay_mount_to_sourcelist(req);
-    //     break;
-    // 其他操作-------------------------------------------
-    default:
-        spdlog::warn("undefined req_type: {}", REQ_TYPE);
-        break;
-    }
-    return 0;
-}
-
 int ntrip_caster::close_unsuccess_req_connect(json req)
 {
     std::string Connect_Key = req["connect_key"];
@@ -516,6 +315,24 @@ int ntrip_caster::close_unsuccess_req_connect(json req)
     _connect_map.erase(item);
 
     return 0;
+}
+
+int ntrip_caster::start_server_thread()
+{
+    event_base_thread(_base);
+    return 0;
+}
+
+void *ntrip_caster::event_base_thread(void *arg)
+{
+    event_base *base = static_cast<event_base *>(arg);
+    evthread_make_base_notifiable(base);
+
+    spdlog::info("Server is runing...");
+    event_base_dispatch(base);
+
+    spdlog::warn("Server is stop!"); // 不应当主动发生
+    return nullptr;
 }
 
 void ntrip_caster::Request_Process_Cb(evutil_socket_t fd, short what, void *arg)
@@ -626,23 +443,4 @@ void ntrip_caster::Server_Check_Mount_Point_Callback(const char *request, void *
     }
 
     delete ctx;
-}
-
-int ntrip_caster::start_server_thread()
-{
-    event_base_thread(_base);
-    return 0;
-}
-
-void *ntrip_caster::event_base_thread(void *arg)
-{
-    event_base *base = static_cast<event_base *>(arg);
-    evthread_make_base_notifiable(base);
-    // event_base_dump_events(base, stdout); // 向控制台输出当前已经绑定在base上的事件
-
-    spdlog::info("Server is runing...");
-    event_base_dispatch(base);
-
-    spdlog::warn("Server is stop!"); // 不应当主动发生
-    return nullptr;
 }

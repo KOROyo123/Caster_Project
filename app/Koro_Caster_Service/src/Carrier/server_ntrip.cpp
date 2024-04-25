@@ -48,8 +48,11 @@ int server_ntrip::start()
 
 int server_ntrip::stop()
 {
-    event_del(_timeout_ev);
-    event_free(_timeout_ev);
+    if (_heart_beat_interval > 0)
+    {
+        event_del(_timeout_ev);
+        event_free(_timeout_ev);
+    }
 
     bufferevent_disable(_bev, EV_READ);
 
@@ -83,17 +86,19 @@ int server_ntrip::runing()
 
     spdlog::info("[{}]: mount [{}] is online, addr:[{}:{}]", __class__, _mount_point, _ip, _port);
 
-    _timeout_tv.tv_sec = _heart_beat_interval;
-    _timeout_tv.tv_usec = 0;
-    _timeout_ev = event_new(bufferevent_get_base(_bev), -1, EV_PERSIST, TimeoutCallback, this);
-    event_add(_timeout_ev, &_timeout_tv);
+    if (_heart_beat_interval > 0)
+    {
+        _timeout_tv.tv_sec = _heart_beat_interval;
+        _timeout_tv.tv_usec = 0;
+        _timeout_ev = event_new(bufferevent_get_base(_bev), -1, EV_PERSIST, TimeoutCallback, this);
+        event_add(_timeout_ev, &_timeout_tv);
+    }
 
     return 0;
 }
 
 int server_ntrip::bev_send_reply()
 {
-
     if (_NtripVersion2)
     {
         evbuffer_add_printf(_send_evbuf, "HTTP/1.1 200 OK\r\n");
