@@ -1,0 +1,21 @@
+Redis_Heart_Beat:
+  Switch: false
+  Reids_Connect_Setting:
+    Redis_IP: 127.0.0.1
+    Redis_Port: 16379
+    Redis_Requirepass: koroyo123
+  Heart_Beat_Interval: 5
+  Heart_Beat_Method: Pub
+  Heart_Beat_Key: CASTER_STATE_INFO
+  Heart_Beat_Set_MSG:
+    module: KORO_CASTER
+    node: 10.0.4.4
+  Heart_Beat_Out_MSG:
+    PID: true
+    gpssecond: true
+    onlineServer: true
+    onlineClient: true
+    onlineTime: true
+    memory: true
+    runningtime: true
+    IP: false

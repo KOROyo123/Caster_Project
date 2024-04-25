@@ -33,16 +33,16 @@ using json = nlohmann::json;
 class ntrip_caster
 {
 private:
-    json _server_config;
+    json _service_setting;
+    json _caster_core_setting;
+    json _auth_verify_setting;
 
-    // 一些开关
-    bool _Server_Login_With_Password = false;
-    bool _Client_Login_With_Password = false;
+    json _listener_setting;
+    json _client_setting;
+    json _server_setting;
 
-    bool _SYS_Relay_Support = false;
-    bool _TRD_Relay_Support = false;
-    bool _HTTP_Ctrl_Support = false;
-    bool _Extra_Module_Support = false;
+    bool _output_state;
+    bool _timeout_intv;
 
 public:
     // 公开的接口

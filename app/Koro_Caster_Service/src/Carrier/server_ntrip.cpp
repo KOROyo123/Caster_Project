@@ -25,10 +25,9 @@ server_ntrip::server_ntrip(json req, bufferevent *bev)
     _connect_key = _info["connect_key"];
     _mount_point = _info["mount_point"];
 
-    _connect_timeout = _conf["Connect_Timeout"];
-    _heart_beat_switch = _conf["Heart_Beat_Switch"];
-    _heart_beat_interval = _conf["Heart_Beat_Interval"];
-    _heart_beat_msg = _conf["Heart_Beat_Msg"];
+    _connect_timeout = _conf["Timeout"];
+    _heart_beat_interval = _conf["Heartbeat_Intv"];
+    _heart_beat_msg = _conf["Heartbeat_Msg"];
 }
 
 server_ntrip::~server_ntrip()

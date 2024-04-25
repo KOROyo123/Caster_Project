@@ -19,7 +19,7 @@
 #endif
 
 
-#include "rtklib.h"
+// #include "rtklib.h"
 
 #define __class__ "redis_heart_beat"
 
@@ -234,8 +234,9 @@ int redis_heart_beat::update_out_set(json conf)
 
 double redis_heart_beat::getGnsssecond()
 {
-    auto time = timeget();
-    return time2gpst(time, NULL);
+    // auto time = timeget();
+    // return time2gpst(time, NULL);
+    return 0.0;
 }
 
 int redis_heart_beat::getMemory()

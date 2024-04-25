@@ -99,69 +99,36 @@ add_executable(${EXE_NAME}
 
 #生成的可执行文件名称和包含的文件
 
-#基于 version.h.in 生成 version.h
+#基于version.h.in 生成 version.h
 configure_file(${CMAKE_SOURCE_DIR}/version.h.in version.h @ONLY)
 target_include_directories(${EXE_NAME}  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-#基于 工程目录下的破i之文件 生成 执行目录下的配置文件
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Koro_Caster_Service_Conf.json ${CMAKE_CURRENT_BINARY_DIR}/Koro_Caster_Service_Conf.json @ONLY)
+#基于工程目录下的配置文件 生成 执行目录下的配置文件
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Auth_Verify.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Auth_Verify.yml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Caster_Core.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Caster_Core.yml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Service_Setting.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Service_Setting.yml @ONLY)
+
+
 
 #Koro_NavTool
 target_link_libraries(${EXE_NAME} knt)
-
 #caster_core
 target_link_libraries(${EXE_NAME} castercore)
-
 #auth_verify
 target_link_libraries(${EXE_NAME} authverify)
-
-
-
-#nlohmann/json
-include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
-
-#如果是windows环境，则rtklib还需要加两个库
-IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-target_link_libraries(${EXE_NAME} Ws2_32 winmm)
-ENDIF()
-#如果是linux环境，需要手动链接math.h pthread库
-IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-target_link_libraries(${EXE_NAME} m pthread)
-ENDIF()
-
-#rtklib
-target_link_libraries(${EXE_NAME} rtklib)
-
-#openssl (找不到就安装一下 sudo apt install libssl-dev)
-# IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-# #windows版本(是否有效还需要验证）
-#     set(OPENSSL_ROOT_DIR "C:/ProgramFiles/OpenSSL-Win64")
-#     set(OPENSSL_INCLUDE_DIR "${OPENSSL_ROOT_DIR}/include")
-#     set(OPENSSL_LIBRARIES "${OPENSSL_ROOT_DIR}/lib/libssl_static.lib"
-#                           "${OPENSSL_ROOT_DIR}/lib/libcrypto_static.lib")
-#     include_directories(${OPENSSL_INCLUDE_DIR})
-#     target_link_libraries(${EXE_NAME} ${OPENSSL_LIBRARIES})
-# ENDIF()
-# IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-#     find_package(OpenSSL REQUIRED)
-#     target_link_libraries(${EXE_NAME}  OpenSSL::Crypto OpenSSL::SSL)
-#     # 采用自编译的方式解决openeular版本找不到ssl库的问题
-#     # include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/include)
-#     # target_link_libraries(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libcrypto.a)
-#     # target_link_libraries(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/openssl-3.0.12/build/libssl.a)
-# ENDIF()
 
 #libevent 
 target_link_libraries(${EXE_NAME} event)
 target_link_libraries(${EXE_NAME} event_core)
 target_link_libraries(${EXE_NAME} event_extra)
-
-#hiredis 
-target_link_libraries(${EXE_NAME} hiredis)
-
+#nlohmann/json
+include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 #spdlog
 target_link_libraries(${EXE_NAME} spdlog)
-
+#yaml
+# target_link_libraries(${EXE_NAME} yaml)
+include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/yaml-cpp-0.8.0/include)
+target_link_libraries(${EXE_NAME} ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a)
 
 
 

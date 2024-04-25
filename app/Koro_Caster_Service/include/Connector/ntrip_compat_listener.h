@@ -43,8 +43,6 @@
 class ntrip_compat_listener
 {
 private:
-    std::string listener_key; // 本机的IP和监听port得到的唯一key
-    std::string _server_IP;   // 运行该程序的主机IP  和实际连接无关
     int _listen_port;
     int _connect_timeout = 0;
 
@@ -57,23 +55,11 @@ private:
     std::set<std::string> _support_virtual_mount;
 
 public:
-    ntrip_compat_listener(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map);
+    ntrip_compat_listener(json conf,event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map);
     ~ntrip_compat_listener();
-
-    int set_listen_conf(json conf);
 
     int start();
     int stop();
-
-    // 最近挂载点模式相关
-    int enable_Nearest_Support();
-    int disable_Nearest_Support();
-
-    // 虚拟挂载点相关
-    int enable_Virtual_Support();
-    int disable_Virtual_Support();
-    int add_Virtal_Mount(std::string mount_point);
-    int del_Virtal_Mount(std::string mount_point);
 
 public:
     // 新建连接相关

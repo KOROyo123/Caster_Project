@@ -6,6 +6,7 @@
 
 client_ntrip::client_ntrip(json req, bufferevent *bev)
 {
+    _conf = req["Settings"];
     _info = req;
     _bev = bev;
 

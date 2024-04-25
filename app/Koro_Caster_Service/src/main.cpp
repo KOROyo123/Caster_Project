@@ -10,17 +10,18 @@
 #include <sys/resource.h>
 #endif
 
-
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#include "yaml-cpp/yaml.h"
+
 #include "version.h"
 #include "ntrip_caster.h"
 
-#define CONF_PATH "Koro_Caster_Service_Conf.json"
+#define CONF_PATH "conf/"
 
 // trace：最详细的日志级别，提供追踪程序执行流程的信息。
 // debug：调试级别的日志信息，用于调试程序逻辑和查找问题。
@@ -28,6 +29,72 @@ using json = nlohmann::json;
 // warn：警告级别的日志信息，表明可能发生错误或不符合预期的情况。
 // error：错误级别的日志信息，表明发生了某些错误或异常情况。
 // critical：严重错误级别的日志信息，表示一个致命的或不可恢复的错误。
+
+json load_Caster_Conf(const char *conf_directory)
+{
+    json conf;
+
+    std::string Path = conf_directory;
+    YAML::Node Conf = YAML::LoadFile(Path + "Service_Setting.yml");
+    // std::cout << Conf << std::endl;
+
+    // 配置转json
+    auto Ntrip_Listener_Setting = Conf["Ntrip_Listener_Setting"];
+    conf["Ntrip_Listener"]["Port"] = Ntrip_Listener_Setting["Listen_Port"].as<int>();
+    conf["Ntrip_Listener"]["Timeout"] = Ntrip_Listener_Setting["Connect_Timeout"].as<int>();
+
+    auto Server_Setting = Conf["Server_Setting"];
+    conf["Server_Setting"]["Timeout"] = Server_Setting["Connect_Timeout"].as<int>();
+    conf["Server_Setting"]["Heartbeat_Intv"] = Server_Setting["Heart_Beat_Interval"].as<int>();
+    conf["Server_Setting"]["Heartbeat_Msg"] = Server_Setting["Heart_Beat_Msg"].as<std::string>();
+
+    auto Client_Setting = Conf["Client_Setting"];
+    conf["Client_Setting"]["Timeout"] = Client_Setting["Connect_Timeout"].as<int>();
+    conf["Client_Setting"]["Unsend_Limit"] = Client_Setting["Unsend_Threshold"].as<int>();
+
+    auto Common_Setting = Conf["Common_Setting"];
+    conf["Common_Setting"]["Timeout_Intv"] = Common_Setting["Refresh_State_Interval"].as<int>();
+    conf["Common_Setting"]["Output_State"] = Common_Setting["Output_State"].as<bool>();
+
+    auto Log_Setting = Conf["Log_Setting"];
+    conf["Log_Setting"]["Output_STD"] = Log_Setting["Output_STD"].as<bool>();
+    conf["Log_Setting"]["Output_File"] = Log_Setting["Output_File"].as<bool>();
+    conf["Log_Setting"]["File_Path"] = Log_Setting["File_Save_Path"].as<std::string>();
+
+    auto Debug_Mode = Conf["Debug_Mode"];
+    conf["Debug_Mode"]["Core_Dump"] = Debug_Mode["Core_Dump"].as<bool>();
+    conf["Debug_Mode"]["Output_Debug"] = Debug_Mode["Output_Debug"].as<bool>();
+
+    return conf;
+}
+
+json load_Core_Conf(const char *conf_directory)
+{
+    json conf;
+    std::string Path = conf_directory;
+    YAML::Node Conf = YAML::LoadFile(Path + "Caster_Core.yml");
+
+    auto Redis_Setting = Conf["Reids_Connect_Setting"];
+    conf["Redis_IP"] = Redis_Setting["IP"].as<std::string>();
+    conf["Redis_Port"] = Redis_Setting["Port"].as<int>();
+    conf["Redis_Requirepass"] = Redis_Setting["Requirepass"].as<std::string>();
+
+    return conf;
+}
+
+json load_Auth_Conf(const char *conf_directory)
+{
+    json conf;
+    std::string Path = conf_directory;
+    YAML::Node Conf = YAML::LoadFile(Path + "Auth_Verify.yml");
+
+    auto Redis_Setting = Conf["Reids_Connect_Setting"];
+    conf["Redis_IP"] = Redis_Setting["IP"].as<std::string>();
+    conf["Redis_Port"] = Redis_Setting["Port"].as<int>();
+    conf["Redis_Requirepass"] = Redis_Setting["Requirepass"].as<std::string>();
+
+    return conf;
+}
 
 int main(int argc, char **argv)
 {
@@ -37,7 +104,7 @@ int main(int argc, char **argv)
     // 启用dump
     prctl(PR_SET_DUMPABLE, 1);
 
-    // 设置core dunp大小
+    // 设置core dump大小
     struct rlimit rlimit_core;
     rlimit_core.rlim_cur = RLIM_INFINITY; // 设置大小为无限
     rlimit_core.rlim_max = RLIM_INFINITY;
@@ -47,46 +114,47 @@ int main(int argc, char **argv)
     // 程序启动
     spdlog::info("{}/{} Start", PROJECT_SET_NAME, PROJECT_SET_VERSION);
     spdlog::info("Software Version: {}-{}", PROJECT_GIT_VERSION, PROJECT_TAG_VERSION);
-    //----------------------功能测试区
 
-    //---------------------------------
     // 解析输入：
-    std::string conf_path;
-    conf_path = CONF_PATH;
-    // if (argc > 1)
-    // {
-    //     conf_path=argv[1];
-    // }
-    // else
-    // {
-    //     conf_path=CONF_PATH;
-    // }
+    std::string conf_path = CONF_PATH;
+    int listen_port = -1;
+    if (argc > 2)
+    {
+        for (int i = 1; i < argc; i += 2)
+        {
+            if (!strcmp(argv[i], "-port")) // 监听端口
+            {
+                listen_port = atoi(argv[i + 1]);
+            }
+            else if (!strcmp(argv[i], "-conf")) // 配置文件路径
+            {
+                conf_path = argv[i + 1];
+            }
+        }
+    }
 
     // 打开配置文件
     spdlog::info("Conf Path:{}", conf_path);
-    std::ifstream f(conf_path);
-    if (!f.is_open())
-    {
-        spdlog::error("Conf File Open Fail! Exit.");
-        return 0;
-    }
-
     // 读取全局配置
     spdlog::info("Load Conf...");
-    json cfg = json::parse(f);
-    f.close();
+    json cfg;
+    cfg["Service_Setting"] = load_Caster_Conf(conf_path.c_str());
+    cfg["Core_Setting"] = load_Core_Conf(conf_path.c_str());
+    cfg["Auth_Setting"] = load_Auth_Conf(conf_path.c_str());
 
-    // coredunp 选项
-    bool Core_Dump = cfg["Debug_Mode"]["Core_Dump"];
+    if (listen_port > 0)
+    {
+        cfg["Ntrip_Listener"]["Port"] = listen_port;
+    }
 
-    bool Debug_Info = cfg["Debug_Mode"]["Debug_Info"];
-    bool Info_Record = cfg["Debug_Mode"]["Info_Record"];
+    // 日志输出选项
+    bool log_to_std = cfg["Service_Setting"]["Log_Setting"]["Output_STD"];
+    bool log_to_file = cfg["Service_Setting"]["Log_Setting"]["Output_File"];
+    std::string logpath = cfg["Service_Setting"]["Log_Setting"]["File_Path"];
 
-    bool logstd = true;//true false
-    bool logfile = cfg["Log_File_Setting"]["Info_Log"]["Switch"];
-    std::string logpath = cfg["Log_File_Setting"]["Info_Log"]["Save_Path"];
-    int file_hour = cfg["Log_File_Setting"]["Info_Log"]["File_Swap_Hour"];
-    int file_min = cfg["Log_File_Setting"]["Info_Log"]["File_Swap_Min"];
+    // 开发者模式相关
+    bool Core_Dump = cfg["Service_Setting"]["Debug_Mode"]["Core_Dump"];
+    bool log_debug = cfg["Service_Setting"]["Debug_Mode"]["Output_Debug"];
 
     if (!Core_Dump) // 是否需要关闭 coredump
     {
@@ -99,30 +167,24 @@ int main(int argc, char **argv)
 
     // 初始化日志系统
     std::vector<spdlog::sink_ptr> sinks;
-    if (logfile) // 输出到文件
-    {
-        spdlog::info("Write log to File...");
-        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logpath, file_hour, file_min));
-    }
-    if (logstd) // 输出到控制台
+    if (log_to_std) // 输出到控制台
     {
         spdlog::info("Write log to Std...");
         sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
     }
+    if (log_to_file) // 输出到文件
+    {
+        spdlog::info("Write log to File...");
+        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logpath, 0, 0));
+    }
     // 把所有sink放入logger
     auto logger = std::make_shared<spdlog::logger>("log", begin(sinks), end(sinks));
-
     spdlog::set_default_logger(logger);
-    //spdlog::flush_every(std::chrono::seconds(5)); // 设置日志刷新时间
-    spdlog::flush_on(spdlog::level::info);        // 立即刷新日志
-
-    if (Debug_Info) // 设置输出日志的级别
+    spdlog::flush_on(spdlog::level::info); // 立即刷新日志
+    if (log_debug)                         // 设置输出日志的级别
     {
         spdlog::set_level(spdlog::level::debug);
-         spdlog::flush_on(spdlog::level::debug); 
-    }
-    if (Info_Record)
-    {
+        spdlog::flush_on(spdlog::level::debug);
     }
 
     // 初始化完成，开始进入正式流程
@@ -132,13 +194,15 @@ int main(int argc, char **argv)
 
 #ifdef WIN32
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        spdlog::info("WSAStartup failed! exit.");;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        spdlog::info("WSAStartup failed! exit.");
         return 1;
     }
 #endif
 
     spdlog::info("Init Server...");
+
     ntrip_caster a(cfg); // 创建一个对象，传入config
 
     spdlog::info("Start Server...");

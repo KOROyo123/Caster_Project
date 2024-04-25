@@ -1,0 +1,14 @@
+# Caster_Core 配置
+
+Caster_Setting:
+
+Mount_Setting:
+  
+Source_Setting:
+  
+
+# Redis连接
+Reids_Connect_Setting:
+  IP: 127.0.0.1
+  Port: 16379
+  Requirepass: koroyo123

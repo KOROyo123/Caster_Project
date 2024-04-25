@@ -27,17 +27,18 @@ int ntrip_caster::update_state_info()
 
 ntrip_caster::ntrip_caster(json cfg)
 {
-    _server_config = cfg;
-
-    std::string dump_conf = _server_config.dump(4);
-
+    std::string dump_conf = cfg.dump(4);
     spdlog::debug("load conf info:\n{}", dump_conf);
 
-    _base = event_base_new();
+    _service_setting = cfg["Service_Setting"];
+    _caster_core_setting = cfg["Core_Setting"];
+    _auth_verify_setting = cfg["Auth_Setting"];
 
-    _SYS_Relay_Support = _server_config["Function_Switch"]["SYS_Relay_Support"];
-    _TRD_Relay_Support = _server_config["Function_Switch"]["TRD_Relay_Support"];
-    _HTTP_Ctrl_Support = _server_config["Function_Switch"]["HTTP_Ctrl_Support"];
+    _listener_setting = _service_setting["Ntrip_Listener"];
+    _client_setting = _service_setting["Client_Setting"];
+    _server_setting = _service_setting["Server_Setting"];
+
+    _base = event_base_new();
 }
 
 ntrip_caster::~ntrip_caster()
@@ -47,45 +48,26 @@ ntrip_caster::~ntrip_caster()
 
 int ntrip_caster::compontent_init()
 {
-    // 根据配置文件，解析并创建初始化任务
-
-    // 必要任务  注意启动的先后顺序-------------------------------------
     // 初始化请求处理队列
     _process_event = event_new(_base, -1, EV_PERSIST, Request_Process_Cb, this);
     QUEUE::Init(_process_event);
 
+    // 用户验证模块
+    AUTH::Init(_auth_verify_setting.dump().c_str(), _base);
+
     // 初始化Caster数据分发核心：当前采用的是Redis，后续开发支持脱离redis运行
-    json redis_req = _server_config["Reids_Connect_Setting"];
-    CASTER::Init(redis_req.dump().c_str(), _base);
+    CASTER::Init(_caster_core_setting.dump().c_str(), _base);
     CASTER::Clear();
 
     // 创建listener请求
-    json listener_req = _server_config["Ntrip_Listener_Setting"];
-    _compat_listener = new ntrip_compat_listener(_base, &_connect_map);
-    _compat_listener->set_listen_conf(listener_req);
+    _compat_listener = new ntrip_compat_listener(_listener_setting, _base, &_connect_map);
     _compat_listener->start();
 
-    // 可选任务-------------------------------------
-
     // 创建一个relay_connectorr
-    _relay_connetcotr = new ntrip_relay_connector(_base, &_connect_map);
+    // _relay_connetcotr = new ntrip_relay_connector(_base, &_connect_map);
     // relay表读取配置文件
-    _relay_accounts.load_account_file("Relay_Accounts.json");
+    // _relay_accounts.load_account_file("Relay_Accounts.json");
     // }
-
-    if (_SYS_Relay_Support)
-    {
-        // 添加一个系统转发检测的超时回调
-    }
-
-    if (_TRD_Relay_Support)
-    {
-        json relay_req;
-        relay_req["req_type"] = ADD_RELAY_MOUNT_TO_LISTENER;
-        QUEUE::Push(relay_req);
-        relay_req["req_type"] = ADD_RELAY_MOUNT_TO_SOURCELIST;
-        QUEUE::Push(relay_req);
-    }
 
     return 0;
 }
@@ -105,9 +87,9 @@ int ntrip_caster::compontent_stop()
 
 int ntrip_caster::extra_init()
 {
-    if (!_server_config["Redis_Heart_Beat"].is_null())
+    if (!_service_setting["Redis_Heart_Beat"].is_null())
     {
-        _redis_beat = new redis_heart_beat(_server_config["Redis_Heart_Beat"]);
+        _redis_beat = new redis_heart_beat(_service_setting["Redis_Heart_Beat"]);
         _redis_beat->set_base(_base);
         _redis_beat->start();
     }
@@ -116,7 +98,7 @@ int ntrip_caster::extra_init()
 
 int ntrip_caster::extra_stop()
 {
-    if (!_server_config["Redis_Heart_Beat"].is_null())
+    if (!_service_setting["Redis_Heart_Beat"].is_null())
     {
         _redis_beat->stop();
         delete _redis_beat;
@@ -584,7 +566,7 @@ void ntrip_caster::Client_Check_Mount_Point_Callback(const char *request, void *
             spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
             throw 2; // 找不到连接
         }
-        req["Settings"] = svr->_server_config["Client_Setting"];
+        req["Settings"] = svr->_client_setting;
         client_ntrip *ntripc = new client_ntrip(req, con->second);
 
         svr->_client_map.insert(std::make_pair(connect_key, ntripc));
@@ -628,7 +610,7 @@ void ntrip_caster::Server_Check_Mount_Point_Callback(const char *request, void *
             spdlog::warn("[{}:{}]: Create_Ntrip_Server fail, con not in connect_map", __class__, __func__);
             throw 2; // 找不到连接
         }
-        req["Settings"] = svr->_server_config["Server_Setting"];
+        req["Settings"] = svr->_server_setting;
         server_ntrip *ntrips = new server_ntrip(req, con->second);
         // 加入挂载点表中
         svr->_server_key.insert(std::make_pair(mount_point, connect_key));

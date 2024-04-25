@@ -8,27 +8,17 @@
 
 #define __class__ "ntrip_compat_listener"
 
-ntrip_compat_listener::ntrip_compat_listener(event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map)
+ntrip_compat_listener::ntrip_compat_listener(json conf, event_base *base, std::unordered_map<std::string, bufferevent *> *connect_map)
 {
+    _listen_port = conf["Port"];
+    _connect_timeout = conf["Timeout"];
+
     _base = base;
     _connect_map = connect_map;
 }
 
 ntrip_compat_listener::~ntrip_compat_listener()
 {
-}
-
-int ntrip_compat_listener::set_listen_conf(json conf)
-{
-    _server_IP = conf["Server_IP"];
-    _listen_port = conf["Listener_Port"];
-
-    _connect_timeout = conf["Connect_Timeout"];
-
-    // _Server_Login_With_Password = conf["Server_Login_With_Password"];
-    // _Client_Login_With_Password = conf["Client_Login_With_Password"];
-
-    return 0;
 }
 
 int ntrip_compat_listener::start()
@@ -367,11 +357,10 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
 
     size_t headerlen = 0;
 
-
     while (1)
     {
         char *header = evbuffer_readln(evbuf, &headerlen, EVBUFFER_EOL_CRLF);
-        if(header ==NULL)
+        if (header == NULL)
         {
             break;
         }

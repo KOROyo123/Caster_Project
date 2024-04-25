@@ -18,6 +18,7 @@ using json = nlohmann::json;
 class client_ntrip
 {
 private:
+
     json _info;
     std::string _connect_key;
     std::string _mount_point;
