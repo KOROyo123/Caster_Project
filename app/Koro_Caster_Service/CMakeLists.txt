@@ -126,9 +126,11 @@ include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 #spdlog
 target_link_libraries(${EXE_NAME} spdlog)
 #yaml
-# target_link_libraries(${EXE_NAME} yaml)
+
 include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/yaml-cpp-0.8.0/include)
-target_link_libraries(${EXE_NAME} ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a)
+target_link_libraries(${EXE_NAME} 
+                        debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a
+                        optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.a)
 
 
 
