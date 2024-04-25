@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 
     if (listen_port > 0)
     {
-        cfg["Ntrip_Listener"]["Port"] = listen_port;
+        cfg["Service_Setting"]["Ntrip_Listener"]["Port"] = listen_port;
     }
 
     // 日志输出选项
