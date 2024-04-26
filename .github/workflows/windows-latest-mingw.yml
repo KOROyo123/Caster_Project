@@ -25,3 +25,18 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Deploy Compress folder
+      run: |
+        cp C:/mingw64/bin/libgcc_s_seh-1.dll ${{github.workspace}}/bin/Koro_Caster_Service/libgcc_s_seh-1.dll
+        cp C:/mingw64/bin/libstdc++-6.dll ${{github.workspace}}/bin/Koro_Caster_Service/libstdc++-6.dll
+        cp C:/mingw64/bin/libwinpthread-1.dll ${{github.workspace}}/bin/Koro_Caster_Service/libwinpthread-1.dll
+        tar -czvf ububtu-latest.tar.gz ${{github.workspace}}/bin/Koro_Caster_Service/
+
+    - name: Upload Release
+      uses: actions/upload-artifact@v4.3.3
+      with:
+        # 上传后文件的名称
+        name: ububtu-latest
+        # 上传的压缩包
+        path: ububtu-latest.tar.gz
