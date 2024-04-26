@@ -16,6 +16,9 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#if WIN32
+    #define YAML_CPP_STATIC_DEFINE
+#endif
 #include "yaml-cpp/yaml.h"
 
 #include "version.h"

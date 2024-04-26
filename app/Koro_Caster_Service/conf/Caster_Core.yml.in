@@ -10,5 +10,5 @@ Source_Setting:
 # Redis连接
 Reids_Connect_Setting:
   IP: 127.0.0.1
-  Port: 16379
-  Requirepass: koroyo123
+  Port: 6379
+  Requirepass: password

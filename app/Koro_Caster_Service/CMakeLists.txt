@@ -104,9 +104,9 @@ configure_file(${CMAKE_SOURCE_DIR}/version.h.in version.h @ONLY)
 target_include_directories(${EXE_NAME}  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 #基于工程目录下的配置文件 生成 执行目录下的配置文件
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Auth_Verify.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Auth_Verify.yml @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Caster_Core.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Caster_Core.yml @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Service_Setting.yml ${CMAKE_CURRENT_BINARY_DIR}/conf/Service_Setting.yml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Auth_Verify.yml.in ${CMAKE_CURRENT_BINARY_DIR}/conf/Auth_Verify.yml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Caster_Core.yml.in ${CMAKE_CURRENT_BINARY_DIR}/conf/Caster_Core.yml @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Service_Setting.yml.in ${CMAKE_CURRENT_BINARY_DIR}/conf/Service_Setting.yml @ONLY)
 
 
 
