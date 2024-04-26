@@ -18,7 +18,6 @@ using json = nlohmann::json;
 class client_ntrip
 {
 private:
-
     json _info;
     std::string _connect_key;
     std::string _mount_point;
@@ -26,12 +25,17 @@ private:
     std::string _ip;
     int _port;
 
+    int _connect_timeout = 0;
+    int _unsend_limit;
+
     bool _NtripVersion2 = false;
     bool _transfer_with_chunked = false;
 
     json _conf;
 
     bufferevent *_bev;
+    timeval _bev_read_timeout_tv;
+
     evbuffer *_send_evbuf;
     evbuffer *_recv_evbuf;
 

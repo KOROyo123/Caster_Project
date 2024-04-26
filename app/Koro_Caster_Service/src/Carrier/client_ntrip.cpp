@@ -25,6 +25,9 @@ client_ntrip::client_ntrip(json req, bufferevent *bev)
 
     _send_evbuf = evbuffer_new();
     _recv_evbuf = evbuffer_new();
+
+    _connect_timeout = _conf["Timeout"];
+    _unsend_limit = _conf["Unsend_Limit"];
 }
 
 client_ntrip::~client_ntrip()
@@ -48,6 +51,14 @@ int client_ntrip::start()
 int client_ntrip::runing()
 {
     bufferevent_enable(_bev, EV_READ);
+
+    if (_connect_timeout > 0)
+    {
+        _bev_read_timeout_tv.tv_sec = _connect_timeout;
+        _bev_read_timeout_tv.tv_usec = 0;
+        bufferevent_set_timeouts(_bev, &_bev_read_timeout_tv, NULL);
+    }
+
     bev_send_reply();
 
     // 添加一个请求，订阅指定频道数据
@@ -127,7 +138,7 @@ int client_ntrip::transfer_sub_raw_data(const char *data, size_t length)
 {
     auto UnsendBufferSize = evbuffer_get_length(bufferevent_get_output(_bev));
 
-    if (UnsendBufferSize > 4096 * 20)
+    if (UnsendBufferSize > _unsend_limit)
     {
         spdlog::info("Client Info: send to user [{}]'s date unsend size is too large :[{}], close the connect! using mount [{}], addr:[{}:{}]", _user_name, UnsendBufferSize, _mount_point, _ip, _port);
         stop();
