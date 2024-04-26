@@ -28,9 +28,9 @@ jobs:
 
     - name: Deploy Compress folder
       run: |
-        cp C:\mingw64\bin\libgcc_s_seh-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        cp C:\mingw64\bin\libstdc++-6.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        cp C:\mingw64\bin\libwinpthread-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
+        copy d:\src\test.txt d:\dst C:\mingw64\bin\libgcc_s_seh-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
+        copy d:\src\test.txt d:\dst C:\mingw64\bin\libstdc++-6.dll ${{github.workspace}}\bin\Koro_Caster_Service\
+        copy d:\src\test.txt d:\dst C:\mingw64\bin\libwinpthread-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
         tar -czvf ububtu-latest.tar.gz ${{github.workspace}}\bin\Koro_Caster_Service\
 
     - name: Upload Release
