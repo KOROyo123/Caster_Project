@@ -38,7 +38,7 @@ int ntrip_compat_listener::start()
         return 1;
     }
 
-    spdlog::info("[{}]: bind to port {} success",__class__,_listen_port);
+    spdlog::info("[{}]: bind to port {} success", __class__, _listen_port);
 
     return 0;
 }
@@ -388,7 +388,14 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
             spdlog::warn("[{}:{}]: decode key value fail ,item:", __class__, __func__, key_value);
             break;
         }
-        item[key_value.substr(0, x)] = key_value.substr(x + 2);
+        if ((x + 2) > key_value.size()) // 解决Key：Value  只有Key： 没有value的情况
+        {
+            item[key_value.substr(0, x)] = "";
+        }
+        else
+        {
+            item[key_value.substr(0, x)] = key_value.substr(x + 2);
+        }
 
         free(header);
     }
@@ -431,7 +438,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
         }
         else
         {
-            info["user_baseID "] = decodeID;
+            info["user_baseID"] = decodeID;
             info["user_name"] = decodeID.substr(0, x);
             info["user_pwd"] = decodeID.substr(x + 1);
         }
