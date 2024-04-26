@@ -96,9 +96,10 @@ int source_ntrip::build_source_table()
         evbuffer_add_printf(_evbuf, "Date: Tue, 01 Jan 2008 14:08:15 GMT\r\n");
         evbuffer_add_printf(_evbuf, "Connection: close\r\n");
         evbuffer_add_printf(_evbuf, "Content-Type: gnss/sourcetable\r\n");
-        evbuffer_add_printf(_evbuf, "Content-Length: %ld\r\n", _source_list.size());
+        evbuffer_add_printf(_evbuf, "Content-Length: %ld\r\n", _source_list.size() + 17);
         evbuffer_add_printf(_evbuf, "\r\n");
         evbuffer_add(_evbuf, _source_list.c_str(), _source_list.size());
+        evbuffer_add_printf(_evbuf, "ENDSOURCETABLE\r\n");
     }
     else
     {
@@ -106,9 +107,10 @@ int source_ntrip::build_source_table()
         evbuffer_add_printf(_evbuf, "Server: Ntrip ExampleCaster 2.0/1.0\r\n");
         evbuffer_add_printf(_evbuf, "Connection: close\r\n");
         evbuffer_add_printf(_evbuf, "Content-Type: text/plain\r\n");
-        evbuffer_add_printf(_evbuf, "Content-Length: %ld\r\n", _source_list.size());
+        evbuffer_add_printf(_evbuf, "Content-Length: %ld\r\n", _source_list.size() + 17);
         evbuffer_add_printf(_evbuf, "\r\n");
         evbuffer_add(_evbuf, _source_list.c_str(), _source_list.size());
+        evbuffer_add_printf(_evbuf, "ENDSOURCETABLE\r\n");
     }
     return 0;
 }
