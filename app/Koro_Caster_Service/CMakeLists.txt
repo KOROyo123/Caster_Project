@@ -23,32 +23,44 @@ endif()
 
 # 使用git describe命令获取标签版本号
 execute_process(
-    COMMAND git describe --tags --abbrev=0
+    COMMAND git describe --tags --abbrev=0 --dirty=-dev
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_TAG
+    OUTPUT_VARIABLE PROJECT_TAG_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 # 检查是否成功获取了标签版本
-if(NOT GIT_TAG)
+if(NOT PROJECT_TAG_VERSION)
     message(WARNING "Failed to get Git tag.")
 else()
-    message("Git tag: ${GIT_TAG}")
     # 使用正则表达式提取标签中的版本号和更新次数
-    string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" VERSION_REGEX "${GIT_TAG}")
+    string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" VERSION_REGEX "${PROJECT_TAG_VERSION}")
     set(VERSION_MAJOR ${CMAKE_MATCH_1})
     set(VERSION_MINOR ${CMAKE_MATCH_2})
     set(VERSION_PATCH ${CMAKE_MATCH_3})
-    # 检查标签是否包含额外的更新次数
-    string(FIND "${GIT_TAG}" "-" HAS_EXTRA)
-    if(HAS_EXTRA GREATER -1)
-        string(SUBSTRING "${GIT_TAG}" ${HAS_EXTRA} -1 EXTRA_STRING)
-        string(REGEX MATCH "[0-9]+" EXTRA_VERSION "${EXTRA_STRING}")
-        set(VERSION_EXTRA ${EXTRA_VERSION})
-    else()
-        set(VERSION_EXTRA 0)
-    endif()
 endif()
+
+# 使用git describe命令获取更新次数
+execute_process(
+    COMMAND git describe --tags --abbrev=0
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE LATEST_TAG
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+if(NOT LATEST_TAG)
+    message(WARNING "Failed to get latest tag.")
+else()
+    # 使用git describe命令获取距离最近标签的更新次数
+    execute_process(
+        COMMAND git rev-list ${LATEST_TAG}..HEAD --count
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE UPDATE_COUNT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(VERSION_EXTRA ${UPDATE_COUNT})
+endif()
+
 
 # 设置项目的版本号
 set(PROJECT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_EXTRA}")
