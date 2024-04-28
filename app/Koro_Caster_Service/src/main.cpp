@@ -115,8 +115,9 @@ int main(int argc, char **argv)
 #endif
 
     // 程序启动
-    spdlog::info("{}/{} Start", PROJECT_SET_NAME, PROJECT_SET_VERSION);
-    spdlog::info("Software Version: {}-{}", PROJECT_GIT_VERSION, PROJECT_TAG_VERSION);
+    spdlog::info("Software: {}-{}", PROJECT_SET_NAME, PROJECT_SET_VERSION);
+    spdlog::info("Tag Version: {}", PROJECT_TAG_VERSION);
+    spdlog::info("Git Version: {}", PROJECT_GIT_VERSION);
 
     // 解析输入：
     std::string conf_path = CONF_PATH;
@@ -192,8 +193,9 @@ int main(int argc, char **argv)
 
     // 初始化完成，开始进入正式流程
     spdlog::info("Start Log...");
-    spdlog::info("Software: {}/{}", PROJECT_SET_NAME, PROJECT_SET_VERSION);
-    spdlog::info("Version : {}", PROJECT_TAG_VERSION);
+    spdlog::info("Software: {}-{}", PROJECT_SET_NAME, PROJECT_SET_VERSION);
+    spdlog::info("Tag Version: {}", PROJECT_TAG_VERSION);
+    spdlog::info("Git Version: {}", PROJECT_GIT_VERSION);
 
 #ifdef WIN32
     WSADATA wsaData;
