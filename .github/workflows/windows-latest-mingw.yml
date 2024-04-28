@@ -39,4 +39,4 @@ jobs:
         # 上传后文件的名称
         name: windows-latest
         # 上传的压缩包
-        path: windows-latest
+        path: windows-latest.zip
