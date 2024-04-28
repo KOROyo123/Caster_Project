@@ -36,7 +36,7 @@ jobs:
 
     - name: Get tag version
       id: tag_version
-      run: echo "::set-output name=tag_version::$(git describe --tags --abbrev=0)"
+      run: echo "name=tag_version::$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
     - name: Upload Release
       uses: actions/upload-artifact@v4.3.3
