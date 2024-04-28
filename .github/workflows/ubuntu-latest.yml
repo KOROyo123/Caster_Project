@@ -31,16 +31,12 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Compress folder
-      run: |
-        tar -czvf ububtu-latest.tar.gz ${{github.workspace}}/bin/Koro_Caster_Service/
-
     - name: Upload Release
     
       uses: actions/upload-artifact@v4.3.3
       with:
         # 上传后文件的名称
         name: ububtu-latest
-        # 打包的路径以及文件过滤，此为仅打包dist目录下的dmg文件
-        path: ububtu-latest.tar.gz
+        # 上传文件的路径
+        path: ${{github.workspace}}/bin/Koro_Caster_Service/
 
