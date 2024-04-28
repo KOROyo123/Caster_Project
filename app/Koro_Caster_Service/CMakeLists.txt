@@ -23,7 +23,7 @@ endif()
 
 # 使用git describe命令获取标签版本号
 execute_process(
-    COMMAND git describe --tags --abbrev=0 --dirty=-dev
+    COMMAND git describe --tags --dirty=-dev
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE PROJECT_TAG_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
