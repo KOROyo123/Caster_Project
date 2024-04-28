@@ -375,7 +375,7 @@ json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev)
             break;
         }
         std::string key_value = header;
-        spdlog::debug("[{}:{}]: {}", __class__, __func__, key_value);
+        spdlog::debug("[{}:{}]: header line info: {}", __class__, __func__, key_value);
 
         if (key_value.size() == 0)
         {
