@@ -34,12 +34,15 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Get tag version
+      id: tag_version
+      run: echo "::set-output name=tag_version::$(git describe --tags --abbrev=0)"
+
     - name: Upload Release
-    
       uses: actions/upload-artifact@v4.3.3
       with:
         # 上传后文件的名称
-        name: ububtu-latest
+        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-ububtu-latest
         # 上传文件的路径
         path: ${{github.workspace}}/bin/Koro_Caster_Service/
 
