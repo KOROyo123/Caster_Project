@@ -19,14 +19,14 @@ if(GIT_FOUND)
     )
     # 使用git describe命令获取标签版本号
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --dirty=-dev
+        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty=-dev
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE PROJECT_TAG_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else()
     set(PROJECT_GIT_VERSION "unknown")
-    set(PROJECT_GIT_VERSION "0.0.0.0")
+    set(PROJECT_TAG_VERSION "0.0.0.0")
 endif()
 
 
@@ -35,15 +35,28 @@ if(NOT PROJECT_TAG_VERSION)
     message(WARNING "Failed to get Git tag.")
 else()
     # 使用正则表达式提取标签中的数字部分和更新次数
-    string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)(\\.([0-9]+))?" VERSION_REGEX "${PROJECT_TAG_VERSION}")
+    string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)(\\-([0-9]+))?" VERSION_REGEX "${PROJECT_TAG_VERSION}")
     set(VERSION "${CMAKE_MATCH_1}")  # 将前三个版本号保存到 VERSION 中
     if(CMAKE_MATCH_4)
         set(VERSION_EXTRA ${CMAKE_MATCH_4})  # 将更新次数保存到 VERSION_EXTRA 中
     endif()
 endif()
 
+
+if(NOT PROJECT_TAG_VERSION)
+    message(WARNING "Failed to get Git tag.")
+else()
+    message("Git tag: ${PROJECT_TAG_VERSION}")
+    # 使用正则表达式提取标签中的版本号和更新次数
+    string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)-([0-9]+)-g[0-9a-f]+" VERSION_REGEX "${PROJECT_TAG_VERSION}")
+    set(VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(VERSION_MINOR ${CMAKE_MATCH_2})
+    set(VERSION_PATCH ${CMAKE_MATCH_3})
+    set(VERSION_EXTRA ${CMAKE_MATCH_4})
+endif()
+
 # 设置项目的版本号
-set(PROJECT_VERSION "${VERSION}.${VERSION_EXTRA}")
+set(PROJECT_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_EXTRA}")
 
 
 set(EXE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
