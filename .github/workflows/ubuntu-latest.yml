@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: Pack on ubuntu-latest platform
+name: ubuntu-latest
 
 on:
   push:
@@ -18,9 +18,6 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [arm64]
     
     steps:
     - uses: actions/checkout@v4.1.4

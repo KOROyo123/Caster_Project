@@ -1,4 +1,4 @@
-name: Pack on windows-latest platform
+name: windows-latest
 
 on:
   push:
