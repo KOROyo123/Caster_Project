@@ -70,10 +70,10 @@ set(EXE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
 message(STATUS "")
 message(STATUS "------- ${PROJECT_NAME} -------")
 
-message(STATUS "Dev version: ${PROJECT_VERSION}")
-message(STATUS "Git version: ${PROJECT_GIT_VERSION}")
-message(STATUS "TAG version: ${PROJECT_TAG_VERSION}")
-message(STATUS "EXE  name  : ${EXE_NAME}")
+message(STATUS "DEV VERSION: ${PROJECT_VERSION}")
+message(STATUS "GIT VERSION: ${PROJECT_GIT_VERSION}")
+message(STATUS "TAG VERSION: ${PROJECT_TAG_VERSION}")
+message(STATUS "BINARY_NAME: ${EXE_NAME}")
 
 #版本14以下可能会导致abseil不支持
 set(CMAKE_CXX_STANDARD 20)
@@ -150,7 +150,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Caster_Core.yml.in ${CMAKE_SOURC
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Service_Setting.yml.in ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service/conf/Service_Setting.yml @ONLY)
 
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service")
-
+message(STATUS "BINARY_DIR : ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service")
 #Koro_NavTool
 target_link_libraries(${EXE_NAME} knt)
 #caster_core
@@ -172,3 +172,5 @@ include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/yaml-cpp-0.8.0/include)
 target_link_libraries(${EXE_NAME} 
                         debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a
                         optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.a)
+                        
+message(STATUS "")
