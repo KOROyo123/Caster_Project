@@ -35,6 +35,9 @@ server_ntrip::~server_ntrip()
     bufferevent_free(_bev);
     evbuffer_free(_send_evbuf);
     evbuffer_free(_recv_evbuf);
+
+    spdlog::info("[{}]: delete mount [{}], addr:[{}:{}]", __class__, _mount_point, _ip, _port);
+
 }
 
 int server_ntrip::start()
@@ -244,6 +247,7 @@ void server_ntrip::Auth_Login_Callback(const char *request, void *arg, AuthReply
     }
     else
     {
+        spdlog::info("[{}]: AUTH_REPLY_ERROR user [{}] , using mount [{}], addr:[{}:{}]", __class__, svr->_user_name, svr->_mount_point, svr->_ip, svr->_port);
         svr->stop();
     }
 }

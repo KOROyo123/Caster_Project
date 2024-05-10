@@ -27,7 +27,7 @@ Client_Setting:
 
 #通用设置
 Common_Setting:
-  Refresh_State_Interval: 10  #程序运行状态更新间隔（内部超时函数）（/秒）
+  Refresh_State_Interval: 1  #程序运行状态更新间隔（内部超时函数）（/秒）
   Output_State: true          #输出状态统计信息
   Working_Directory:          #(未实现）工作路径（所有的输出文件都以此路径为相对路径进行输出，不设置则默认在可执行程序启动时的路径下）
 
