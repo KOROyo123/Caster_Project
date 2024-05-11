@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Caster_Project)
 
+# 设置使用的 C++ 标准版本为 C++20
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  #要求编译器支持所选的标准
+set(CMAKE_CXX_EXTENSIONS ON)  #启用编译器的扩展特性
+
 
 IF(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
 add_definitions(-DLINUX)
