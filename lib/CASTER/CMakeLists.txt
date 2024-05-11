@@ -36,8 +36,7 @@ include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 
 #spdlog
 add_definitions(-DUSE_SPD_LOG)
-target_link_libraries(${PROJECT_NAME} spdlog)
-
-
+# target_link_libraries(${PROJECT_NAME} spdlog)
+include_directories(${EXE_NAME} ${SPDLOG_INCLUDE_PATH})
 
 

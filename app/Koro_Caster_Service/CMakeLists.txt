@@ -165,6 +165,7 @@ target_link_libraries(${EXE_NAME} event_extra)
 #nlohmann/json
 include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 #spdlog
-target_link_libraries(${EXE_NAME} spdlog)
+# target_link_libraries(${EXE_NAME} spdlog)
+include_directories(${EXE_NAME} ${SPDLOG_INCLUDE_PATH})
 #yaml
 target_link_libraries(${EXE_NAME} yaml-cpp)
