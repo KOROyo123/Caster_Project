@@ -168,18 +168,15 @@ include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 target_link_libraries(${EXE_NAME} spdlog)
 #yaml
 include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/yaml-cpp-0.8.0/include)
-
-
-# 如果使用的是 GCC 编译器
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-   target_link_libraries(${EXE_NAME} 
-                        debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a
-                        optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.a)
-endif()
 # 如果使用的是 MSVC 编译器
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(${EXE_NAME} 
+target_link_libraries(${EXE_NAME} 
                         debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/yaml-cppd.lib
                         optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.lib)
+else()
+# 使用的是 GCC Clang 编译器
+target_link_libraries(${EXE_NAME} 
+                        debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a
+                        optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.a)
 endif()
                         
