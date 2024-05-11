@@ -36,7 +36,7 @@ jobs:
     - name: Deploy Compress folder
       run: |
         move ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}\* ${{github.workspace}}\bin\Koro_Caster_Service\
-        rmdir /s ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
+        rmdir ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
         xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\Redis-7.0.15-Windows-x64\
 
 
