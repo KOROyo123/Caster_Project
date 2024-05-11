@@ -1,4 +1,6 @@
-name: windows-latest
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: Ubuntu-GCC
 
 on:
   push:
@@ -12,29 +14,25 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v4.1.4
       with:
         fetch-depth: 0
         fetch-tags: true  # 获取所有的 Git 标签
- 
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G "MinGW Makefiles"
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Deploy Compress folder
-      run: |
-        copy C:\mingw64\bin\libgcc_s_seh-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        copy C:\mingw64\bin\libstdc++-6.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        copy C:\mingw64\bin\libwinpthread-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\Redis-7.0.15-Windows-x64\
 
     - name: Get tag version
       id: tag_version
@@ -44,6 +42,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.3
       with:
         # 上传后文件的名称
-        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-windows-latest
-        # 上传的压缩包
-        path: ${{github.workspace}}\bin\Koro_Caster_Service\
+        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-ububtu-latest
+        # 上传文件的路径
+        path: ${{github.workspace}}/bin/Koro_Caster_Service/
+
