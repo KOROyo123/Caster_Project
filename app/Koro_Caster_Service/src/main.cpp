@@ -23,9 +23,18 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-#if WIN32
+#if defined(__GNUC__)
+    // GCC 编译器相关的代码
+#elif defined(_MSC_VER)
+    // Visual Studio 编译器相关的代码
     #define YAML_CPP_STATIC_DEFINE
+#elif defined(__clang__)
+    // Clang 编译器相关的代码
+#else
+    // 其他编译器的代码
 #endif
+
+
 #include "yaml-cpp/yaml.h"
 
 #include "version.h"
