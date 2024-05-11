@@ -25,7 +25,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake -B ${{github.workspace}}/build
-        -DCMAKE_CXX_COMPILER= cl
+        -DCMAKE_CXX_COMPILER=cl
         -DCMAKE_C_COMPILER=cl
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
@@ -36,7 +36,7 @@ jobs:
     - name: Deploy Compress folder
       run: |
         move ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}\* ${{github.workspace}}\bin\Koro_Caster_Service\
-        rmdir /s /q ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
+        rmdir /s ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
         xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\Redis-7.0.15-Windows-x64\
 
 
