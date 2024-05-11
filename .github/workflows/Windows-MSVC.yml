@@ -1,4 +1,4 @@
-name: Windows-MinGW
+name: Windows-MSVC
 
 on:
   push:
@@ -15,26 +15,30 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4.1.4
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         fetch-tags: true  # 获取所有的 Git 标签
- 
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G "MinGW Makefiles"
+      run: >
+        cmake -B ${{github.workspace}}/build
+        -DCMAKE_CXX_COMPILER= cl
+        -DCMAKE_C_COMPILER=cl
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
+      
     - name: Deploy Compress folder
       run: |
-        copy C:\mingw64\bin\libgcc_s_seh-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        copy C:\mingw64\bin\libstdc++-6.dll ${{github.workspace}}\bin\Koro_Caster_Service\
-        copy C:\mingw64\bin\libwinpthread-1.dll ${{github.workspace}}\bin\Koro_Caster_Service\
+        move ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}\* ${{github.workspace}}\bin\Koro_Caster_Service\
+        rmdir /s /q ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
         xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\Redis-7.0.15-Windows-x64\
+
 
     - name: Get tag version
       id: tag_version
@@ -44,6 +48,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.3
       with:
         # 上传后文件的名称
-        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-windows-mingw
+        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-windows-msvc
         # 上传的压缩包
         path: ${{github.workspace}}\bin\Koro_Caster_Service\
+

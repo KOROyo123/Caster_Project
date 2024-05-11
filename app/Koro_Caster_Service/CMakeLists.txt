@@ -145,11 +145,11 @@ configure_file(${CMAKE_SOURCE_DIR}/version.h.in version.h @ONLY)
 target_include_directories(${EXE_NAME}  PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 #基于工程目录下的配置文件 生成 执行目录下的配置文件
+set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Auth_Verify.yml.in ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service/conf/Auth_Verify.yml @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Caster_Core.yml.in ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service/conf/Caster_Core.yml @ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf/Service_Setting.yml.in ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service/conf/Service_Setting.yml @ONLY)
 
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service")
 message(STATUS "BINARY_DIR : ${CMAKE_SOURCE_DIR}/bin/Koro_Caster_Service")
 #Koro_NavTool
 target_link_libraries(${EXE_NAME} knt)

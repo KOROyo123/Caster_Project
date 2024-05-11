@@ -42,7 +42,7 @@ jobs:
       uses: actions/upload-artifact@v4.3.3
       with:
         # 上传后文件的名称
-        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-ububtu-latest
+        name: Koro_Caster_Service-${{ steps.tag_version.outputs.tag_version }}-ububtu-gcc
         # 上传文件的路径
         path: ${{github.workspace}}/bin/Koro_Caster_Service/
 
