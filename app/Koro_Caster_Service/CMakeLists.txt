@@ -135,7 +135,7 @@ add_executable(${EXE_NAME}
                 ${CONNECTOR_TYPE_SOURCE}
                 ${COMPONTENT_TYPE_SOURCE}    
                 ${DB_TABLE_SOURCE} 
-                ${EXTRA_SOURCE}
+                #${EXTRA_SOURCE}
                 ${VERSION_SOURCES})
 
 #生成的可执行文件名称和包含的文件
@@ -167,10 +167,19 @@ include_directories(${EXE_NAME} ${JSON_INCLUDE_PATH})
 #spdlog
 target_link_libraries(${EXE_NAME} spdlog)
 #yaml
-
 include_directories(${EXE_NAME} ${CMAKE_SOURCE_DIR}/rely/yaml-cpp-0.8.0/include)
-target_link_libraries(${EXE_NAME} 
+
+
+# 如果使用的是 GCC 编译器
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+   target_link_libraries(${EXE_NAME} 
                         debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cppd.a
                         optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.a)
+endif()
+# 如果使用的是 MSVC 编译器
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_link_libraries(${EXE_NAME} 
+                        debug       ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/yaml-cppd.lib
+                        optimized   ${CMAKE_BINARY_DIR}/rely/yaml-cpp-0.8.0/libyaml-cpp.lib)
+endif()
                         
-message(STATUS "")
