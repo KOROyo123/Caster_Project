@@ -10,6 +10,13 @@
 #include <sys/resource.h>
 #endif
 
+
+#ifdef _WIN32
+#pragma comment(lib, "Iphlpapi.lib")
+//解决在宇宙编译器(Visual Studio)下 libevent evutil.c找不到符号的问题
+#endif
+
+
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>

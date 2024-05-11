@@ -68,6 +68,43 @@ int redis_msg_internal::stop()
     return 0;
 }
 
+int redis_msg_internal::add_local_active_connect_key(const char *connect_key)
+{
+    if (_local_active_channel.find(connect_key) == _local_active_channel.end())
+    {
+        _local_active_channel.insert(connect_key);
+    }
+    else
+    {
+        // 已经存在set中
+    }
+    return 0;
+}
+
+int redis_msg_internal::del_local_active_connect_key(const char *connect_key)
+{
+    if (_local_active_channel.find(connect_key) != _local_active_channel.end())
+    {
+        _local_active_channel.erase(connect_key);
+        // redisAsyncCommand(_pub_context, NULL, NULL, "HSET MOUNT:ONLINE:COMMON %s", mount_point, connect_key);
+    }
+    else
+    {
+        // 在set中没有
+    }
+    return 0;
+}
+
+int redis_msg_internal::update_all_local_active_connect_key_expiration_time()
+{
+    
+
+
+
+
+    return 0;
+}
+
 int redis_msg_internal::add_sub_cb_item(const char *channel, const char *connect_key, CasterCallback cb, void *arg)
 {
     auto find = _sub_cb_map.find(channel);

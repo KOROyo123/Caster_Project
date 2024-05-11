@@ -24,9 +24,7 @@ ntrip_compat_listener::~ntrip_compat_listener()
 int ntrip_compat_listener::start()
 {
     struct sockaddr_in sin = {0};
-
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = inet_addr("0.0.0.0");
     sin.sin_port = htons(_listen_port);
 
     _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_LEAVE_SOCKETS_BLOCKING | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));

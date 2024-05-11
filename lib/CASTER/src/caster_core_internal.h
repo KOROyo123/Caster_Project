@@ -36,19 +36,14 @@ private:
     // 活跃频道 HASH(CHANNEL:ACTIVE)
     std::set<std::string> _active_channel;
 
+    std::set<std::string> _local_active_channel; //本程序负载的频道  用于给活跃频道续期
+
     // 普通挂载点
     // 挂载点在线 HASH(MOUNT:COMMON:ONLINE)
 
     // 挂载点信息 HASH(MOUNT:COMMON:INFO) //人工设置
 
     // 挂载点坐标 HASH(MOUNT:COMMON:GEO)
-
-    // 虚拟参考站挂载点 HASH(MOUNT:VIRTUAL:LIST)
-
-
-
-
-
 
 
 public:
@@ -61,6 +56,10 @@ public:
 
     int start();
     int stop();
+
+    int add_local_active_connect_key(const char *connect_key);
+    int del_local_active_connect_key(const char *connect_key);
+    int update_all_local_active_connect_key_expiration_time();
 
     int add_sub_cb_item(const char *channel, const char *connect_key, CasterCallback cb, void *arg);
     int del_sub_cb_item(const char *channel, const char *connect_key);
