@@ -37,7 +37,6 @@ server_ntrip::~server_ntrip()
     evbuffer_free(_recv_evbuf);
 
     spdlog::info("[{}]: delete mount [{}], addr:[{}:{}]", __class__, _mount_point, _ip, _port);
-
 }
 
 int server_ntrip::start()
@@ -65,9 +64,10 @@ int server_ntrip::stop()
     close_req["req_type"] = CLOSE_NTRIP_SERVER;
     QUEUE::Push(close_req);
 
-    spdlog::info("[{}]: mount [{}] is offline, addr:[{}:{}]", __class__, _mount_point, _ip, _port);
-
     CASTER::Set_Base_Station_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
+    AUTH::Add_Logout_Record(_user_name.c_str(), _connect_key.c_str());
+
+    spdlog::info("[{}]: mount [{}] is offline, addr:[{}:{}]", __class__, _mount_point, _ip, _port);
 
     return 0;
 }

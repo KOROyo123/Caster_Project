@@ -33,13 +33,13 @@ namespace AUTH
 
     int Clear();
 
-    // 验证密码是否通过，返回有效期，或登录失败
+    // 验证密码是否通过，返回有效期，或登录失败(在回调调用前，回调对象不能被删除)
     int Verify(const char *userID, VerifyCallback cb, void *arg, Auth_type type = AUTH_COMMON);
 
     // 添加登录记录（无论是否成功都会添加一条登录记录），登录成功，添加到在线表，登录失败，返回登录失败
     int Add_Login_Record(const char *user_name, const char *connect_key, VerifyCallback cb, void *arg, Auth_type type = AUTH_COMMON);
 
-    // 添加登出记录，删除在线表记录
+    // 添加登出记录，删除在线表记录（后续会在库中添加记录回调的map，用来踢用户下线？，所以在下线的时候也要调用一下这个函数，用来删除绑定回调）
     int Add_Logout_Record(const char *user_name, const char *connect_key, Auth_type type = AUTH_COMMON);
 
     // 添加账号

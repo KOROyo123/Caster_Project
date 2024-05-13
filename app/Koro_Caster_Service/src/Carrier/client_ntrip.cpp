@@ -84,6 +84,8 @@ int client_ntrip::stop()
     CASTER::Set_Rover_Client_State_OFFLINE(_mount_point.c_str(), NULL, _connect_key.c_str());
     CASTER::UnSub_Base_Station_Raw_Data(_mount_point.c_str(), _connect_key.c_str());
 
+    AUTH::Add_Logout_Record(_user_name.c_str(), _connect_key.c_str());
+
     spdlog::info("[{}]: user [{}] is logout, using mount [{}], addr:[{}:{}]", __class__, _user_name, _mount_point, _ip, _port);
 
     return 0;
