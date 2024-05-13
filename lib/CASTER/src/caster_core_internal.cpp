@@ -219,7 +219,7 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
             return;
         }
         auto subs = channel_subs->second;
-        for (auto iter : subs)
+        for (auto iter : subs)// 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
         {
             auto cb_item = iter.second;
             auto Func = cb_item.cb;
