@@ -34,7 +34,9 @@ Common_Setting:
 #输出运行状态
 Log_Setting:
   Output_STD: true           #输出状态信息(将信息输出到控制台)
-  Output_File: false         #将信息输出到文件（仅输出Info及以上级别）
+  Output_File: true         #将信息输出到文件（仅输出Info及以上级别）
+  Output_File_Daily: false   #文件按天分割（两个选项选一个即可，都开会都生成）
+  Output_File_Hourly: true   #文件按小时分割（两个输出选项选一个即可，都开会都生成）
   File_Save_Path: CasterRecord/Info_log.log    #日志输出路径
 
 #开发者模式

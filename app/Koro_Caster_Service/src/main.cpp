@@ -10,30 +10,28 @@
 #include <sys/resource.h>
 #endif
 
-
 #ifdef _WIN32
 #pragma comment(lib, "Iphlpapi.lib")
-//解决在宇宙编译器(Visual Studio)下 libevent evutil.c找不到符号的问题
+// 解决在宇宙编译器(Visual Studio)下 libevent evutil.c找不到符号的问题
 #endif
-
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>
+#include <spdlog/sinks/hourly_file_sink.h>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 #if defined(__GNUC__)
-    // GCC 编译器相关的代码
+// GCC 编译器相关的代码
 #elif defined(_MSC_VER)
-    // Visual Studio 编译器相关的代码
-    #define YAML_CPP_STATIC_DEFINE
+// Visual Studio 编译器相关的代码
+#define YAML_CPP_STATIC_DEFINE
 #elif defined(__clang__)
-    // Clang 编译器相关的代码
+// Clang 编译器相关的代码
 #else
-    // 其他编译器的代码
+// 其他编译器的代码
 #endif
-
 
 #include "yaml-cpp/yaml.h"
 
@@ -78,6 +76,8 @@ json load_Caster_Conf(const char *conf_directory)
     auto Log_Setting = Conf["Log_Setting"];
     conf["Log_Setting"]["Output_STD"] = Log_Setting["Output_STD"].as<bool>();
     conf["Log_Setting"]["Output_File"] = Log_Setting["Output_File"].as<bool>();
+    conf["Log_Setting"]["Output_File_Daily"] = Log_Setting["Output_File_Daily"].as<bool>();
+    conf["Log_Setting"]["Output_File_Hourly"] = Log_Setting["Output_File_Hourly"].as<bool>();
     conf["Log_Setting"]["File_Path"] = Log_Setting["File_Save_Path"].as<std::string>();
 
     auto Debug_Mode = Conf["Debug_Mode"];
@@ -170,6 +170,8 @@ int main(int argc, char **argv)
     // 日志输出选项
     bool log_to_std = cfg["Service_Setting"]["Log_Setting"]["Output_STD"];
     bool log_to_file = cfg["Service_Setting"]["Log_Setting"]["Output_File"];
+    bool log_file_daily = cfg["Service_Setting"]["Log_Setting"]["Output_File_Daily"];
+    bool log_file_hourly = cfg["Service_Setting"]["Log_Setting"]["Output_File_Hourly"];
     std::string logpath = cfg["Service_Setting"]["Log_Setting"]["File_Path"];
 
     // 开发者模式相关
@@ -194,8 +196,16 @@ int main(int argc, char **argv)
     }
     if (log_to_file) // 输出到文件
     {
-        spdlog::info("Write log to File...");
-        sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logpath, 0, 0));
+        if (log_file_daily)
+        {
+            spdlog::info("Write log to File Daily...");
+            sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_st>(logpath, 0, 0));
+        }
+        if (log_file_hourly)
+        {
+            spdlog::info("Write log to File Hourly...");
+            sinks.push_back(std::make_shared<spdlog::sinks::hourly_file_sink_st>(logpath));
+        }
     }
     // 把所有sink放入logger
     auto logger = std::make_shared<spdlog::logger>("log", begin(sinks), end(sinks));
