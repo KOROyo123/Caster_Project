@@ -97,10 +97,6 @@ int redis_msg_internal::del_local_active_connect_key(const char *connect_key)
 
 int redis_msg_internal::update_all_local_active_connect_key_expiration_time()
 {
-    
-
-
-
 
     return 0;
 }
@@ -200,6 +196,7 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
 {
     auto reply = static_cast<redisReply *>(r);
     auto svr = static_cast<redis_msg_internal *>(privdata);
+    auto cb_map = svr->_sub_cb_map;// 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
 
     if (!reply)
     {
@@ -216,8 +213,8 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
         Reply.str = re3->str;
         Reply.len = re3->len;
 
-        auto channel_subs = svr->_sub_cb_map.find(re2->str); // 找到订阅该频道的map
-        if (channel_subs == svr->_sub_cb_map.end())
+        auto channel_subs = cb_map.find(re2->str); // 找到订阅该频道的map
+        if (channel_subs == cb_map.end())
         {
             return;
         }
