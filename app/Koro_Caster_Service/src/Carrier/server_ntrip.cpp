@@ -95,6 +95,8 @@ int server_ntrip::runing()
         _timeout_tv.tv_usec = 0;
         _timeout_ev = event_new(bufferevent_get_base(_bev), -1, EV_PERSIST, TimeoutCallback, this);
         event_add(_timeout_ev, &_timeout_tv);
+
+        send_heart_beat_to_server();//直接就触发一次心跳包
     }
 
     return 0;
