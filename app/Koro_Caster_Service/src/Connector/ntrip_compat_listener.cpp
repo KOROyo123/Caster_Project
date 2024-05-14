@@ -143,11 +143,11 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
 
             if (header == NULL)
             {
-                spdlog::warn("[{}:{}]: error header, header dont'have CRLF ", __class__, __func__, ip, port, header_len);
+                spdlog::warn("[{}:{}]: error header, header dont'have CRLF ", __class__, __func__);
             }
             if (header_len > 255)
             {
-                spdlog::warn("[{}:{}]: error header, header is too long, header length: {} ", __class__, __func__, ip, port, header_len);
+                spdlog::warn("[{}:{}]: error header, header is too long, header length: {} ", __class__, __func__, header_len);
             }
 
             throw 1;
