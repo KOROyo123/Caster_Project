@@ -28,13 +28,14 @@ int ntrip_compat_listener::start()
     sin.sin_port = htons(_listen_port);
 
     _listener = evconnlistener_new_bind(_base, AcceptCallback, this, LEV_OPT_LEAVE_SOCKETS_BLOCKING | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
-    evconnlistener_set_error_cb(_listener, AcceptErrorCallback);
 
     if (!_listener)
     {
         spdlog::error("ntrip listener: couldn't bind to port {}.", _listen_port);
-        return 1;
+        exit(1);
     }
+
+    evconnlistener_set_error_cb(_listener, AcceptErrorCallback);
 
     spdlog::info("[{}]: bind to port {} success", __class__, _listen_port);
 
