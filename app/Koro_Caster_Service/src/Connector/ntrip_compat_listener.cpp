@@ -56,12 +56,12 @@ void ntrip_compat_listener::AcceptCallback(evconnlistener *listener, evutil_sock
 
     std::string ip = util_get_user_ip(fd);
     int port = util_get_user_port(fd);
-    spdlog::info("[{}]: receive new connect, addr:[{}:{}]", __class__, ip, port);//如果ip和port为空，则连接已经挂了，fd解析不出来
+    spdlog::info("[{}]: receive new connect, addr:[{}:{}]", __class__, ip, port); // 如果ip和port为空，则连接已经挂了，fd解析不出来
 
     std::string Connect_Key = util_cal_connect_key(fd);
     if (Connect_Key.size() == 0)
     {
-        //解析fd失败，则表明没有解析出ip和port，可间接表明该连接在解析fd的时候就已经挂了，没必要再进行后续的操作了
+        // 解析fd失败，则表明没有解析出ip和port，可间接表明该连接在解析fd的时候就已经挂了，没必要再进行后续的操作了
         return;
     }
 
@@ -131,6 +131,7 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
 
     evbuffer *evbuf = bufferevent_get_input(bev);
 
+    size_t evbuf_len = evbuffer_get_length(evbuf);
     size_t header_len = 0;
     char *header = evbuffer_readln(evbuf, &header_len, EVBUFFER_EOL_CRLF);
 
@@ -138,9 +139,20 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     {
         if (header == NULL | header_len > 255)
         {
-            spdlog::warn("[{}:{}]: error respone, from: [ip: {} port: {}]", __class__, __func__, ip, port);
+            spdlog::warn("[{}:{}]: error header, from: [ip: {} port: {}] ,data length: {}", __class__, __func__, ip, port, evbuf_len);
+
+            if (header == NULL)
+            {
+                spdlog::warn("[{}:{}]: error header, header dont'have CRLF ", __class__, __func__, ip, port, header_len);
+            }
+            if (header_len > 255)
+            {
+                spdlog::warn("[{}:{}]: error header, header is too long, header length: {} ", __class__, __func__, ip, port, header_len);
+            }
+
             throw 1;
         }
+
         spdlog::info("[{}]: receive request header: [{}], from: [ip: {} port: {}]", __class__, header, ip, port);
 
         char ele[4][256] = {'\0'};
@@ -524,6 +536,9 @@ int ntrip_compat_listener::erase_and_free_bev(std::string Connect_Key)
     {
         bufferevent_free(con->second);
         _connect_map->erase(con);
+    }
+    {
+        spdlog::warn("con't find bev in connetc_map");
     }
 
     return 0;
