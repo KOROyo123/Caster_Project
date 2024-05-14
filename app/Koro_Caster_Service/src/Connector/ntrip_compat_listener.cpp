@@ -131,7 +131,6 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
 
     evbuffer *evbuf = bufferevent_get_input(bev);
 
-    size_t evbuf_len = evbuffer_get_length(evbuf);
     size_t header_len = 0;
     char *header = evbuffer_readln(evbuf, &header_len, EVBUFFER_EOL_CRLF);
 
@@ -139,7 +138,8 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     {
         if (header == NULL | header_len > 255)
         {
-            spdlog::warn("[{}:{}]: error header, from: [ip: {} port: {}] ,data length: {}", __class__, __func__, ip, port, evbuf_len);
+            size_t evbuf_len = evbuffer_get_length(evbuf);
+            spdlog::warn("[{}:{}]: error header, from: [ip: {} port: {}] ,data length: {}", __class__, __func__, ip, port, evbuf_len + header_len);
 
             if (header == NULL)
             {
@@ -185,12 +185,12 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         else
         {
             // 不支持的方法
-            spdlog::info("[{}:{}]: receive unsuppose request", __class__, __func__);
             throw 1;
         }
     }
     catch (int i)
     {
+        spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ", __class__, __func__, ip, port);
         svr->Process_Unknow_Request(connect_key);
     }
 
@@ -536,9 +536,11 @@ int ntrip_compat_listener::erase_and_free_bev(std::string Connect_Key)
     {
         bufferevent_free(con->second);
         _connect_map->erase(con);
+        // spdlog::warn("[{}:{}]: free conect, connect key: {}", __class__, __func__, Connect_Key);
     }
+    else
     {
-        spdlog::warn("con't find bev in connetc_map");
+        spdlog::warn("[{}:{}]: con't find bev in connetc_map, connect key: {}", __class__, __func__, Connect_Key);
     }
 
     return 0;

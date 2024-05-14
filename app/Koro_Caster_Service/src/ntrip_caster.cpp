@@ -131,6 +131,8 @@ int ntrip_caster::request_process(json req)
     int REQ_TYPE = req["req_type"];
 
     spdlog::debug("[{}:{}]: \n\r {}", __class__, __func__, req.dump(2));
+    spdlog::info("[{}:{}]: REQ_TYPE: {}", __class__, __func__,REQ_TYPE);
+
 
     switch (REQ_TYPE)
     {
