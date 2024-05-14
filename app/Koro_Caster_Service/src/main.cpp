@@ -27,6 +27,7 @@ using json = nlohmann::json;
 #elif defined(_MSC_VER)
 // Visual Studio 编译器相关的代码
 #define YAML_CPP_STATIC_DEFINE
+#include <direct.h> // 包含 _chdir 函数的头文件
 #elif defined(__clang__)
 // Clang 编译器相关的代码
 #else
@@ -115,6 +116,39 @@ json load_Auth_Conf(const char *conf_directory)
     return conf;
 }
 
+int switch_Working_Dir(std::string exe_path)
+{
+    std::string exepath = exe_path;
+
+    // 找到路径中最后一个斜杠的位置
+    size_t lastSlashPos = exepath.find_last_of("/\\");
+    if (lastSlashPos == std::string::npos)
+    {
+        spdlog::error("Unable to extract directory from executable path.");
+        return 1;
+    }
+    // 提取路径
+    std::string exeDir = exepath.substr(0, lastSlashPos);
+
+    // 切换工作目录
+#if defined(_MSC_VER)
+    if (_chdir(exeDir.c_str()) != 0)
+    {
+        spdlog::error("Failed to change working directory.");
+        return 1;
+    }
+#else
+    if (chdir(exeDir.c_str()) != 0)
+    {
+        spdlog::error("Failed to change working directory.");
+        return 1;
+    }
+#endif
+
+    spdlog::info("Switch Working directory: {}", exeDir);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef WIN32
@@ -138,6 +172,14 @@ int main(int argc, char **argv)
     // 解析输入：
     std::string conf_path = CONF_PATH;
     int listen_port = -1;
+
+    if (argc < 1)
+    {
+        return 1;
+    }
+
+    switch_Working_Dir(argv[0]); // 切换工作路径到可执行目录下
+
     if (argc > 2)
     {
         for (int i = 1; i < argc; i += 2)
@@ -150,6 +192,13 @@ int main(int argc, char **argv)
             {
                 conf_path = argv[i + 1];
             }
+        }
+    }
+    else if (argc == 2)
+    {
+        if (!strcmp(argv[1], "-info")) // 监听端口
+        {
+            exit(0);
         }
     }
 
