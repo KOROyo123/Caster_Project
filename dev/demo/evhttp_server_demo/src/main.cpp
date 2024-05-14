@@ -79,7 +79,7 @@
 int main()
 {
     // 基础设置  设置监听端口
-    int port = 4202;
+    int port = 8404;
 
     // // 可选项---------------------------------------
     // int iocp = 0; // WINDOWS 下生效  是否启动IOCP模型
@@ -115,9 +115,10 @@ int main()
     // 为不同的路径访问提供不同的回调函数
 
     evhttp_set_cb(http, "/test", test_request_cb, NULL);
-    evhttp_set_cb(http, "/user", user_update_request_cb, NULL);
-    evhttp_set_cb(http, "/mount", mount_update_request_cb, NULL);
-    evhttp_set_cb(http, "/update", info_update_request_cb, NULL);
+    evhttp_set_cb(http, "/cdc_user", user_request_cb, NULL);
+    evhttp_set_cb(http, "/cdc_station", station_request_cb, NULL);
+    evhttp_set_cb(http, "/cdc_rover", client_request_cb, NULL);
+    evhttp_set_cb(http, "/dump", dump_request_cb, NULL);
 
     // 设置通用回调函数，处理其他路径的请求
     evhttp_set_gencb(http, unset_request_cb, NULL);

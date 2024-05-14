@@ -93,17 +93,65 @@ void test_request_cb(struct evhttp_request *req, void *arg)
     evhttp_send_reply(req, 200, "OK", NULL);
 }
 
-void user_update_request_cb(struct evhttp_request *req, void *arg)
+
+/* Callback used for the /dump URI, and for every non-GET request:
+ * dumps all information to stdout and gives back a trivial 200 ok */
+void
+dump_request_cb(struct evhttp_request *req, void *arg)
+{
+	const char *cmdtype;
+	struct evkeyvalq *headers;
+	struct evkeyval *header;
+	struct evbuffer *buf;
+
+	switch (evhttp_request_get_command(req)) {
+	case EVHTTP_REQ_GET: cmdtype = "GET"; break;
+	case EVHTTP_REQ_POST: cmdtype = "POST"; break;
+	case EVHTTP_REQ_HEAD: cmdtype = "HEAD"; break;
+	case EVHTTP_REQ_PUT: cmdtype = "PUT"; break;
+	case EVHTTP_REQ_DELETE: cmdtype = "DELETE"; break;
+	case EVHTTP_REQ_OPTIONS: cmdtype = "OPTIONS"; break;
+	case EVHTTP_REQ_TRACE: cmdtype = "TRACE"; break;
+	case EVHTTP_REQ_CONNECT: cmdtype = "CONNECT"; break;
+	case EVHTTP_REQ_PATCH: cmdtype = "PATCH"; break;
+	default: cmdtype = "unknown"; break;
+	}
+
+	printf("Received a %s request for %s\nHeaders:\n",
+	    cmdtype, evhttp_request_get_uri(req));
+
+	headers = evhttp_request_get_input_headers(req);
+	for (header = headers->tqh_first; header;
+	    header = header->next.tqe_next) {
+		printf("  %s: %s\n", header->key, header->value);
+	}
+
+	buf = evhttp_request_get_input_buffer(req);
+	puts("Input data: <<<");
+	while (evbuffer_get_length(buf)) {
+		int n;
+		char cbuf[128];
+		n = evbuffer_remove(buf, cbuf, sizeof(cbuf));
+		if (n > 0)
+			(void) fwrite(cbuf, 1, n, stdout);
+	}
+	puts(">>>");
+
+	evhttp_send_reply(req, 200, "OK", NULL);
+}
+
+
+void user_request_cb(struct evhttp_request *req, void *arg)
 {
     evhttp_send_reply(req, 200, "OK", NULL);
 }
 
-void mount_update_request_cb(struct evhttp_request *req, void *arg)
+void station_request_cb(struct evhttp_request *req, void *arg)
 {
     evhttp_send_reply(req, 200, "OK", NULL);
 }
 
-void info_update_request_cb(struct evhttp_request *req, void *arg)
+void client_request_cb(struct evhttp_request *req, void *arg)
 {
     evhttp_send_reply(req, 200, "OK", NULL);
 

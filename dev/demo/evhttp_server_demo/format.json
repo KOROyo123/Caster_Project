@@ -1,0 +1,114 @@
+{
+"POST /user":{
+    "user_name":"usertest",
+    "user_pwd":"password",
+    "user_contacts":"联系人姓名",
+    "user_phone_number":"133XXXX7654",
+    "user_mail":"usertest@163.com",
+    "user_qq":"1112223334",
+    "user_compony":"xxxx公司",
+    "expire_time":"2024/08/29 00:00:00"
+},
+"PUT /user":{
+    "user_name":"usertest",
+    "user_pwd":"password",
+    "user_contacts":"联系人姓名",
+    "user_phone_number":"133XXXX7654",
+    "user_mail":"usertest@163.com",
+    "user_qq":"1112223334",
+    "user_compony":"xxxx公司",
+    "expire_time":"2024/08/29 00:00:00"
+},
+"GET /user":{
+    "user_name":"usertest"
+},
+"DELETE /user":{
+    "user_name":"usertest"
+},
+
+"GET /station":{
+
+},
+
+"GET /rover":{
+
+}
+
+}
+
+    HTTP/1.1 200 OK
+    Date: Tue, 14 May 2024 02:55:51 GMT
+    Content-Length: 12345
+    Content-Type: text/html; charset=ISO-8859-1
+
+    [
+        {
+            "Mount":"Mpt111",
+            "Format":"RTCM3",
+            "Status": 1,
+            "Coord_B":35.66611561891,
+            "Coord_L":120.16516518881,
+            "Coord_H":105.334,
+            "RoverNum":2,
+            "OnlineSec":3521,
+            "OnlineTime":"2024/05/14 11:36:15",
+            "IP":"127.0.0.1",
+            "Port":60002
+        },
+        {
+            "Mount":"Mpt111",
+            "Format":"RTCM3",
+            "Status": 1,
+            "Coord_B":35.66611561891,
+            "Coord_L":120.16516518881,
+            "Coord_H":105.334,
+            "RoverNum":2,
+            "OnlineSec":3521,
+            "OnlineTime":"2024/05/14 11:36:15",
+            "IP":"127.0.0.1",
+            "Port":60002
+        }
+    ]
+
+
+    HTTP/1.1 200 OK
+    Date: Tue, 14 May 2024 02:55:51 GMT
+    Content-Length: 12345
+    Content-Type: text/html; charset=ISO-8859-1
+
+    [
+        {
+            "UserName":"testuser",
+            "Status": 1,
+            "Mount":"Mpt111",
+            "UseMount":"Mpt111",           
+            "Coord_B":35.66611561891,
+            "Coord_L":120.16516518881,
+            "Coord_H":105.334,
+            "UseSatNum":34,
+            "DiffDelay":1.0,
+            "Distance":3.4,
+            "RoverSpeed":12.1,
+            "OnlineSec":3521,
+            "OnlineTime":"2024/05/14 11:36:15",
+            "IP":"127.0.0.1",
+            "Port":60002
+        },
+        {
+            "UserName":"testuser2",
+            "Status": 1,
+            "Mount":"Mpt112",
+            "UseMount":"Mpt121",           
+            "Coord_B":35.66611561891,
+            "Coord_L":120.16516518881,
+            "Coord_H":105.334,
+            "UseSatNum":34,
+            "DiffDelay":1.0,
+            "Distance":3.4,
+            "RoverSpeed":12.1,
+            "OnlineSec":3521,
+            "OnlineTime":"2024/05/14 11:36:15",
+            "IP":"127.0.0.1",
+            "Port":60002
+        },
+    ]

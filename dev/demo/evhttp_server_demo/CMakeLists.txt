@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(evhttp_server_demo_0.0.1 LANGUAGES CXX)
+project(evhttp_server_demo LANGUAGES CXX)
 
 #版本14以下可能会导致abseil不支持
 set(CMAKE_CXX_STANDARD 17)
