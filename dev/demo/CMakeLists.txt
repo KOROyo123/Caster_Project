@@ -1,6 +1,6 @@
 # add_subdirectory(core_dump_demo)
 # add_subdirectory(evhttp_client_demo/)
-add_subdirectory(evhttp_server_demo/)
+# add_subdirectory(evhttp_server_demo/)
 # add_subdirectory(redis_mq_demo/)
 # add_subdirectory(smtp_email_demo/)
 # add_subdirectory(sqlite_demo/)
