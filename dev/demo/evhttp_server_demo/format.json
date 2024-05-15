@@ -1,8 +1,75 @@
+//成功回复
+
+HTTP/1.1 200 OK
+Date: Tue,
+14 May 2024 02: 55: 51 GMT
+Content-Length: 0
+Content-Type: text/html; charset=ISO-8859-1
+
+{
+    "status": 0,
+    "message": "在线基站数量:3",
+    "data": [
+        {
+            "MountPoint": "MPT01"
+        },
+        {
+            "MountPoint": "MPT02"
+        },
+        {
+            "MountPoint": "MPT03"
+        }
+    ]
+}
 
 
+HTTP/1.1 200 OK
+Date: Tue,
+14 May 2024 02: 55: 51 GMT
+Content-Length: 0
+Content-Type: text/html; charset=ISO-8859-1
 
+{
+    "status": "0",
+    "message": "在线流动站数量:3",
+    "data": [
+        {
+            "UserName": "user001"
+        },
+        {
+            "UserName": "user001"
+        },
+        {
+            "UserName": "user003"
+        }
+    ]
+}
 
+HTTP/1.1 200 OK
+Date: Tue,
+14 May 2024 02: 55: 51 GMT
+Content-Length: 0
+Content-Type: text/html; charset=ISO-8859-1
 
+{
+    "status": 0,
+    "message": "在线流动站数量:0",
+    "data": []
+}
+//错误回复
+
+HTTP/1.1 400 Bad Request
+Date: Tue,
+14 May 2024 02: 55: 51 GMT
+Content-Length: 1234
+Content-Type: text/html; charset=ISO-8859-1
+
+{
+    "status": -1,
+    "message": "账号不存在",
+    "data": []
+}
+//新建用户
 
 POST /cdc_user HTTP/1.1
 
@@ -21,6 +88,26 @@ POST /cdc_user HTTP/1.1
         }
     ]
 }
+//修改用户
+
+PUT /cdc_user HTTP/1.1
+
+{
+    "data": [
+        {
+            "UserName": "usertest",
+            "Password": "password",
+            "Contacts": "联系人姓名",
+            "PhoneNum": "133XXXX7654",
+            "Mail": "usertest@163.com",
+            "QQ": "1112223334",
+            "Company": "xxxx公司",
+            "ExpireTime": "2024/08/29 00:00:00",
+            "Enabled": true
+        }
+    ]
+}
+//删除用户
 
 DELETE /cdc_user HTTP/1.1
 
@@ -31,19 +118,130 @@ DELETE /cdc_user HTTP/1.1
         }
     ]
 }
+//查找用户
 
+GET /cdc_user HTTP/1.1
+
+{
+    "data": [
+        {
+            "UserName": "usertest",
+        }
+    ]
+}
+//获取站点统计信息
 
 GET /cdc_station_stat HTTP/1.1
+//获取站点详细信息
 
 GET /cdc_station_info HTTP/1.1
 
 {
-    "data":[
-        {"MountPoint":"MPT01"},
-        {"MountPoint":"MPT02"},
-        {"MountPoint":"MPT03"},
+    "data": [
+        {
+            "MountPoint": "MPT01"
+        },
+        {
+            "MountPoint": "MPT02"
+        },
+        {
+            "MountPoint": "MPT03"
+        },
     ]
 }
+
+
+{
+    "status": 0,
+    "message": "返回基站信息，数量：2",
+    "data": [
+        {
+            "MountPoint": "Mpt111",
+            "Format": "RTCM3",
+            "Status": 1,
+            "Coord_B": 35.66611561891,
+            "Coord_L": 120.16516518881,
+            "Coord_H": 105.334,
+            "OnlineSec": 3521,
+            "OnlineTime": "2024/05/14 11:36:15",
+            "IP": "127.0.0.1",
+            "Port": 60002,
+            "RoverNum": 2,
+            "RoverName": [
+                {
+                    "UserName": "user001"
+                },
+                {
+                    "UserName": "user002"
+                }
+            ]
+        },
+        {
+            "MountPoint": "Mpt112",
+            "Format": "RTCM3",
+            "Status": 1,
+            "Coord_B": 35.66611561891,
+            "Coord_L": 120.16516518881,
+            "Coord_H": 105.334,
+            "OnlineSec": 3521,
+            "OnlineTime": "2024/05/14 11:36:15",
+            "IP": "127.0.0.1",
+            "Port": 60002,
+            "RoverNum": 2,
+            "RoverName": [
+                {
+                    "UserName": "user001"
+                },
+                {
+                    "UserName": "user002"
+                }
+            ]
+        }
+    ]
+}
+
+
+{
+    "status": 0,
+    "message": "返回流动站信息,数量:2",
+    "data": [
+        {
+            "UserName": "user001",
+            "Status": 1,
+            "MountPoint": "Mpt111",
+            "UsePoint": "Mpt111",
+            "Coord_B": 35.66611561891,
+            "Coord_L": 120.16516518881,
+            "Coord_H": 105.334,
+            "SatNum": 46,
+            "DiffDelay": 0,
+            "Distance": 1225.234,
+            "RoverSpeed": 7.5,
+            "OnlineSec": 3521,
+            "OnlineTime": "2024/05/14 11:36:15",
+            "IP": "127.0.0.1",
+            "Port": 60002,
+        },
+        {
+            "UserName": "user002",
+            "Status": 1,
+            "MountPoint": "Mpt111",
+            "UsePoint": "Mpt111",
+            "Coord_B": 35.66611561891,
+            "Coord_L": 120.16516518881,
+            "Coord_H": 105.334,
+            "SatNum": 46,
+            "DiffDelay": 0,
+            "Distance": 1225.234,
+            "RoverSpeed": 7.5,
+            "OnlineSec": 3521,
+            "OnlineTime": "2024/05/14 11:36:15",
+            "IP": "127.0.0.1",
+            "Port": 60002,
+        },
+    ]
+}
+
 
 
 HTTP/1.1 200 OK
@@ -143,38 +341,55 @@ Content-Type: text/html; charset=ISO-8859-1
     "GET /rover": {}
 }
 
-    HTTP/1.1 200 OK
-    Date: Tue,
+HTTP/1.1 200 OK
+Date: Tue,
 14 May 2024 02: 55: 51 GMT
-    Content-Length: 12345
-    Content-Type: text/html; charset=ISO-8859-1
+Content-Length: 12345
+Content-Type: text/html; charset=ISO-8859-1
 
-    [
+
+    "data": [
     {
-        "Mount": "Mpt111",
+        "MountPoint": "Mpt111",
         "Format": "RTCM3",
         "Status": 1,
         "Coord_B": 35.66611561891,
         "Coord_L": 120.16516518881,
         "Coord_H": 105.334,
-        "RoverNum": 2,
         "OnlineSec": 3521,
         "OnlineTime": "2024/05/14 11:36:15",
         "IP": "127.0.0.1",
-        "Port": 60002
+        "Port": 60002,
+        "RoverNum": 2,
+        "RoverName": [
+            {
+                "UserName": "user001"
+            },
+            {
+                "UserName": "user002"
+            }
+        ]
     },
     {
-        "Mount": "Mpt111",
+        "MountPoint": "Mpt112",
         "Format": "RTCM3",
         "Status": 1,
         "Coord_B": 35.66611561891,
         "Coord_L": 120.16516518881,
         "Coord_H": 105.334,
-        "RoverNum": 2,
         "OnlineSec": 3521,
         "OnlineTime": "2024/05/14 11:36:15",
         "IP": "127.0.0.1",
-        "Port": 60002
+        "Port": 60002,
+        "RoverNum": 2,
+        "RoverName": [
+            {
+                "UserName": "user001"
+            },
+            {
+                "UserName": "user002"
+            }
+        ]
     }
 ]
 

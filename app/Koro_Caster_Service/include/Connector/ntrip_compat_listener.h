@@ -69,10 +69,10 @@ public:
     static void Bev_EventCallback(bufferevent *bev, short what, void *arg);
 
     // 解析请求相关（在解析完请求后，向AUTH验证用户名密码是否合法，只要合法就允许进入下一步（不判断是否已经登录，是否是重复登录，由后续步骤进行检查））
-    int Process_GET_Request(std::string connect_key, const char *path);
-    int Process_POST_Request(std::string connect_key, const char *path);
-    int Process_SOURCE_Request(std::string connect_key, const char *path, const char *secret);
-    int Process_Unknow_Request(std::string connect_key);
+    int Process_GET_Request(bufferevent *bev, std::string connect_key, const char *path);
+    int Process_POST_Request(bufferevent *bev, std::string connect_key, const char *path);
+    int Process_SOURCE_Request(bufferevent *bev, std::string connect_key, const char *path, const char *secret);
+    int Process_Unknow_Request(bufferevent *bev, std::string connect_key);
 
     // Auth验证回调
     static void Auth_Verify_Cb(const char *request, void *arg, AuthReply *reply);
@@ -80,9 +80,9 @@ public:
 private:
     // 内部函数
     // std::string get_conncet_key(bufferevent *bev);
-    json decode_bufferevent_req(std::string connect_key);
+    json decode_bufferevent_req(bufferevent *bev, std::string connect_key);
     std::string extract_path(std::string path);
     std::string extract_para(std::string path);
     std::string decode_basic_authentication(std::string authentication);
-    int erase_and_free_bev(std::string Connect_Key);
+    int erase_and_free_bev(bufferevent *bev, std::string Connect_Key);
 };

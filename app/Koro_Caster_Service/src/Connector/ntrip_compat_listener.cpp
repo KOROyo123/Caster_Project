@@ -162,25 +162,25 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         // 判断是否是Server还是Client
         if (strcmp(ele[0], "GET") == 0)
         {
-            svr->Process_GET_Request(connect_key, ele[1]);
+            svr->Process_GET_Request(bev, connect_key, ele[1]);
         }
         else if (strcmp(ele[0], "POST") == 0)
         {
-            svr->Process_POST_Request(connect_key, ele[1]);
+            svr->Process_POST_Request(bev, connect_key, ele[1]);
         }
         else if (strcmp(ele[0], "SOURCE") == 0)
         {
             if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
             {
-                svr->Process_SOURCE_Request(connect_key, ele[1], "");
+                svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
             }
             else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
             {
-                svr->Process_SOURCE_Request(connect_key, ele[1], "");
+                svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
             }
             else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
             {
-                svr->Process_SOURCE_Request(connect_key, ele[2], ele[1]);
+                svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
             }
         }
         else
@@ -192,7 +192,7 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     catch (int i)
     {
         spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ", __class__, __func__, ip, port);
-        svr->Process_Unknow_Request(connect_key);
+        svr->Process_Unknow_Request(bev, connect_key);
     }
 
     // 清理
@@ -235,9 +235,9 @@ void ntrip_compat_listener::Bev_EventCallback(bufferevent *bev, short events, vo
     delete arg; // 发生事件之后，参数已经没有用，但是是new出来的pair，需要释放
 }
 
-int ntrip_compat_listener::Process_GET_Request(std::string connect_key, const char *url)
+int ntrip_compat_listener::Process_GET_Request(bufferevent *bev, std::string connect_key, const char *url)
 {
-    json req = decode_bufferevent_req(connect_key);
+    json req = decode_bufferevent_req(bev, connect_key);
     req["mount_point"] = extract_path(url); // 提取请求的?前的内容
     req["mount_para"] = extract_para(url);  // 提取请求的?后的内容
 
@@ -277,9 +277,9 @@ int ntrip_compat_listener::Process_GET_Request(std::string connect_key, const ch
     return 0;
 }
 
-int ntrip_compat_listener::Process_POST_Request(std::string connect_key, const char *url)
+int ntrip_compat_listener::Process_POST_Request(bufferevent *bev, std::string connect_key, const char *url)
 {
-    json req = decode_bufferevent_req(connect_key);
+    json req = decode_bufferevent_req(bev, connect_key);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
     req["req_type"] = REQUEST_SERVER_LOGIN;
@@ -290,9 +290,9 @@ int ntrip_compat_listener::Process_POST_Request(std::string connect_key, const c
     return 0;
 }
 
-int ntrip_compat_listener::Process_SOURCE_Request(std::string connect_key, const char *url, const char *secret)
+int ntrip_compat_listener::Process_SOURCE_Request(bufferevent *bev, std::string connect_key, const char *url, const char *secret)
 {
-    json req = decode_bufferevent_req(connect_key);
+    json req = decode_bufferevent_req(bev, connect_key);
     req["mount_point"] = extract_path(url);
     req["mount_para"] = extract_para(url);
     req["req_type"] = REQUEST_SERVER_LOGIN;
@@ -310,9 +310,9 @@ int ntrip_compat_listener::Process_SOURCE_Request(std::string connect_key, const
     return 0;
 }
 
-int ntrip_compat_listener::Process_Unknow_Request(std::string connect_key)
+int ntrip_compat_listener::Process_Unknow_Request(bufferevent *bev, std::string connect_key)
 {
-    erase_and_free_bev(connect_key);
+    erase_and_free_bev(bev, connect_key);
     return 0;
 }
 
@@ -342,7 +342,7 @@ void ntrip_compat_listener::Auth_Verify_Cb(const char *request, void *arg, AuthR
 //     return util_cal_connect_key(bufferevent_getfd(bev));
 // }
 
-json ntrip_compat_listener::decode_bufferevent_req(std::string connect_key)
+json ntrip_compat_listener::decode_bufferevent_req(bufferevent *bev, std::string connect_key)
 {
     /*
         connect_key
@@ -376,13 +376,6 @@ json ntrip_compat_listener::decode_bufferevent_req(std::string connect_key)
     info["user_pwd"] = "none";
 
     info["connect_key"] = connect_key;
-
-    bufferevent *bev = NULL;
-    auto con = _connect_map->find(connect_key);
-    if (con != _connect_map->end())
-    {
-        bev = con->second;
-    }
 
     evbuffer *evbuf = bufferevent_get_input(bev);
     json item;
@@ -529,7 +522,7 @@ std::string ntrip_compat_listener::decode_basic_authentication(std::string authe
     return util_base64_decode(auth);
 }
 
-int ntrip_compat_listener::erase_and_free_bev(std::string Connect_Key)
+int ntrip_compat_listener::erase_and_free_bev(bufferevent *bev, std::string Connect_Key)
 {
     auto con = _connect_map->find(Connect_Key);
 
@@ -542,6 +535,7 @@ int ntrip_compat_listener::erase_and_free_bev(std::string Connect_Key)
     else
     {
         spdlog::warn("[{}:{}]: con't find bev in connetc_map, connect key: {}", __class__, __func__, Connect_Key);
+        bufferevent_free(bev);
     }
 
     return 0;
