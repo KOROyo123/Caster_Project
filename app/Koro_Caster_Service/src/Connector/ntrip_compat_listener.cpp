@@ -137,7 +137,7 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
 
     try
     {
-        if (header == NULL | header_len > 255)
+        if (header == NULL | header_len > 255 | header_len < 9) // HTTP请求最短长度也要15 "GET / HTTP/1.0"  NTRIP1.0请求最短长度为9  "SOURCE  1"
         {
             size_t evbuf_len = evbuffer_get_length(evbuf);
             spdlog::warn("[{}:{}]: error header, from: [ip: {} port: {}] ,data length: {}", __class__, __func__, ip, port, evbuf_len + header_len);
@@ -146,9 +146,9 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
             {
                 spdlog::warn("[{}:{}]: error header, header dont'have CRLF ", __class__, __func__);
             }
-            if (header_len > 255)
+            else
             {
-                spdlog::warn("[{}:{}]: error header, header is too long, header length: {} ", __class__, __func__, header_len);
+                spdlog::warn("[{}:{}]: error header, header is length error, header length: {} ", __class__, __func__, header_len);
             }
 
             throw 1;
@@ -159,28 +159,65 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         char ele[4][256] = {'\0'};
         sscanf(header, "%[^ |\n] %[^ |\n] %[^ |\n] %[^ |\n]", ele[0], ele[1], ele[2], ele[3]);
 
-        // 判断是否是Server还是Client
-        if (strcmp(ele[0], "GET") == 0)
+        if (strcmp(ele[0], "SOURCE") == 0) // 针对Ntrip1.0 挂载点的处理请求
         {
-            svr->Process_GET_Request(bev, connect_key, ele[1]);
-        }
-        else if (strcmp(ele[0], "POST") == 0)
-        {
-            svr->Process_POST_Request(bev, connect_key, ele[1]);
-        }
-        else if (strcmp(ele[0], "SOURCE") == 0)
-        {
-            if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
+            // 需要支持的处理情况，以外的情况均不支持
+            //  SOURCE password MPT HTTP/1.1
+            //  SOURCE  MTP HTTP/1.1
+            //  SOURCE password MPT
+            //  SOURCE  MPT
+            // 需要排除的情况
+            //  SOURCE   HTTP/1.1  设计是四参数但是用户名密码都为空
+            //  SOURCE  后面跟了很多个空格
+
+            if (ele[3][0] != '\0') // 处理四个参数的情况 SOURCE password MPT HTTP/1.1，只有一种报文格式符合
             {
-                svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+                if (strcmp(ele[3], "HTTP/1.1") == 0 | strcmp(ele[3], "HTTP/1.0") == 0)
+                {
+                    svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
+                }
+                else
+                {
+                    throw 1;
+                }
             }
-            else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
+            else if (ele[2][0] != '\0') // 处理三个参数的情况
             {
-                svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+                if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) //  SOURCE  MTP HTTP/1.1
+                {
+                    svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+                }
+                else //  SOURCE password MPT
+                {
+                    svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
+                }
             }
-            else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
+            else if (ele[1][0] != '\0') // 处理两个参数的情况  SOURCE  MPT   SOURCE  HTTP/1.1
             {
-                svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
+                if (strcmp(ele[1], "HTTP/1.1") == 0 | strcmp(ele[1], "HTTP/1.0") == 0) //  SOURCE  HTTP/1.1   但是对于其他形式比如 HTTP/2.0什么的，那就过滤不掉了
+                {
+                    throw 1;
+                }
+                else //  SOURCE  MPT
+                {
+                    svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+                }
+            }
+            else // 处理一个参数的情况  如：SOURCE后面跟了很多个空格
+            {
+                // 不支持的方法
+                throw 1;
+            }
+        }
+        else if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 判断第三个请求头是否是HTTP/1.X,这样可以过滤请求的url为空的情况
+        {
+            if (strcmp(ele[0], "GET") == 0)
+            {
+                svr->Process_GET_Request(bev, connect_key, ele[1]);
+            }
+            else if (strcmp(ele[0], "POST") == 0)
+            {
+                svr->Process_POST_Request(bev, connect_key, ele[1]);
             }
         }
         else
@@ -188,6 +225,36 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
             // 不支持的方法
             throw 1;
         }
+
+        // // 判断是否是Server还是Client
+        // if (strcmp(ele[0], "GET") == 0)
+        // {
+        //     svr->Process_GET_Request(bev, connect_key, ele[1]);
+        // }
+        // else if (strcmp(ele[0], "POST") == 0)
+        // {
+        //     svr->Process_POST_Request(bev, connect_key, ele[1]);
+        // }
+        // else if (strcmp(ele[0], "SOURCE") == 0)
+        // {
+        //     if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
+        //     {
+        //         svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+        //     }
+        //     else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
+        //     {
+        //         svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
+        //     }
+        //     else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
+        //     {
+        //         svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
+        //     }
+        // }
+        // else
+        // {
+        //     // 不支持的方法
+        //     throw 1;
+        // }
     }
     catch (int i)
     {
