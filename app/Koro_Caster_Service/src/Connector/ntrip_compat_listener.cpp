@@ -219,6 +219,11 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
             {
                 svr->Process_POST_Request(bev, connect_key, ele[1]);
             }
+            else
+            {
+                // 不支持的方法
+                throw 1;
+            }
         }
         else
         {
