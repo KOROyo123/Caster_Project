@@ -54,7 +54,12 @@ Content-Type: text/html; charset=ISO-8859-1
 {
     "status": 0,
     "message": "在线流动站数量:0",
-    "data": []
+    "data":[
+        {参数条目1},
+        {参数条目2},
+        {参数条目3}
+    ]
+
 }
 //错误回复
 
@@ -72,6 +77,16 @@ Content-Type: text/html; charset=ISO-8859-1
 //新建用户
 
 POST /cdc_user HTTP/1.1
+
+
+
+{
+    "data":[
+        {参数条目1},
+        {参数条目2},
+        {参数条目3}
+    ]
+}
 
 {
     "data": [

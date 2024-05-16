@@ -178,8 +178,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    switch_Working_Dir(argv[0]); // 切换工作路径到可执行目录下
-
+    if (argc == 2)
+    {
+        if (!strcmp(argv[1], "-info")) // 监听端口
+        {
+            exit(0);
+        }
+    }
     if (argc > 2)
     {
         for (int i = 1; i < argc; i += 2)
@@ -194,13 +199,8 @@ int main(int argc, char **argv)
             }
         }
     }
-    else if (argc == 2)
-    {
-        if (!strcmp(argv[1], "-info")) // 监听端口
-        {
-            exit(0);
-        }
-    }
+
+    switch_Working_Dir(argv[0]); // 切换工作路径到可执行目录下
 
     // 打开配置文件
     spdlog::info("Conf Path:{}", conf_path);
