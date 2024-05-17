@@ -219,7 +219,7 @@ void redis_msg_internal::Redis_SUB_Callback(redisAsyncContext *c, void *r, void 
             return;
         }
         auto subs = channel_subs->second;
-        for (auto iter : subs)// 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
+        for (auto iter : subs) // 先复制一份副本,采用副本进行操作，避免执行的回调函数对本体进行了操作，导致for循环出错
         {
             auto cb_item = iter.second;
             auto Func = cb_item.cb;
@@ -415,26 +415,47 @@ mount_info redis_msg_internal::build_default_mount_info(std::string mount_point)
     // bitrate;          9600
     // misc;             caster.koroyo.xyz:2101/KORO996
 
+    // mount_info item = {
+    //     "STR",
+    //     mount_point,
+    //     "unknown",
+    //     "unknown",
+    //     "unknown",
+    //     "0",
+    //     "unknown",
+    //     "unknown",
+    //     "unknown",
+    //     "00.00",
+    //     "000.00",
+    //     "0",
+    //     "0",
+    //     "unknown",
+    //     "unknown",
+    //     "B",
+    //     "N",
+    //     "0000",
+    //     "Not parsed or provided"};
+
     mount_info item = {
         "STR",
         mount_point,
-        "unknown",
-        "unknown",
-        "unknown",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "0.0",
+        "0.0",
         "0",
-        "unknown",
-        "unknown",
-        "unknown",
-        "00.00",
-        "000.00",
         "0",
-        "0",
-        "unknown",
-        "unknown",
-        "B",
+        "",
+        "",
         "N",
-        "0000",
-        "Not parsed or provided"};
+        "N",
+        "0",
+        "none"};
 
     return item;
 }

@@ -152,6 +152,7 @@ int client_ntrip::transfer_sub_raw_data(const char *data, size_t length)
     if (_transfer_with_chunked)
     {
         evbuffer_add_printf(_send_evbuf, "%lx\r\n", length);
+        evbuffer_add(_send_evbuf, data, length);
         evbuffer_add(_send_evbuf, "\r\n", 2);
         bufferevent_write_buffer(_bev, _send_evbuf);
     }
