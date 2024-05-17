@@ -554,7 +554,7 @@ std::string ntrip_compat_listener::extract_path(std::string path)
     }
     else
     {
-        mount = path.substr(1, x);
+        mount = path.substr(1, x - 1);
         search = path.substr(x + 1);
     }
     return mount;
@@ -575,7 +575,7 @@ std::string ntrip_compat_listener::extract_para(std::string path)
     }
     else
     {
-        mount = path.substr(1, x);
+        mount = path.substr(1, x - 1);
         search = path.substr(x + 1);
     }
     return search;
