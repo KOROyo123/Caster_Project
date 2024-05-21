@@ -46,9 +46,15 @@ int CASTER::Check_Mount_Type(const char *mount_point)
 int CASTER::Set_Base_Station_State_ONLINE(const char *mount_point, const char *user_name, const char *connect_key, Station_type type)
 {
     auto context = caster_svr->_pub_context;
-    redisAsyncCommand(context, NULL, NULL, "HSET MOUNT:ONLINE:COMMON %s %s", mount_point, connect_key);
+    redisAsyncCommand(context, NULL, NULL, "HSET MOUNT:ONLINE:COMMON %s %s", mount_point, connect_key); //改成   挂载点-时间的格式
     redisAsyncCommand(context, NULL, NULL, "HSET CHANNEL:ACTIVE MOUNT:%s %s", mount_point, connect_key);
     caster_svr->add_local_active_connect_key(connect_key);
+
+    //添加到本地的挂载点列表中（mount-connect_key)
+        //向云端添加一条在线记录        HSET MOUNT:ONLINE:COMMON         挂载点：当前时间
+        //向云端添加活跃频道记录        HSET CHANNEL:ACTIVE              挂载点：Connect_key
+        //向云端添加订阅该频道的记录     HSET CHANNEL:SUBS:挂载点         Connect_Key:name
+    
 
     return 0;
 }
