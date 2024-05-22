@@ -36,7 +36,7 @@ jobs:
 
     - name: Build-Env
       # Build your program with the given configuration
-      run: cd ${{github.workspace}}/env/redis-7.2.1 && make
+      run: cd ${{github.workspace}}/env/redis-7.2.1 && make MALLOC=libc
 
     - name: Pack-Env
       run: cp ${{github.workspace}}/env/redis-7.2.1/src/redis-server /bin/Koro_Caster_Service/
