@@ -39,7 +39,7 @@ jobs:
       run: cd ${{github.workspace}}/env/redis-7.2.1 && make MALLOC=libc
 
     - name: Pack-Env
-      run: cp ${{github.workspace}}/env/redis-7.2.1/src/redis-server ${{github.workspace}}/bin/Koro_Caster_Service/
+      run: cp ${{github.workspace}}/env/redis-7.2.1/src/redis-server ${{github.workspace}}/bin/Koro_Caster_Service/env
 
     - name: Get tag version
       id: tag_version
