@@ -23,6 +23,7 @@
 
 #include <random>
 
+
 std::string util_random_string(int string_len)
 {
     std::string rand_str;
@@ -221,6 +222,15 @@ std::string util_get_http_date()
     return std::string();
 }
 
+std::time_t util_get_now_second()
+{
+       // 获取当前时间点
+    auto now = std::chrono::system_clock::now();
+    // 转换为 time_t 类型（自1970年1月1日以来的秒数）
+    std::time_t current_time = std::chrono::system_clock::to_time_t(now);
+
+    return current_time;
+}
 int util_get_use_memory()
 {
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <chrono>
 
 std::string util_random_string(int string_len);
 
@@ -20,6 +21,6 @@ std::string util_get_date_time();
 std::string util_get_space_time();
 
 std::string util_get_http_date();
-
+std::time_t util_get_now_second();
 
 int util_get_use_memory();
