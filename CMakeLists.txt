@@ -18,6 +18,10 @@ ENDIF()
 set(JSON_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/third/json-3.11.3/include")
 set(SPDLOG_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/rely/spdlog-1.12.0/include")
 
+#全局设置选项
+set(BUILD_EXAMPLES OFF)
+set(BUILD_TESTING OFF)
+
 add_subdirectory(rely/)
 add_subdirectory(lib/)
 add_subdirectory(app/)
