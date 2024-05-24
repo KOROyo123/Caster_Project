@@ -28,6 +28,7 @@ server_ntrip::server_ntrip(json req, bufferevent *bev)
     _connect_timeout = _conf["Timeout"];
     _heart_beat_interval = _conf["Heartbeat_Intv"];
     _heart_beat_msg = _conf["Heartbeat_Msg"];
+    _unsend_limit = _conf["Unsend_Limit"];
 }
 
 server_ntrip::~server_ntrip()
@@ -154,6 +155,15 @@ void server_ntrip::TimeoutCallback(evutil_socket_t fd, short events, void *arg)
 
 int server_ntrip::send_heart_beat_to_server()
 {
+
+    auto UnsendBufferSize = evbuffer_get_length(bufferevent_get_output(_bev));
+
+    if (_unsend_limit > 0 && UnsendBufferSize > _unsend_limit)
+    {
+        spdlog::info("[{}:{}: send to server [{}]'s  unsend size is too large :[{}], close the connect! addr:[{}:{}]", __class__, __func__, _mount_point, UnsendBufferSize, _ip, _port);
+        stop();
+    }
+
     bufferevent_write(_bev, _heart_beat_msg.data(), _heart_beat_msg.size());
     return 0;
 }

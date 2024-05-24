@@ -142,9 +142,9 @@ int client_ntrip::transfer_sub_raw_data(const char *data, size_t length)
 {
     auto UnsendBufferSize = evbuffer_get_length(bufferevent_get_output(_bev));
 
-    if (UnsendBufferSize > _unsend_limit)
+    if (_unsend_limit > 0 && UnsendBufferSize > _unsend_limit)
     {
-        spdlog::info("Client Info: send to user [{}]'s date unsend size is too large :[{}], close the connect! using mount [{}], addr:[{}:{}]", _user_name, UnsendBufferSize, _mount_point, _ip, _port);
+        spdlog::info("[{}:{}: send to user [{}]'s date unsend size is too large :[{}], close the connect! using mount [{}], addr:[{}:{}]", __class__, __func__, _user_name, UnsendBufferSize, _mount_point, _ip, _port);
         stop();
         return -1;
     }

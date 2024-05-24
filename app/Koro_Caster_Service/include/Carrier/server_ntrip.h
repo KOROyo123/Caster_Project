@@ -30,6 +30,7 @@ private:
     bool _heart_beat_switch;
     int _heart_beat_interval;
     std::string _heart_beat_msg;
+    int _unsend_limit;
 
     bufferevent *_bev;
     timeval _bev_read_timeout_tv;

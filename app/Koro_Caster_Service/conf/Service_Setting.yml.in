@@ -11,6 +11,7 @@ Server_Setting:
   Connect_Timeout: 30        #超时时间（未收到基站数据超过一定时间）（/秒）（≤0 ：关闭） 
   Heart_Beat_Interval: 10    #发送心跳间隔（/秒）（≤0 ：关闭） 
   Heart_Beat_Msg: "\r\n"     #心跳包内容
+  Unsend_Threshold: 128      #当发送缓冲区中未发送字节超过该值则触发关闭连接操作（用来关闭异常的连接）（/字节）（≤0 ：不启用此功能）
   # Data_Record: true          #(未实现）记录接收信息（正式连接建立后启用，不包括header信息）
   # Save_Path: /BaseRecord     #(未实现）保存路径 （格式：/YYYYMMDD/MountName/HHMMSS_ConnectKey.log）
 

@@ -65,6 +65,7 @@ json load_Caster_Conf(const char *conf_directory)
     conf["Server_Setting"]["Timeout"] = Server_Setting["Connect_Timeout"].as<int>();
     conf["Server_Setting"]["Heartbeat_Intv"] = Server_Setting["Heart_Beat_Interval"].as<int>();
     conf["Server_Setting"]["Heartbeat_Msg"] = Server_Setting["Heart_Beat_Msg"].as<std::string>();
+    conf["Server_Setting"]["Unsend_Limit"] = Server_Setting["Unsend_Threshold"].as<int>();
 
     auto Client_Setting = Conf["Client_Setting"];
     conf["Client_Setting"]["Timeout"] = Client_Setting["Connect_Timeout"].as<int>();
