@@ -37,7 +37,7 @@ jobs:
       run: |
         move ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}\* ${{github.workspace}}\bin\Koro_Caster_Service\
         rmdir ${{github.workspace}}\bin\Koro_Caster_Service\${{env.BUILD_TYPE}}
-        xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\Redis-7.0.15-Windows-x64\
+        xcopy /S /E /I ${{github.workspace}}\env\Redis-7.0.15-Windows-x64\ ${{github.workspace}}\bin\Koro_Caster_Service\env\
 
 
     - name: Get tag version
