@@ -230,36 +230,6 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
             // 不支持的方法
             throw 1;
         }
-
-        // // 判断是否是Server还是Client
-        // if (strcmp(ele[0], "GET") == 0)
-        // {
-        //     svr->Process_GET_Request(bev, connect_key, ele[1]);
-        // }
-        // else if (strcmp(ele[0], "POST") == 0)
-        // {
-        //     svr->Process_POST_Request(bev, connect_key, ele[1]);
-        // }
-        // else if (strcmp(ele[0], "SOURCE") == 0)
-        // {
-        //     if (strcmp(ele[2], "HTTP/1.1") == 0 | strcmp(ele[2], "HTTP/1.0") == 0) // 针对报文： SOURCE  KOROYO2 HTTP/1.1
-        //     {
-        //         svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
-        //     }
-        //     else if (ele[2][0] == '\0') // 针对报文： SOURCE  KOROYO2
-        //     {
-        //         svr->Process_SOURCE_Request(bev, connect_key, ele[1], "");
-        //     }
-        //     else // 针对报文： SOURCE 42411 KOROYO2 HTTP/1.1 |  SOURCE 42411 KOROYO2
-        //     {
-        //         svr->Process_SOURCE_Request(bev, connect_key, ele[2], ele[1]);
-        //     }
-        // }
-        // else
-        // {
-        //     // 不支持的方法
-        //     throw 1;
-        // }
     }
     catch (int i)
     {
@@ -268,7 +238,7 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
     }
     catch (std::exception &e)
     {
-        spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ,what:{}", __class__, __func__, ip, port, e.what());
+        spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ,what: {}", __class__, __func__, ip, port, e.what());
         svr->Process_Unknow_Request(bev, connect_key);
     }
 
@@ -562,6 +532,11 @@ std::string ntrip_compat_listener::extract_path(std::string path)
         mount = path.substr(1, x - 1);
         search = path.substr(x + 1);
     }
+    if(!check_mount_is_valid(mount))
+    {
+        throw std::invalid_argument("MountPoint Name invalid");
+    }
+    
     return mount;
 }
 
@@ -616,4 +591,12 @@ int ntrip_compat_listener::erase_and_free_bev(bufferevent *bev, std::string Conn
     }
 
     return 0;
+}
+
+bool ntrip_compat_listener::check_mount_is_valid(const std::string &str)
+{
+    // 定义一个正则表达式，匹配仅由大小写字母、数字和下划线组成的字符串
+    std::regex pattern("^[a-zA-Z0-9_.-]+$");
+    // 使用 std::regex_match 进行匹配检查
+    return std::regex_match(str, pattern);
 }

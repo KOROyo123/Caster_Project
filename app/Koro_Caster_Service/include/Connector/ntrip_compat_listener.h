@@ -40,6 +40,8 @@
 #include <unordered_map>
 #include <set>
 
+#include <regex>
+
 class ntrip_compat_listener
 {
 private:
@@ -85,4 +87,6 @@ private:
     std::string extract_para(std::string path);
     std::string decode_basic_authentication(std::string authentication);
     int erase_and_free_bev(bufferevent *bev, std::string Connect_Key);
+
+    bool check_mount_is_valid(const std::string& str);
 };
