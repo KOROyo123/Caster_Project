@@ -266,6 +266,11 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
         spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ", __class__, __func__, ip, port);
         svr->Process_Unknow_Request(bev, connect_key);
     }
+    catch (std::exception &e)
+    {
+        spdlog::warn("[{}:{}]: process error request, from: [ip: {} port: {}] ,what:{}", __class__, __func__, ip, port, e.what());
+        svr->Process_Unknow_Request(bev, connect_key);
+    }
 
     // 清理
     delete arg;   // 删除arg
