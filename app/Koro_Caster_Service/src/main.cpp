@@ -60,6 +60,7 @@ json load_Caster_Conf(const char *conf_directory)
     auto Ntrip_Listener_Setting = Conf["Ntrip_Listener_Setting"];
     conf["Ntrip_Listener"]["Port"] = Ntrip_Listener_Setting["Listen_Port"].as<int>();
     conf["Ntrip_Listener"]["Timeout"] = Ntrip_Listener_Setting["Connect_Timeout"].as<int>();
+    conf["Ntrip_Listener"]["Enable_No_CRLF"]=Ntrip_Listener_Setting["Header_No_CRLF"].as<bool>();
 
     auto Server_Setting = Conf["Server_Setting"];
     conf["Server_Setting"]["Timeout"] = Server_Setting["Connect_Timeout"].as<int>();

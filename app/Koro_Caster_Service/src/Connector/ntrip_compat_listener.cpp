@@ -12,6 +12,7 @@ ntrip_compat_listener::ntrip_compat_listener(json conf, event_base *base, std::u
 {
     _listen_port = conf["Port"];
     _connect_timeout = conf["Timeout"];
+    _enable_no_CRLF=conf["Enable_No_CRLF"];
 
     _base = base;
     _connect_map = connect_map;
@@ -134,6 +135,19 @@ void ntrip_compat_listener::Ntrip_Decode_Request_cb(bufferevent *bev, void *ctx)
 
     size_t header_len = 0;
     char *header = evbuffer_readln(evbuf, &header_len, EVBUFFER_EOL_CRLF);
+
+    if (header == NULL && svr->_enable_no_CRLF) // 允许不带回车换行的请求登录
+    {
+        auto len = evbuffer_get_length(evbuf);
+        if (len < 255)
+        {
+            spdlog::warn("[{}:{}]: header dont'have CRLF, but Set [Header_No_CRLF], accept this header", __class__, __func__);
+            header = new char[len + 1];
+            header[len] = '\0';
+            header_len = len;
+            evbuffer_remove(evbuf, header, header_len);
+        }
+    }
 
     try
     {
@@ -532,11 +546,11 @@ std::string ntrip_compat_listener::extract_path(std::string path)
         mount = path.substr(1, x - 1);
         search = path.substr(x + 1);
     }
-    if(!check_mount_is_valid(mount))
+    if (!check_mount_is_valid(mount))
     {
         throw std::invalid_argument("MountPoint Name invalid");
     }
-    
+
     return mount;
 }
 
@@ -595,7 +609,7 @@ int ntrip_compat_listener::erase_and_free_bev(bufferevent *bev, std::string Conn
 
 bool ntrip_compat_listener::check_mount_is_valid(const std::string &str)
 {
-    if(str.empty()) //针对获取源列表的情况
+    if (str.empty()) // 针对获取源列表的情况
     {
         return true;
     }

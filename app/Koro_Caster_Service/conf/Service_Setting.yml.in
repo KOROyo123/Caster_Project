@@ -1,10 +1,11 @@
 # Koro_Caster_Service 主体配置文件
-# 适用版本：1.1.3.1或更高
+# 适用版本：1.1.3.3或更高
 
 # 监听端口设置
 Ntrip_Listener_Setting:
   Listen_Port: 4202     #监听的端口
   Connect_Timeout: 30   #连接无响应超时时间（建立了TCP连接但是并不发送验证信息）（/秒）（≤0 ：关闭） 
+  Header_No_CRLF: true  #兼容模式，允许用户仅发送Header头登录，且不必发送回车换行，但是同时由于没有回车换行，也不能携带除挂载点之外的任何信息
 
 #基站相关设置
 Server_Setting:                
