@@ -595,6 +595,10 @@ int ntrip_compat_listener::erase_and_free_bev(bufferevent *bev, std::string Conn
 
 bool ntrip_compat_listener::check_mount_is_valid(const std::string &str)
 {
+    if(str.empty()) //针对获取源列表的情况
+    {
+        return true;
+    }
     // 定义一个正则表达式，匹配仅由大小写字母、数字和下划线组成的字符串
     std::regex pattern("^[a-zA-Z0-9_.-]+$");
     // 使用 std::regex_match 进行匹配检查
